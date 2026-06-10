@@ -749,7 +749,7 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
     </div>
   </div>
 </div>
- 
+
 <div id="editorUI">
 <div class="shell">
 <aside class="sidebar">
@@ -797,10 +797,16 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
         </button>
       </div>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="lerArquivoBackup(event)"/>
-      <button class="btn-share" onclick="compartilhar()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        🔗 Copiar link do aluno
-      </button>
+      <div style="display:flex;gap:5px">
+        <button class="btn-share" style="flex:1" onclick="compartilhar()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          🔗 Link
+        </button>
+        <button class="btn-share" style="flex:1" onclick="baixarHTMLAluno()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          ⬇ HTML
+        </button>
+      </div>
       <div class="btn-backup-row">
         <button class="btn-backup" onclick="exportarBackup()">⬇ Backup</button>
         <button class="btn-backup" onclick="importarBackup()">⬆ Restaurar</button>
@@ -824,20 +830,20 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 </div>
 <div id="pdfOutput" style="display:none"></div>
 <script>
- 
+
 // ════════════════════════════════════════════════════════
 //  SUPABASE CONFIG
 // ════════════════════════════════════════════════════════
 const SB_URL = 'https://fdojstrsiojbcoiumobv.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkb2pzdHJzaW9qYmNvaXVtb2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDk3NjYsImV4cCI6MjA5NjU4NTc2Nn0.uDymw4Dsj40RH46dXxVLn6CjutJaruADrUFriQmqVbM';
- 
+
 const SB_HEADERS = {
   'Content-Type': 'application/json',
   'apikey': SB_KEY,
   'Authorization': 'Bearer ' + SB_KEY,
   'Prefer': 'return=representation'
 };
- 
+
 // ── API helpers ──────────────────────────────────────────
 async function sbGet(table, params='') {
   try {
@@ -846,7 +852,7 @@ async function sbGet(table, params='') {
     return await r.json();
   } catch(e) { console.error('sbGet fetch error', e); return [] }
 }
- 
+
 async function sbUpsert(table, data) {
   try {
     const h = {...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation'};
@@ -856,21 +862,21 @@ async function sbUpsert(table, data) {
     return await r.json();
   } catch(e) { console.error('sbUpsert error', e); return null }
 }
- 
+
 async function sbDelete(table, id) {
   try {
     const r = await fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+id, { method:'DELETE', headers: SB_HEADERS });
     if (!r.ok) console.error('sbDelete error', table, await r.text());
   } catch(e) { console.error('sbDelete error', e) }
 }
- 
+
 async function sbDeleteWhere(table, col, val) {
   try {
     const r = await fetch(SB_URL+'/rest/v1/'+table+'?'+col+'=eq.'+val, { method:'DELETE', headers: SB_HEADERS });
     if (!r.ok) console.error('sbDeleteWhere error', table, await r.text());
   } catch(e) { console.error('sbDeleteWhere error', e) }
 }
- 
+
 // ── Status de sync ───────────────────────────────────────
 let syncStatus = 'ok'; // 'ok' | 'syncing' | 'error'
 function setSyncStatus(s) {
@@ -880,11 +886,11 @@ function setSyncStatus(s) {
   const map = { ok:'🟢 Sincronizado', syncing:'🟡 Salvando...', error:'🔴 Offline (local)' };
   el.textContent = map[s] || '';
 }
- 
+
 // ════════════════════════════════════════════════════════
 //  SAVE / LOAD com SUPABASE
 // ════════════════════════════════════════════════════════
- 
+
 // Salva UM aluno completo no Supabase (upsert cascata)
 async function syncAlunoParaSupabase(a) {
   setSyncStatus('syncing');
@@ -980,14 +986,14 @@ async function syncAlunoParaSupabase(a) {
     setSyncStatus('error');
   }
 }
- 
+
 // Carrega TODOS os alunos do Supabase e reconstrói o db
 async function carregarDoSupabase() {
   setSyncStatus('syncing');
   try {
     const alunos = await sbGet('alunos','order=created_at.asc');
     if (!alunos.length) { setSyncStatus('ok'); return false }
- 
+
     const [semanas,series,exercicios,avaliacoes,cargas,diario,metas,fotos] = await Promise.all([
       sbGet('semanas','order=aluno_id,ordem'),
       sbGet('series','order=aluno_id,ordem'),
@@ -998,7 +1004,7 @@ async function carregarDoSupabase() {
       sbGet('metas','order=aluno_id'),
       sbGet('fotos_evolucao','order=aluno_id,data'),
     ]);
- 
+
     db.alunos = alunos.map(a => {
       const aId = a.id;
       const semList = semanas.filter(s=>s.aluno_id===aId).sort((x,y)=>x.ordem-y.ordem)
@@ -1033,7 +1039,7 @@ async function carregarDoSupabase() {
         fotosEvolucao: fotos.filter(f=>f.aluno_id===aId).map(f=>({id:f.id,data:f.data,Frente:f.frente,Lado:f.lado,Costas:f.costas})),
       };
     });
- 
+
     saveDB(); // salva cópia local também
     setSyncStatus('ok');
     return true;
@@ -1043,12 +1049,12 @@ async function carregarDoSupabase() {
     return false;
   }
 }
- 
+
 // Deleta aluno completo do Supabase (cascade cuida do resto)
 async function deletarAlunoSupabase(id) {
   await sbDelete('alunos', id);
 }
- 
+
 // Salvar progresso do aluno (chamado pela ficha compartilhada via API direta)
 async function salvarProgressoAluno(alunoId, dados) {
   return sbUpsert('progresso_aluno', {
@@ -1062,14 +1068,14 @@ async function salvarProgressoAluno(alunoId, dados) {
     feedbacks_ex: dados.feedbacks||{}
   });
 }
- 
+
 // Carregar progresso mais recente de um aluno
 async function carregarProgressoAluno(alunoId) {
   const rows = await sbGet('progresso_aluno',
     'aluno_id=eq.'+alunoId+'&order=created_at.desc&limit=30');
   return rows;
 }
- 
+
 const MW_BUILTIN=[
   {nome:'Supino Reto (Barra)',musculo:'Peito',slug:'barbell-bench-press'},
   {nome:'Supino Inclinado (Barra)',musculo:'Peito',slug:'incline-barbell-bench-press'},
@@ -1147,26 +1153,26 @@ const GRUPO_EMOJI={'Peito':'🫀','Costas':'🔵','Pernas':'🦵','Glúteos':'�
 const GRUPO_COR={'Peito':'#ff6b8a','Costas':'#63b3ed','Pernas':'#f6ad55','Glúteos':'#ff8fa3','Panturrilha':'#9a75ea','Ombros':'#60a5fa','Bíceps':'#6ee7b7','Tríceps':'#fbbf24','Abdômen':'#f87171'};
 const SERIE_CORES=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7','#f87171','#fbbf24'];
 const LETRAS='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
- 
+
 function getMWDB(){return[...MW_BUILTIN,...JSON.parse(localStorage.getItem('fitficha_exdb')||'[]')]}
 function getCustomEx(){return JSON.parse(localStorage.getItem('fitficha_exdb')||'[]')}
 function saveCustomEx(a){localStorage.setItem('fitficha_exdb',JSON.stringify(a))}
- 
+
 const DBKEY='fitficha_db3';
 let db={consultoria:'PH PERFORMANCE',alunos:[]};
 let alunoAtivo=null,serieAtivaMap={},mwFiltro={},dragSrc=null;
- 
+
 function saveDB(){localStorage.setItem(DBKEY,JSON.stringify({db,serieAtivaMap}))}
 function loadDB(){try{const s=localStorage.getItem(DBKEY);if(s){const p=JSON.parse(s);db=p.db||db;serieAtivaMap=p.serieAtivaMap||{}}}catch(e){}}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
- 
+
 function editarConsultoria(){const w=document.getElementById('brandEditWrap');w.style.display=w.style.display==='block'?'none':'block';if(w.style.display==='block'){const i=document.getElementById('brandInp');i.value=db.consultoria;i.focus();i.select()}}
 function salvarConsultoria(){const v=document.getElementById('brandInp').value.trim()||'PH PERFORMANCE';db.consultoria=v;saveDB();document.getElementById('brandLogo').textContent=v;document.getElementById('emptyLogo').textContent=v;document.getElementById('brandEditWrap').style.display='none'}
- 
+
 function abrirModal(){['mNome','mObj','mNivel','mDias','mPeriodo','mObs'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});document.getElementById('modalBg').classList.add('open');setTimeout(()=>document.getElementById('mNome').focus(),50)}
 function fecharModal(){document.getElementById('modalBg').classList.remove('open')}
 document.getElementById('modalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal()});
- 
+
 function criarAluno(){
   const nome=document.getElementById('mNome').value.trim();if(!nome)return document.getElementById('mNome').focus();
   const a={id:'a'+Date.now(),nome,objetivo:document.getElementById('mObj').value.trim(),nivel:document.getElementById('mNivel').value.trim(),dias:document.getElementById('mDias').value.trim(),periodo:document.getElementById('mPeriodo').value.trim(),obs:document.getElementById('mObs').value.trim(),
@@ -1175,7 +1181,7 @@ function criarAluno(){
   db.alunos.push(a);saveDB();syncAlunoParaSupabase(a);fecharModal();renderAlunoList();selecionarAluno(a.id);
 }
 function deletarAluno(id,e){e.stopPropagation();const a=db.alunos.find(x=>x.id===id);if(!confirm('Remover '+( a?.nome||'aluno')+'?'))return;db.alunos=db.alunos.filter(x=>x.id!==id);saveDB();deletarAlunoSupabase(id);if(alunoAtivo?.id===id){alunoAtivo=null;renderEmpty()}renderAlunoList()}
- 
+
 function renderAlunoList(){
   const el=document.getElementById('alunoList');
   if(!db.alunos.length){el.innerHTML='<div style="padding:8px 12px;font-size:10px;color:#2a2a2a">Nenhum aluno ainda</div>';return}
@@ -1197,21 +1203,21 @@ function renderAlunoList(){
     </div>`;
   }).join('');
 }
- 
+
 function selecionarAluno(id){alunoAtivo=db.alunos.find(x=>x.id===id);if(!alunoAtivo)return;renderAlunoList();document.getElementById('sidebarForm').style.display='block';renderSemanas();renderSeriesNav();const sid=serieAtivaMap[id]||alunoAtivo.series[0]?.id;if(sid)renderSerieEditor(sid);else renderEmpty()}
 function renderEmpty(){document.getElementById('sidebarForm').style.display='none';document.getElementById('serieContent').innerHTML=`<div class="empty-screen"><div class="empty-logo">${esc(db.consultoria)}</div><p class="empty-sub">Adicione um aluno clicando em <strong>＋</strong> para começar.</p></div>`}
- 
+
 function addSemana(){if(!alunoAtivo)return;alunoAtivo.semanas.push({nome:'',reps:'',descanso:''});saveDB();renderSemanas()}
 function delSemana(i){if(!alunoAtivo)return;alunoAtivo.semanas.splice(i,1);saveDB();renderSemanas()}
 function renderSemanas(){if(!alunoAtivo)return;document.getElementById('semList').innerHTML=alunoAtivo.semanas.map((s,i)=>`<div class="sem-card"><div class="sem-top"><div class="sem-num">${i+1}</div><input class="sem-name-inp" type="text" placeholder="Nome" value="${esc(s.nome)}" oninput="alunoAtivo.semanas[${i}].nome=this.value;saveDB()"/><button class="sem-del-btn" onclick="delSemana(${i})">✕</button></div><div class="sem-fields"><div class="sem-field"><label>Reps</label><input type="text" placeholder="10–12" value="${esc(s.reps)}" oninput="alunoAtivo.semanas[${i}].reps=this.value;saveDB()"/></div><div class="sem-field"><label>Descanso</label><input type="text" placeholder="60s" value="${esc(s.descanso)}" oninput="alunoAtivo.semanas[${i}].descanso=this.value;saveDB()"/></div></div></div>`).join('')}
- 
+
 function addSerie(){if(!alunoAtivo)return;const i=alunoAtivo.series.length;const l=LETRAS[i]||('S'+(i+1));const s={id:'s'+Date.now()+Math.random().toString(36).slice(2),letra:l,nome:'',grupos:[],exercicios:[]};alunoAtivo.series.push(s);saveDB();serieAtivaMap[alunoAtivo.id]=s.id;saveDB();renderSeriesNav();renderSerieEditor(s.id)}
 function delSerie(sid,e){e.stopPropagation();if(!alunoAtivo||alunoAtivo.series.length<=1)return;alunoAtivo.series=alunoAtivo.series.filter(s=>s.id!==sid);alunoAtivo.series.forEach((s,i)=>s.letra=LETRAS[i]||('S'+(i+1)));saveDB();const n=alunoAtivo.series[0].id;serieAtivaMap[alunoAtivo.id]=n;saveDB();renderSeriesNav();renderSerieEditor(n)}
 function ativarSerie(sid){serieAtivaMap[alunoAtivo.id]=sid;saveDB();renderSeriesNav();renderSerieEditor(sid)}
 function renderSeriesNav(){if(!alunoAtivo)return;const av=serieAtivaMap[alunoAtivo.id];document.getElementById('seriesNav').innerHTML=alunoAtivo.series.map((s,i)=>{const cor=SERIE_CORES[i%SERIE_CORES.length];return`<div class="serie-nav-item${av===s.id?' active':''}" onclick="ativarSerie('${s.id}')"><div class="serie-nav-badge" style="background:${cor};color:#111">${s.letra}</div><div class="serie-nav-info"><div class="serie-nav-name">${s.nome||'Série '+s.letra}</div><div class="serie-nav-meta">${s.exercicios.length} exercício${s.exercicios.length!==1?'s':''}</div></div><button class="serie-nav-del" onclick="delSerie('${s.id}',event)">✕</button></div>`}).join('')}
- 
+
 function getSerie(sid){return alunoAtivo?.series.find(x=>x.id===sid)}
- 
+
 function renderSerieEditor(sid){
   if(!alunoAtivo)return;const s=getSerie(sid);if(!s)return;
   serieAtivaMap[alunoAtivo.id]=sid;saveDB();
@@ -1271,10 +1277,10 @@ function renderSerieEditor(sid){
   initDrag(document.getElementById('exlist_'+sid),sid);
   buscarMW(sid);
 }
- 
+
 function toggleGrupo(sid,g,el){const s=getSerie(sid);if(!s)return;if(s.grupos.includes(g))s.grupos=s.grupos.filter(x=>x!==g);else s.grupos.push(g);el.classList.toggle('on');saveDB()}
 function addGrupoCustom(sid,inp){const v=inp.value.trim();if(!v)return;const s=getSerie(sid);if(!s)return;if(!s.grupos.includes(v))s.grupos.push(v);saveDB();const row=document.getElementById('gRow_'+sid);const sp=document.createElement('span');sp.className='g-tag on';sp.dataset.g=v;sp.textContent='✦ '+v;sp.onclick=function(){toggleGrupo(sid,v,this)};row.insertBefore(sp,inp);inp.value=''}
- 
+
 function setFiltro(sid,g,el){const row=document.getElementById('mwF_'+sid);row.querySelectorAll('.mw-filter-btn').forEach(b=>b.classList.remove('on'));if(mwFiltro[sid]===g){mwFiltro[sid]=''}else{mwFiltro[sid]=g;el.classList.add('on')}buscarMW(sid)}
 function buscarMW(sid){const q=(document.getElementById('mwInp_'+sid)?.value||'').trim().toLowerCase();const fil=mwFiltro[sid]||'';const found=getMWDB().filter(e=>(!q||e.nome.toLowerCase().includes(q)||e.musculo.toLowerCase().includes(q))&&(!fil||e.musculo===fil)).slice(0,10);renderMWR(sid,found)}
 function renderMWR(sid,found){
@@ -1355,14 +1361,14 @@ function mwAd(sid,nome,url){const s=getSerie(sid);if(!s)return;const ex={id:'ex'
 function mwDel(id,sid){saveCustomEx(getCustomEx().filter(e=>e.id!==id));buscarMW(sid)}
 function toggleCad(sid){const f=document.getElementById('mwCF_'+sid);const b=document.getElementById('mwCT_'+sid);const op=f.style.display==='flex';f.style.display=op?'none':'flex';b.textContent=op?'＋ Cadastrar exercício personalizado':'✕ Fechar cadastro'}
 function mwCadastrar(sid){const n=(document.getElementById('mwCN_'+sid)?.value||'').trim();const m=document.getElementById('mwCM_'+sid)?.value||'';const u=(document.getElementById('mwCU_'+sid)?.value||'').trim();if(!n)return alert('Digite o nome.');const arr=getCustomEx();arr.push({id:'cex'+Date.now(),nome:n,musculo:m,url:u||null,custom:true});saveCustomEx(arr);document.getElementById('mwCN_'+sid).value='';document.getElementById('mwCU_'+sid).value='';buscarMW(sid);toggleCad(sid)}
- 
+
 function addEx(sid){const s=getSerie(sid);if(!s)return;const ex={id:'ex'+Date.now(),nome:'',series:'',reps:'',descanso:'',obs:'',medias:[]};s.exercicios.push(ex);saveDB();const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];const lista=document.getElementById('exlist_'+sid);const d=document.createElement('div');d.innerHTML=buildExCard(sid,ex,s.exercicios.length,cor);lista.appendChild(d.firstElementChild);initDrag(lista,sid);lista.querySelector('#excard_'+ex.id+' .ex-name-inp').focus();renderSeriesNav()}
 function delEx(sid,eid){const s=getSerie(sid);if(!s)return;s.exercicios=s.exercicios.filter(e=>e.id!==eid);saveDB();document.getElementById('excard_'+eid)?.remove();document.querySelectorAll('#exlist_'+sid+' .ex-card .ex-num').forEach((n,i)=>n.textContent=i+1);renderSeriesNav()}
 function updEx(sid,eid,c,v){const s=getSerie(sid);if(!s)return;const ex=s.exercicios.find(x=>x.id===eid);if(ex)ex[c]=v;saveDB()}
 function addMedia(sid,eid){const inp=document.getElementById('mi_'+eid);if(!inp)return;const url=inp.value.trim();if(!url)return;const s=getSerie(sid);if(!s)return;const ex=s.exercicios.find(x=>x.id===eid);if(!ex)return;const yt=url.match(/(?:youtu\.be\/|v=|\/embed\/)([A-Za-z0-9_-]{11})/);const img=/\.(jpg|jpeg|png|gif|webp)/i.test(url);const type=yt?'yt':img?'img':'link';const mid='m'+Date.now();ex.medias.push({id:mid,type,url});saveDB();inp.value='';document.getElementById('mt_'+eid)?.appendChild(makeThumb(sid,eid,{id:mid,type,url}))}
 function delMedia(sid,eid,mid){const s=getSerie(sid);if(!s)return;const ex=s.exercicios.find(x=>x.id===eid);if(!ex)return;ex.medias=ex.medias.filter(m=>m.id!==mid);saveDB();document.getElementById('md_'+mid)?.remove()}
 function makeThumb(sid,eid,m){const w=document.createElement('div');w.className='thumb-wrap';w.id='md_'+m.id;const yi=`<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>`;if(m.type==='yt')w.innerHTML=`<a href="${m.url}" target="_blank" class="thumb-yt">${yi}</a>`;else if(m.type==='img')w.innerHTML=`<img src="${m.url}" alt=""/>`;else w.innerHTML=`<a href="${m.url}" target="_blank" class="thumb-link" style="font-size:16px;color:#555">↗</a>`;const rm=document.createElement('button');rm.className='thumb-rm';rm.textContent='✕';rm.onclick=()=>delMedia(sid,eid,m.id);w.appendChild(rm);const ed=document.createElement('button');ed.className='thumb-rm';ed.style.cssText='bottom:-5px;top:auto;background:#c9a84c;font-size:8px';ed.textContent='✎';ed.onclick=()=>abrirEditMedia(sid,eid,m.id,m.url);w.appendChild(ed);return w}
- 
+
 function buildExCard(sid,ex,num,cor){
   const yi=`<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>`;
   const thumbs=(ex.medias||[]).map(m=>{const rm=`<button class="thumb-rm" onclick="delMedia('${sid}','${ex.id}','${m.id}')">✕</button>`;const ed=`<button class="thumb-rm" style="bottom:-5px;top:auto;background:#c9a84c;font-size:8px" onclick="abrirEditMedia('${sid}','${ex.id}','${m.id}','${(m.url||'').replace(/'/g,"\\'")}')">✎</button>`;if(m.type==='yt')return`<div class="thumb-wrap" id="md_${m.id}"><a href="${m.url}" target="_blank" class="thumb-yt">${yi}</a>${rm}${ed}</div>`;if(m.type==='img')return`<div class="thumb-wrap" id="md_${m.id}"><img src="${m.url}" alt=""/>${rm}${ed}</div>`;return`<div class="thumb-wrap" id="md_${m.id}"><a href="${m.url}" target="_blank" class="thumb-link" style="font-size:16px;color:#555">↗</a>${rm}${ed}</div>`}).join('');
@@ -1375,7 +1381,7 @@ function buildExCard(sid,ex,num,cor){
     <div class="ex-thumbs" id="mt_${ex.id}">${thumbs}</div>
   </div>`;
 }
- 
+
 function initDrag(lista,sid){
   lista.addEventListener('dragstart',e=>{const c=e.target.closest('.ex-card');if(!c)return;dragSrc=c.dataset.exid;c.classList.add('dragging');e.dataTransfer.effectAllowed='move'});
   lista.addEventListener('dragend',()=>document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('dragging','drag-over')));
@@ -1397,7 +1403,203 @@ async function compartilhar(){
     mostrarToastCompartilhar('📋 Copie o link abaixo:',link,true);
   }
 }
- 
+
+async function baixarHTMLAluno(){
+  if(!alunoAtivo)return;
+  // Garante sync no Supabase antes de gerar o HTML
+  setSyncStatus('syncing');
+  await syncAlunoParaSupabase(alunoAtivo);
+  const link='https://predubr.github.io/Montador-de-treino/aluno.html?id='+alunoAtivo.id;
+  const nome=alunoAtivo.nome;
+  const sems=alunoAtivo.semanas||[];
+  const CORES=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7','#f87171','#fbbf24'];
+  const GCOR={'Peito':'#ff6b8a','Costas':'#63b3ed','Pernas':'#f6ad55','Glúteos':'#ff8fa3','Panturrilha':'#9a75ea','Ombros':'#60a5fa','Bíceps':'#6ee7b7','Tríceps':'#fbbf24','Abdômen':'#f87171'};
+
+  let seriesHTML='';
+  alunoAtivo.series.forEach((s,si)=>{
+    const cor=CORES[si%CORES.length];
+    const tagsH=s.grupos.map(g=>`<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 10px;border-radius:20px;border:1px solid ${GCOR[g]||cor};color:${GCOR[g]||cor};margin:0 3px 3px 0;display:inline-block">${g}</span>`).join('');
+    let exH='';
+    s.exercicios.forEach((ex,ei)=>{
+      let mediaH='';
+      (ex.medias||[]).forEach(m=>{
+        if(m.type==='yt'||m.type==='link')
+          mediaH+=`<a href="${m.url}" target="_blank" style="display:inline-block;margin-top:6px;padding:6px 14px;background:${cor};color:#111;border-radius:7px;font-weight:800;font-size:12px;text-decoration:none">${m.type==='yt'?'▶ Vídeo':'↗ Ver'}</a>`;
+      });
+      exH+=`<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:13px;padding:14px;margin-bottom:9px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px">
+          <div style="width:30px;height:30px;border-radius:50%;background:${cor};color:#111;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ei+1}</div>
+          <div style="font-size:16px;font-weight:800;color:#f5f3ee">${ex.nome||'Exercício '+(ei+1)}</div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+          ${ex.series?`<div><div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;margin-bottom:2px">Séries</div><div style="font-size:24px;font-weight:900;color:#f5f3ee;font-family:sans-serif">${ex.series}</div></div>`:''}
+          ${ex.reps?`<div><div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;margin-bottom:2px">Repetições</div><div style="font-size:24px;font-weight:900;color:${cor};font-family:sans-serif">${ex.reps}</div></div>`:''}
+          ${ex.descanso?`<div><div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;margin-bottom:2px">Descanso</div><div style="font-size:24px;font-weight:900;color:#f5f3ee;font-family:sans-serif">${ex.descanso}</div></div>`:''}
+        </div>
+        ${ex.obs?`<div style="font-size:12px;color:#555;line-height:1.5;border-top:1px solid #2a2a2a;padding-top:8px;margin-bottom:8px">${ex.obs}</div>`:''}
+        <div style="background:#111;border-radius:9px;padding:10px 12px;margin-top:6px">
+          <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;margin-bottom:6px">⚖️ Anotar Carga Usada</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${sems.length?sems.map((sm,i)=>`<div style="flex:1;min-width:70px"><div style="font-size:8px;color:#3a3a3a;margin-bottom:3px">Sem ${i+1}${sm.nome?' · '+sm.nome.substring(0,8):''}</div><input type="text" placeholder="ex: 80kg" style="width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;color:#f5f3ee;font-size:13px;font-family:sans-serif;outline:none"/></div>`).join(''):`<div style="flex:1"><input type="text" placeholder="ex: 80kg" style="width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;color:#f5f3ee;font-size:13px;font-family:sans-serif;outline:none"/></div>`}
+          </div>
+          <div style="margin-top:8px">
+            <div style="font-size:8px;color:#3a3a3a;margin-bottom:3px">📓 Como foi?</div>
+            <textarea style="width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;color:#f5f3ee;font-size:12px;font-family:sans-serif;outline:none;resize:none;min-height:40px" placeholder="Ex: difícil, boa execução…"></textarea>
+          </div>
+        </div>
+        ${mediaH}
+      </div>`;
+    });
+    seriesHTML+=`<div style="margin-bottom:26px">
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:9px;padding-bottom:10px;border-bottom:2px solid ${cor}">
+        <div style="font-size:56px;font-weight:900;line-height:.85;color:${cor};font-family:sans-serif">${s.letra}</div>
+        <div><div style="font-size:20px;font-weight:900;color:#f5f3ee">${s.nome||'Série '+s.letra}</div><div style="margin-top:5px">${tagsH}</div></div>
+      </div>
+      ${exH}
+    </div>`;
+  });
+
+  let semH='';
+  if(sems.length){
+    semH=`<div style="background:#131313;border:1px solid #1e1e1e;border-radius:13px;padding:14px;margin-bottom:22px">
+      <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#3a3a3a;margin-bottom:10px">Periodização</div>
+      ${sems.map((s,i)=>`<div style="display:flex;align-items:baseline;gap:9px;padding:6px 0;border-bottom:1px solid #1e1e1e">
+        <div style="font-size:9px;font-weight:700;color:#3a3a3a;min-width:46px">SEM ${i+1}</div>
+        <div style="font-size:12px;font-weight:700;color:#f5f3ee;flex:1">${s.nome||'—'}</div>
+        <div style="font-size:20px;font-weight:900;color:#c9a84c;font-family:sans-serif">${s.reps||'—'}</div>
+        <div style="font-size:10px;color:#3a3a3a">${s.descanso||''}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  const eyebrow=[alunoAtivo.objetivo,alunoAtivo.nivel,alunoAtivo.obs].filter(Boolean).join(' · ');
+  const checkinDays=['SEG','TER','QUA','QUI','SEX','SAB','DOM'];
+  const RPE_LABELS=['','Muito leve','Leve','Moderado','Um pouco forte','Forte','Forte','Muito forte','Muito forte','Exaustivo','Máximo'];
+  const RPE_CORES=['','#6ee7b7','#6ee7b7','#6ee7b7','#a3e635','#fbbf24','#fbbf24','#f97316','#f97316','#f87171','#f87171'];
+  const SB='https://fdojstrsiojbcoiumobv.supabase.co';
+  const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkb2pzdHJzaW9qYmNvaXVtb2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDk3NjYsImV4cCI6MjA5NjU4NTc2Nn0.uDymw4Dsj40RH46dXxVLn6CjutJaruADrUFriQmqVbM';
+  const ALUNO_ID=alunoAtivo.id;
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Treino — ${nome}</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e0e0e;font-family:'Space Grotesk',sans-serif;padding-bottom:60px}
+.save-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:13px;background:#c9a84c;border:none;border-radius:12px;color:#111;font-size:14px;font-weight:800;cursor:pointer;margin-top:14px;font-family:'Space Grotesk',sans-serif}
+.checkin-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.ci-day{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:9px;cursor:pointer;flex:1;min-width:42px;user-select:none;transition:all .15s}
+.ci-day.done{background:#6ee7b722;border-color:#6ee7b7}
+.ci-label{font-size:7px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#444}
+.ci-icon{font-size:16px}
+.ci-day.done .ci-label{color:#6ee7b7}
+.rpe-row{display:flex;gap:4px;flex-wrap:wrap}
+.rpe-btn{width:38px;height:38px;border-radius:8px;border:1px solid #2a2a2a;background:none;color:#555;font-size:13px;font-weight:700;cursor:pointer;font-family:sans-serif;transition:all .15s}
+.rpe-btn.active{color:#111}
+.saved-msg{text-align:center;font-size:12px;color:#6ee7b7;margin-top:8px;display:none}
+.link-box{background:#131313;border:1px solid #c9a84c44;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.link-box a{color:#c9a84c;font-size:11px;font-weight:700;text-decoration:none;word-break:break-all;flex:1}
+.link-box-btn{padding:6px 12px;background:#c9a84c;border:none;border-radius:7px;color:#111;font-size:11px;font-weight:800;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
+</style>
+</head><body>
+<div style="background:#0a0a0a;border-bottom:1px solid #1e1e1e;padding:24px 18px 20px">
+  ${eyebrow?`<div style="font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#3a3632;border:1px solid #2a2620;padding:4px 11px;border-radius:20px;display:inline-block;margin-bottom:12px">${eyebrow}</div><br/>`:``}
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:46px;font-weight:900;color:#f5f3ee;line-height:1;margin-bottom:3px">TREINO <span style="color:#c9a84c">${nome.split(' ')[0].toUpperCase()}</span></div>
+  <div style="font-size:10px;color:#3a3a3a;margin-top:5px">${[alunoAtivo.dias?alunoAtivo.dias+'x por semana':'',alunoAtivo.periodo].filter(Boolean).join(' · ')}</div>
+</div>
+<div style="padding:18px 16px">
+  <!-- LINK DA VERSÃO ONLINE -->
+  <div class="link-box">
+    <div>
+      <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:4px">🔗 Versão online (sempre atualizada)</div>
+      <a href="${link}" target="_blank">${link}</a>
+    </div>
+    <button class="link-box-btn" onclick="navigator.clipboard.writeText('${link}').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>this.textContent='Copiar',2000)})">Copiar</button>
+  </div>
+  <!-- CHECK-IN -->
+  <div style="background:#131313;border:1px solid #1e1e1e;border-radius:13px;padding:14px;margin-bottom:16px">
+    <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#3a3a3a;margin-bottom:10px">✅ Check-in da Semana</div>
+    <div class="checkin-bar">${checkinDays.map((d,i)=>`<div class="ci-day" id="ci_${i}" onclick="toggleCheckin(${i})"><div class="ci-icon">⬜</div><div class="ci-label">${d}</div></div>`).join('')}</div>
+    <div style="font-size:11px;color:#3a3a3a" id="freqLabel">0 de 7 dias</div>
+  </div>
+  ${semH}${seriesHTML}
+  <!-- RPE + FEEDBACK -->
+  <div style="background:#131313;border:1px solid #1e1e1e;border-radius:13px;padding:14px;margin-top:6px">
+    <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#3a3a3a;margin-bottom:8px">📊 Como foi o treino? (RPE 1–10)</div>
+    <div class="rpe-row" id="rpeRow">${Array.from({length:10},(_,i)=>`<button class="rpe-btn" id="rpe_${i+1}" onclick="setRPE(${i+1})">${i+1}</button>`).join('')}</div>
+    <div id="rpeLabel" style="font-size:11px;color:#555;margin-top:6px;min-height:16px"></div>
+    <textarea style="width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 11px;color:#f5f3ee;font-size:12px;font-family:'Space Grotesk',sans-serif;outline:none;resize:none;margin-top:10px;min-height:60px" id="feedbackGeral" placeholder="Como foi o treino hoje?"></textarea>
+    <button class="save-btn" onclick="salvarTudo()">💾 Salvar progresso</button>
+    <div class="saved-msg" id="savedMsg"></div>
+  </div>
+  <div style="text-align:center;font-size:10px;color:#1e1e1e;padding-top:20px;letter-spacing:.08em">PH PERFORMANCE</div>
+</div>
+<script>
+const SB='${SB}';
+const KEY='${KEY}';
+const ALUNO_ID='${ALUNO_ID}';
+const SK='ph_treino_${ALUNO_ID}';
+const RPE_LABELS=${JSON.stringify(RPE_LABELS)};
+const RPE_CORES=${JSON.stringify(RPE_CORES)};
+let state=JSON.parse(localStorage.getItem(SK)||'{}');
+let rpeVal=state.rpe||0;
+
+window.addEventListener('DOMContentLoaded',()=>{
+  (state.checkin||[]).forEach(i=>{const el=document.getElementById('ci_'+i);if(el){el.classList.add('done');el.querySelector('.ci-icon').textContent='✅'}});
+  atualizarFreq();
+  if(rpeVal)setRPE(rpeVal,true);
+  if(state.feedbackGeral)document.getElementById('feedbackGeral').value=state.feedbackGeral;
+});
+function toggleCheckin(i){
+  if(!state.checkin)state.checkin=[];
+  const idx=state.checkin.indexOf(i);
+  const el=document.getElementById('ci_'+i);const icon=el.querySelector('.ci-icon');
+  if(idx===-1){state.checkin.push(i);el.classList.add('done');icon.textContent='✅'}
+  else{state.checkin.splice(idx,1);el.classList.remove('done');icon.textContent='⬜'}
+  atualizarFreq();localStorage.setItem(SK,JSON.stringify(state));
+}
+function atualizarFreq(){document.getElementById('freqLabel').textContent=(state.checkin||[]).length+' de 7 dias esta semana'}
+function setRPE(v,silent){
+  rpeVal=v;state.rpe=v;
+  document.querySelectorAll('.rpe-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('rpe_'+v);
+  if(btn){btn.classList.add('active');btn.style.background=RPE_CORES[v];btn.style.borderColor=RPE_CORES[v]}
+  document.getElementById('rpeLabel').textContent=v+'/10 — '+RPE_LABELS[v];
+  document.getElementById('rpeLabel').style.color=RPE_CORES[v];
+  if(!silent)localStorage.setItem(SK,JSON.stringify(state));
+}
+async function salvarTudo(){
+  state.feedbackGeral=document.getElementById('feedbackGeral').value;
+  state.savedAt=new Date().toISOString();
+  localStorage.setItem(SK,JSON.stringify(state));
+  const hoje=new Date().toISOString().split('T')[0];
+  const msg=document.getElementById('savedMsg');
+  try{
+    await fetch(SB+'/rest/v1/progresso_aluno',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY,'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({id:'pg_'+ALUNO_ID+'_'+hoje,aluno_id:ALUNO_ID,data:hoje,checkin:state.checkin||[],rpe:state.rpe||null,feedback:state.feedbackGeral||'',cargas:state.cargas||{},feedbacks_ex:state.feedbacks||{}})
+    });
+    msg.textContent='✅ Progresso salvo na nuvem!';msg.style.color='#6ee7b7';
+  }catch(e){
+    msg.textContent='✅ Salvo no dispositivo (offline)';msg.style.color='#fbbf24';
+  }
+  msg.style.display='block';setTimeout(()=>msg.style.display='none',3000);
+}
+<\/script>
+</body></html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='treino-'+nome.replace(/\s+/g,'-').toLowerCase()+'.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  mostrarToastCompartilhar('⬇ HTML baixado! O arquivo já contém o link online.',link);
+}
+
 function mostrarToastCompartilhar(msg,link,mostrarInput=false){
   // Remove toast anterior se existir
   document.getElementById('shareToast')?.remove();
@@ -1412,7 +1614,7 @@ function mostrarToastCompartilhar(msg,link,mostrarInput=false){
   document.body.appendChild(t);
   if(!mostrarInput) setTimeout(()=>t.remove(),5000);
 }
- 
+
 function gerarPDF(){
   if(!alunoAtivo)return;
   const cons=db.consultoria||'PH PERFORMANCE';
@@ -1423,7 +1625,7 @@ function gerarPDF(){
   const p1=nome.split(' ')[0].toUpperCase();
   const p2=nome.split(' ').slice(1).join(' ').toUpperCase();
   html+=`<div class="pdf-page"><div>${eyebrow?`<div class="pdf-cover-eyebrow">${eyebrow}</div>`:''}<div class="pdf-cover-name">TREINO <span>${p1}</span>${p2?' '+p2:''}</div><div class="pdf-cover-subtitle">${cons}${alunoAtivo.periodo?' · '+alunoAtivo.periodo:''}</div><div class="pdf-cover-stats">${alunoAtivo.dias?`<div class="pdf-cover-stat"><div class="pdf-cover-stat-val">${alunoAtivo.dias}X</div><div class="pdf-cover-stat-label">Dias/Semana</div></div>`:''} ${alunoAtivo.nivel?`<div class="pdf-cover-stat"><div class="pdf-cover-stat-val">${alunoAtivo.nivel.substring(0,5).toUpperCase()}</div><div class="pdf-cover-stat-label">Nível</div></div>`:''}<div class="pdf-cover-stat"><div class="pdf-cover-stat-val">${alunoAtivo.series.length}</div><div class="pdf-cover-stat-label">Séries</div></div></div></div>${sems.length?`<div><div class="pdf-rule"></div><div class="pdf-cover-period-title">Periodização</div><div class="pdf-cover-periods">${sems.map((s,i)=>`<div class="pdf-cover-period"><div class="pdf-cover-period-num">SEMANA ${i+1}</div><div class="pdf-cover-period-name">${s.nome||'—'}</div><div class="pdf-cover-period-reps">${s.reps||'—'}</div><div class="pdf-cover-period-rest">${s.descanso?'⏱ '+s.descanso:''}</div></div>`).join('')}</div></div>`:''}<div><div class="pdf-rule"></div><div class="pdf-series-list">${alunoAtivo.series.map((s,si)=>{const cor=SERIE_CORES[si%SERIE_CORES.length];return`<div class="pdf-series-item"><div class="pdf-series-letter" style="color:${cor}">${s.letra}</div><div style="flex:1"><div class="pdf-series-name">${s.nome||'Série '+s.letra}</div><div class="pdf-series-grupos">${s.grupos.join(' · ')||'—'}</div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#2a2a2a">${s.exercicios.length} ex.</div></div>`}).join('')}</div></div><div class="pdf-foot"><span>${cons}</span><span>Treino — ${nome}</span><span>${alunoAtivo.periodo||''}</span></div></div>`;
- 
+
   alunoAtivo.series.forEach((s,si)=>{
     const cor=SERIE_CORES[si%SERIE_CORES.length];
     const tagsH=s.grupos.map(g=>`<span class="pdf-serie-tag" style="background:${(GRUPO_COR[g]||cor)+'22'};color:${GRUPO_COR[g]||cor};border:1px solid ${(GRUPO_COR[g]||cor)+'44'}">${GRUPO_EMOJI[g]||''} ${g}</span>`).join('');
@@ -1433,14 +1635,14 @@ function gerarPDF(){
   document.getElementById('pdfOutput').innerHTML=html;
   window.print();
 }
- 
+
 loadDB();
 document.getElementById('brandLogo').textContent=db.consultoria||'PH PERFORMANCE';
 document.getElementById('emptyLogo').textContent=db.consultoria||'PH PERFORMANCE';
 renderAlunoList();
 mostrarDashboard();
 </script>
- 
+
 <!-- Modal editar banco de exercícios -->
 <div class="modal-bg" id="ebModal" style="display:none;align-items:center;justify-content:center">
   <div class="modal-box" style="max-width:480px">
@@ -1472,7 +1674,7 @@ mostrarDashboard();
     </div>
   </div>
 </div>
- 
+
 <!-- Modal editar mídia -->
 <div class="modal-bg" id="editMediaModal" style="display:none;align-items:center;justify-content:center">
   <div class="modal-box" style="max-width:460px">
@@ -1491,7 +1693,7 @@ mostrarDashboard();
     </div>
   </div>
 </div>
- 
+
 <script>
 // ── BACKUP / RESTORE ──────────────────────────────────────
 function exportarBackup(){
@@ -1526,7 +1728,7 @@ function lerArquivoBackup(e){
   };
   reader.readAsText(file);e.target.value='';
 }
- 
+
 // ── EDITAR MÍDIA ──────────────────────────────────────────
 function abrirEditMedia(sid,eid,mid,urlAtual){
   document.getElementById('editMediaSid').value=sid;
@@ -1561,8 +1763,8 @@ function salvarEditMedia(){
     else thumbEl.innerHTML=`<a href="${url}" target="_blank" class="thumb-link" style="font-size:16px;color:#555">↗</a>${rmBtn}`;
   }
 }
- 
- 
+
+
 // ═══════════════════════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════════════════════
@@ -1575,7 +1777,7 @@ function setNavActive(id){
 function irParaDash(){setNavActive('navDash');mostrarDashboard()}
 function irParaFinanceiro(){setNavActive('navFin');if(!alunoAtivo){mostrarDashboard();return}mostrarFinanceiro()}
 function irParaAgenda(){setNavActive('navAgenda');mostrarAgendaGlobal()}
- 
+
 // ═══════════════════════════════════════════════════════
 //  DASHBOARD
 // ═══════════════════════════════════════════════════════
@@ -1594,7 +1796,7 @@ function mostrarDashboard(){
   const inadimplentes=db.alunos.filter(a=>a.financeiro?.status==='atrasado');
   const precisamReav=db.alunos.filter(a=>a.proximaAvaliacao&&new Date(a.proximaAvaliacao)<hoje);
   const ativos=db.alunos.filter(a=>a.financeiro?.status!=='inativo');
- 
+
   const kpis=`<div class="dash-kpi-row">
     <div class="kpi-card"><div class="kpi-card-accent" style="background:var(--green)"></div>
       <div class="kpi-val" style="color:var(--green)">${ativos.length}</div>
@@ -1615,7 +1817,7 @@ function mostrarDashboard(){
       <div class="kpi-sub">${anivMes.map(a=>a.nome.split(' ')[0]).join(', ')||'Nenhum'}</div>
     </div>
   </div>`;
- 
+
   const cards=db.alunos.map((a,ai)=>{
     const cor=SERIE_CORES[ai%SERIE_CORES.length];
     const tot=a.series.reduce((s,sr)=>s+sr.exercicios.length,0);
@@ -1648,12 +1850,12 @@ function mostrarDashboard(){
       </div>
     </div>`;
   }).join('');
- 
+
   const addCard=`<div class="aluno-card dash-add-card" onclick="abrirModal()">
     <div style="font-size:28px;color:#2a2a2a">＋</div>
     <div style="font-size:11px;font-weight:700;color:#2a2a2a;letter-spacing:.05em">NOVO ALUNO</div>
   </div>`;
- 
+
   let anivH='';
   if(anivMes.length){
     anivH=`<div class="dash-section-title">🎂 Aniversariantes do Mês</div>
@@ -1666,16 +1868,16 @@ function mostrarDashboard(){
       return`<div class="aniv-item"><div class="aniv-avatar">${fotoH}</div><div class="aniv-info"><div class="aniv-nome">${esc(a.nome)}</div><div class="aniv-data">Dia ${diaAniv}</div></div>${diasRestam===0?'<span style="font-size:11px;font-weight:700;color:var(--accent)">HOJE! 🎉</span>':`<span class="aniv-dias">${diasRestam}d</span>`}</div>`;
     }).join('')}</div>`;
   }
- 
+
   sc.innerHTML=`<div class="dash-page">${kpis}
     <div class="dash-section-title">Todos os Alunos</div>
     <div class="aluno-cards-grid">${cards}${addCard}</div>
     ${anivH}
   </div>`;
 }
- 
+
 function gerarPDFAluno(aid){const prev=alunoAtivo;alunoAtivo=db.alunos.find(x=>x.id===aid);if(alunoAtivo)gerarPDF();alunoAtivo=prev}
- 
+
 // ═══════════════════════════════════════════════════════
 //  FINANCEIRO
 // ═══════════════════════════════════════════════════════
@@ -1702,7 +1904,7 @@ function mostrarFinanceiro(){
       <td><button style="padding:3px 8px;font-size:9px;font-weight:700;border-radius:5px;border:1px solid var(--border2);background:none;color:#444;cursor:pointer;font-family:'Space Grotesk',sans-serif" onclick="editarFinanceiro('${a.id}')">Editar</button></td>
     </tr>`;
   }).join('');
- 
+
   sc.innerHTML=`<div class="dash-page">
     <div class="dash-section-title" style="margin-bottom:16px">💰 Controle Financeiro</div>
     <div class="fin-resumo">
@@ -1716,7 +1918,7 @@ function mostrarFinanceiro(){
     </table>
   </div>`;
 }
- 
+
 function editarFinanceiro(aid){
   const a=db.alunos.find(x=>x.id===aid);if(!a)return;
   const fin=a.financeiro||{};
@@ -1727,7 +1929,7 @@ function editarFinanceiro(aid){
   a.updatedAt=new Date().toISOString();
   saveDB();mostrarFinanceiro();renderAlunoList();
 }
- 
+
 // ═══════════════════════════════════════════════════════
 //  AGENDA GLOBAL
 // ═══════════════════════════════════════════════════════
@@ -1759,13 +1961,13 @@ function mostrarAgendaGlobal(){
       </div>
     </div>`;
   }).join('');
- 
+
   sc.innerHTML=`<div class="dash-page">
     <div class="dash-section-title" style="margin-bottom:16px">📅 Agenda — Próximos Eventos</div>
     ${items.length?`<div class="agenda-list">${rows}</div>`:'<div style="color:#2a2a2a;font-size:13px;padding:20px 0">Nenhum evento agendado. Configure datas de avaliação e troca de treino na aba Anamnese de cada aluno.</div>'}
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 //  TABS
 // ═══════════════════════════════════════════════════════
@@ -1783,7 +1985,7 @@ function abrirTab(tab,sid){
   else if(tab==='metas')renderMetas(sid);
   else if(tab==='fotos')renderFotos(sid);
 }
- 
+
 // ═══════════════════════════════════════════════════════
 //  ANAMNESE
 // ═══════════════════════════════════════════════════════
@@ -1893,11 +2095,11 @@ function lerFotoAluno(e){
   const file=e.target.files[0];if(!file||!alunoAtivo)return;
   const r=new FileReader();r.onload=ev=>{alunoAtivo.foto=ev.target.result;alunoAtivo.updatedAt=new Date().toISOString();saveDB();renderAlunoList();const sid=serieAtivaMap[alunoAtivo.id];if(sid)renderAnamnese(sid)};r.readAsDataURL(file);
 }
- 
+
 // ═══════════════════════════════════════════════════════
 //  AVALIAÇÃO FÍSICA
 // ═══════════════════════════════════════════════════════
- 
+
 // ── AVALIAÇÃO FÍSICA — baseada nas planilhas Excel ─────────────────────────
 function calcAvaliacaoAuto(v,sexo){
   const p=parseFloat(v.peso)||0,h=parseFloat(v.altura)||0;
@@ -1935,7 +2137,7 @@ function calcAvaliacaoAuto(v,sexo){
   if(v.dist_cooper) v.vo2max=((parseFloat(v.dist_cooper)-504)/45).toFixed(1);
   return v;
 }
- 
+
 function faixaIMC(imc){
   const v=parseFloat(imc);if(!v)return{label:'—',cor:'#3a3a3a'};
   if(v<18.5)return{label:'Abaixo do peso',cor:'#63b3ed'};
@@ -1965,21 +2167,21 @@ function faixaRCQ(rcq,sexo){
   if(sexo==='M'){if(v<0.95)return{label:'Baixo risco',cor:'#6ee7b7'};if(v<1.0)return{label:'Risco moderado',cor:'#fbbf24'};return{label:'Alto risco',cor:'#f87171'}}
   else{if(v<0.8)return{label:'Baixo risco',cor:'#6ee7b7'};if(v<0.85)return{label:'Risco moderado',cor:'#fbbf24'};return{label:'Alto risco',cor:'#f87171'}}
 }
- 
+
 function inpAv(id,sid,label,placeholder,type='text',step=''){
   return`<div class="aval-field"><label>${label}</label><input id="${id}_${sid}" type="${type}" ${step?`step="${step}"`:''}  placeholder="${placeholder}" class="aval-inp-auto" oninput="recalcAval('${sid}')"/></div>`;
 }
- 
+
 function renderAvaliacao(sid){
   if(!alunoAtivo)return;
   const el=document.getElementById('tabContent_aval_'+sid);if(!el)return;
   const avals=(alunoAtivo.avaliacoes||[]).sort((a,b)=>b.data.localeCompare(a.data));
   const hoje=new Date().toISOString().split('T')[0];
   const sexo=alunoAtivo.anamnese?.sexo||'M';
- 
+
   el.innerHTML=`
   <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#3a3a3a;margin-bottom:12px">Nova Avaliação Física</div>
- 
+
   <!-- Dados básicos -->
   <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">Identificação</div>
   <div class="aval-grid" style="margin-bottom:14px">
@@ -1988,13 +2190,13 @@ function renderAvaliacao(sid){
     <div class="aval-field"><label>Estatura (m)</label><input id="av_altura_${sid}" type="number" step="0.01" placeholder="1.75" class="aval-inp-auto" oninput="recalcAval('${sid}')"/></div>
     <div class="aval-field"><label>Massa Corporal (kg)</label><input id="av_peso_${sid}" type="number" step="0.1" placeholder="70.0" class="aval-inp-auto" oninput="recalcAval('${sid}')"/></div>
   </div>
- 
+
   <!-- Resultados auto-calculados -->
   <div id="avalAutoResults_${sid}" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
     <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:10px">Resultados Calculados Automaticamente</div>
     <div id="avalResultCards_${sid}" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
   </div>
- 
+
   <!-- Dobras Cutâneas -->
   <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">Dobras Cutâneas (mm) — Jackson & Pollock 7</div>
   <div class="aval-grid" style="margin-bottom:14px">
@@ -2007,7 +2209,7 @@ function renderAvaliacao(sid){
     <div class="aval-field"><label>Coxa</label><input id="av_dc_coxa_${sid}" type="number" step="0.1" placeholder="0.0" class="aval-inp-auto" oninput="recalcAval('${sid}')"/></div>
     <div class="aval-field"><label>∑ Total (calculado)</label><input id="av_dc_total_${sid}" readonly style="background:#111;color:var(--accent)" placeholder="—"/></div>
   </div>
- 
+
   <!-- Circunferências -->
   <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">Circunferências (cm)</div>
   <div class="aval-grid" style="margin-bottom:14px">
@@ -2026,7 +2228,7 @@ function renderAvaliacao(sid){
     <div class="aval-field"><label>Perna Direita</label><input id="av_pern_d_${sid}" type="number" step="0.1" placeholder="0"/></div>
     <div class="aval-field"><label>Perna Esquerda</label><input id="av_pern_e_${sid}" type="number" step="0.1" placeholder="0"/></div>
   </div>
- 
+
   <!-- Testes Físicos -->
   <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">Testes Físicos</div>
   <div class="aval-grid" style="margin-bottom:14px">
@@ -2039,9 +2241,9 @@ function renderAvaliacao(sid){
     <div class="aval-field"><label>Distância Cooper (m)</label><input id="av_dist_cooper_${sid}" type="number" placeholder="0" class="aval-inp-auto" oninput="recalcAval('${sid}')"/></div>
     <div class="aval-field"><label>BPM 15seg (FC repouso)</label><input id="av_bpm15_${sid}" type="number" placeholder="0" class="aval-inp-auto" oninput="recalcAval('${sid}')"/></div>
   </div>
- 
+
   <button class="aval-add-btn" onclick="salvarAvaliacao('${sid}')">SALVAR AVALIAÇÃO</button>
- 
+
   <!-- Gráficos histórico -->
   ${avals.length>1?`
   <div class="chart-wrap" style="margin-top:16px;margin-bottom:10px">
@@ -2054,7 +2256,7 @@ function renderAvaliacao(sid){
     </div>
     <canvas id="avalCanvas_${sid}" height="120" style="margin-top:10px"></canvas>
   </div>`:''}
- 
+
   <!-- Histórico de avaliações -->
   <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#3a3a3a;margin:16px 0 10px">Histórico</div>
   <div class="aval-history">${avals.length?avals.map(av=>{
@@ -2084,11 +2286,11 @@ function renderAvaliacao(sid){
       <div class="aval-metrics">${campos.map(f=>`<div class="aval-metric"><div class="aval-metric-label">${f[0]}</div><div class="aval-metric-val">${f[1]}<span style="font-size:10px;color:var(--muted)">${f[2]}</span></div></div>`).join('')}</div>
     </div>`;
   }).join(''):'<div style="font-size:12px;color:#2a2a2a;padding:16px 0;text-align:center">Nenhuma avaliação ainda.</div>'}</div>`;
- 
+
   // render chart peso by default se tiver dados
   if(avals.length>1) setTimeout(()=>renderAvalChart(sid,'peso'),100);
 }
- 
+
 let _avalCharts={};
 function renderAvalChart(sid,campo){
   const avals=(alunoAtivo.avaliacoes||[]).sort((a,b)=>a.data.localeCompare(b.data));
@@ -2106,7 +2308,7 @@ function renderAvalChart(sid,campo){
     datasets:[{label:labels[campo],data:avals.map(a=>parseFloat(a[campo])||null),borderColor:cors[campo],backgroundColor:cors[campo]+'22',tension:.3,fill:true,pointBackgroundColor:cors[campo],pointRadius:4}]
   },options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{size:9}}},y:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{size:9}}}}}});
 }
- 
+
 function recalcAval(sid){
   const g=k=>document.getElementById('av_'+k+'_'+sid)?.value||'';
   const v={
@@ -2143,7 +2345,7 @@ function recalcAval(sid){
     </div>`).join('');
   }
 }
- 
+
 function salvarAvaliacao(sid){
   if(!alunoAtivo)return;
   if(!alunoAtivo.avaliacoes)alunoAtivo.avaliacoes=[];
@@ -2169,7 +2371,7 @@ function salvarAvaliacao(sid){
   syncAvaliacaoSupabase(alunoAtivo.id,v);
   renderAvaliacao(sid);
 }
- 
+
 async function syncAvaliacaoSupabase(alunoId,av){
   try{
     await sbUpsert('avaliacoes',{
@@ -2180,14 +2382,14 @@ async function syncAvaliacaoSupabase(alunoId,av){
     });
   }catch(e){}
 }
- 
+
 function delAvaliacao(sid,id){
   if(!alunoAtivo)return;
   alunoAtivo.avaliacoes=(alunoAtivo.avaliacoes||[]).filter(a=>a.id!==id);
   saveDB();renderAvaliacao(sid);
 }
- 
- 
+
+
 // ═══════════════════════════════════════════════════════
 //  EVOLUÇÃO DE CARGA
 // ═══════════════════════════════════════════════════════
@@ -2232,7 +2434,7 @@ function addCarga(sid){
   document.getElementById('cargaVal_'+sid).value='';renderCargaTabela(sid);
 }
 function delCarga(sid,exId,cid){if(!alunoAtivo.cargas?.[exId])return;alunoAtivo.cargas[exId]=alunoAtivo.cargas[exId].filter(c=>c.id!==cid);saveDB();renderCargaTabela(sid)}
- 
+
 // ═══════════════════════════════════════════════════════
 //  DIÁRIO
 // ═══════════════════════════════════════════════════════
@@ -2257,7 +2459,7 @@ function addDiario(sid){
   alunoAtivo.updatedAt=new Date().toISOString();saveDB();renderDiario(sid);
 }
 function delDiario(sid,did){if(!alunoAtivo)return;alunoAtivo.diario=(alunoAtivo.diario||[]).filter(d=>d.id!==did);saveDB();renderDiario(sid)}
- 
+
 // ═══════════════════════════════════════════════════════
 //  METAS
 // ═══════════════════════════════════════════════════════
@@ -2311,7 +2513,7 @@ function addMetaRapida(sid,label){
 function updMetaAtual(sid,mid,val){const m=(alunoAtivo.metas||[]).find(x=>x.id===mid);if(m){m.atual=parseFloat(val)||0;saveDB();renderMetas(sid)}}
 function toggleMetaConcluida(sid,mid){const m=(alunoAtivo.metas||[]).find(x=>x.id===mid);if(m){m.concluida=!m.concluida;saveDB();renderMetas(sid)}}
 function delMeta(sid,mid){alunoAtivo.metas=(alunoAtivo.metas||[]).filter(m=>m.id!==mid);saveDB();renderMetas(sid)}
- 
+
 // ═══════════════════════════════════════════════════════
 //  FOTOS DE EVOLUÇÃO
 // ═══════════════════════════════════════════════════════
@@ -2354,7 +2556,7 @@ function salvarFotoEvolucao(sid){
   delete alunoAtivo._fotoTemp;alunoAtivo.updatedAt=new Date().toISOString();saveDB();renderFotos(sid);
 }
 function delFotoEvolucao(sid,id){alunoAtivo.fotosEvolucao=(alunoAtivo.fotosEvolucao||[]).filter(f=>f.id!==id);saveDB();renderFotos(sid)}
- 
+
 // ═══════════════════════════════════════════════════════
 //  TIMER
 // ═══════════════════════════════════════════════════════
@@ -2369,7 +2571,7 @@ function toggleTimer(eid,descanso){
   tick();timers[eid]=setInterval(tick,1000);
 }
 function resetTimerUI(eid){const btn=document.getElementById('timerBtn_'+eid);const disp=document.getElementById('timerDisp_'+eid);if(btn){btn.classList.remove('running','done');btn.textContent='⏱ Timer'}if(disp){disp.style.display='none';disp.textContent=''}}
- 
+
 // ═══════════════════════════════════════════════════════
 //  DUPLICAR
 // ═══════════════════════════════════════════════════════
@@ -2391,7 +2593,7 @@ function confirmarDuplicar(){
   if(document.getElementById('dupSemanas').checked)dest.semanas=JSON.parse(JSON.stringify(orig.semanas));
   dest.updatedAt=new Date().toISOString();saveDB();fecharDupModal();renderAlunoList();alert('Ficha duplicada para '+dest.nome+'!');
 }
- 
+
 // ═══════════════════════════════════════════════════════
 //  BACKUP
 // ═══════════════════════════════════════════════════════
@@ -2412,12 +2614,12 @@ function lerBackup(e){
     }catch(x){alert('Arquivo inválido.')}
   };r.readAsText(file);
 }
- 
- 
+
+
 // saveDB já tem o patch de updatedAt acima
- 
+
 // Override init
- 
+
 // ════════════════════════════════════════════════════════
 //  VER PROGRESSO DO ALUNO (dados enviados pela ficha)
 // ════════════════════════════════════════════════════════
@@ -2489,13 +2691,13 @@ async function verProgressoAluno(sid){
   html+=`</div>`;
   sc.innerHTML=html;
 }
- 
+
 </script>
- 
+
 <!-- MODAL NOVO ALUNO hidden file inputs -->
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="lerBackup(event)"/>
 <input type="file" id="fotoFileInput" accept="image/*" style="display:none" onchange="lerFotoAluno(event)"/>
- 
+
 <!-- MODAL DUPLICAR -->
 <div id="dupModal" class="modal-bg">
   <div class="modal-box" style="max-width:380px">
