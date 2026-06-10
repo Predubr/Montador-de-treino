@@ -107,34 +107,34 @@ body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-ser
 </style>
 </head>
 <body>
-
+ 
 <!-- LOADING -->
 <div id="loadingScreen">
   <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--accent)">PH PERFORMANCE</div>
   <div class="spinner"></div>
   <div id="loadingMsg">Carregando seu treino...</div>
 </div>
-
+ 
 <!-- ERROR -->
 <div id="errorScreen">
   <div class="e-icon">😕</div>
   <div class="e-title">Treino não encontrado</div>
   <div class="e-msg" id="errorMsg">O link pode estar errado ou o treino foi removido. Fale com seu personal trainer.</div>
 </div>
-
+ 
 <!-- CONTEÚDO (escondido até carregar) -->
 <div id="appContent" style="display:none">
   <!-- STATUS BAR -->
   <div id="statusBar"></div>
-
+ 
   <!-- HEADER -->
   <div class="header" id="pageHeader"></div>
-
+ 
   <!-- MAIN -->
   <div class="main">
     <!-- TABS (Séries A, B, C...) -->
     <div class="tabs" id="tabsBar"></div>
-
+ 
     <!-- TAB: RESUMO (periodização + checkin + rpe + feedback) -->
     <div class="tab-content active" id="tab_resumo">
       <!-- CHECKIN -->
@@ -151,33 +151,33 @@ body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-ser
         </div>
         <div class="freq-label" id="freqLabel">0 de 7 dias</div>
       </div>
-
+ 
       <!-- RPE -->
       <div class="card">
         <div class="card-title">💪 Como está o treino hoje? (RPE)</div>
         <div class="rpe-row" id="rpeRow"></div>
         <div class="rpe-label" id="rpeLabel">—</div>
       </div>
-
+ 
       <!-- PERIODIZAÇÃO -->
       <div class="card" id="periodoCard" style="display:none">
         <div class="card-title">📅 Periodização</div>
         <div id="periodoList"></div>
       </div>
-
+ 
       <!-- FEEDBACK GERAL -->
       <div class="card">
         <div class="card-title">📝 Anotação geral do treino</div>
         <textarea class="feed-geral-ta" id="feedbackGeral" placeholder="Como foi o treino hoje? Alguma dificuldade? Mudanças?" oninput="agendarSave()"></textarea>
       </div>
-
+ 
       <button class="save-btn" onclick="salvarTudo()">☁️ Confirmar e salvar na nuvem</button>
       <div style="text-align:center;font-size:12px;color:var(--green);margin-top:8px;min-height:18px" id="savedMsg"></div>
     </div>
-
+ 
     <!-- TABS DE SÉRIE (geradas dinamicamente) -->
     <div id="seriesContainer"></div>
-
+ 
     <!-- TAB: HISTÓRICO -->
     <div class="tab-content" id="tab_historico">
       <div class="card">
@@ -185,11 +185,11 @@ body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-ser
         <div id="histList"><div style="font-size:12px;color:#3a3a3a;padding:8px 0">Carregando histórico...</div></div>
       </div>
     </div>
-
+ 
     <div class="footer" id="pageFooter"></div>
   </div>
 </div>
-
+ 
 <script>
 // ═══════════════════════════════════════════════════════
 //  CONSTANTES
@@ -198,24 +198,24 @@ const SB = 'https://fdojstrsiojbcoiumobv.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkb2pzdHJzaW9qYmNvaXVtb2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDk3NjYsImV4cCI6MjA5NjU4NTc2Nn0.uDymw4Dsj40RH46dXxVLn6CjutJaruADrUFriQmqVbM';
 const HDRS = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' };
 const HOJE = new Date().toISOString().split('T')[0];
-
+ 
 const SERIE_CORES = ['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7','#f87171','#fbbf24'];
 const GRUPO_COR = {'Peito':'#ff6b8a','Costas':'#63b3ed','Pernas':'#f6ad55','Glúteos':'#ff8fa3','Panturrilha':'#9a75ea','Ombros':'#60a5fa','Bíceps':'#6ee7b7','Tríceps':'#fbbf24','Abdômen':'#f87171'};
 const RPE_LABELS = ['','Muito leve','Leve','Moderado','Um pouco forte','Forte','Forte','Muito forte','Muito forte','Exaustivo','Esforço máx.'];
 const RPE_CORES  = ['','#6ee7b7','#6ee7b7','#6ee7b7','#a3e635','#fbbf24','#fbbf24','#f97316','#f97316','#f87171','#f87171'];
-
+ 
 // ═══════════════════════════════════════════════════════
 //  ESTADO
 // ═══════════════════════════════════════════════════════
 const params = new URLSearchParams(location.search);
 const ALUNO_ID = params.get('id');
 const SK = 'ph_treino_' + ALUNO_ID;
-
+ 
 let aluno = null;
 let state = JSON.parse(localStorage.getItem(SK) || '{}');
 let saveTimer = null;
 let abaAtiva = 'resumo';
-
+ 
 // ═══════════════════════════════════════════════════════
 //  API HELPERS
 // ═══════════════════════════════════════════════════════
@@ -224,7 +224,7 @@ async function sbGet(table, qs='') {
     const r = await fetch(SB+'/rest/v1/'+table+(qs?'?'+qs:''), { headers: HDRS });
     if (!r.ok) { console.error('sbGet error', table, r.status, await r.text()); return []; }
     return r.json();
-  } catch(e) { console.error('sbGet fetch error', table, e); return []; }
+  } catch(e) { console.error('sbGet error', table, e); return []; }
 }
 async function sbUpsert(table, data) {
   const h = {...HDRS, 'Prefer': 'resolution=merge-duplicates'};
@@ -232,9 +232,10 @@ async function sbUpsert(table, data) {
     method:'POST', headers: h,
     body: JSON.stringify(Array.isArray(data)?data:[data])
   });
+  if (!r.ok) { console.error('sbUpsert error', table, r.status); }
   return r.ok;
 }
-
+ 
 // ═══════════════════════════════════════════════════════
 //  CARREGAR ALUNO DO SUPABASE
 // ═══════════════════════════════════════════════════════
@@ -245,19 +246,19 @@ async function carregarAluno() {
   }
   try {
     document.getElementById('loadingMsg').textContent = 'Buscando seu treino...';
-
+ 
     const [alunoRows, semanas, series, exercicios] = await Promise.all([
       sbGet('alunos', 'id=eq.'+ALUNO_ID),
       sbGet('semanas', 'aluno_id=eq.'+ALUNO_ID+'&order=ordem.asc'),
       sbGet('series',  'aluno_id=eq.'+ALUNO_ID+'&order=ordem.asc'),
       sbGet('exercicios', 'aluno_id=eq.'+ALUNO_ID+'&order=ordem.asc'),
     ]);
-
+ 
     if (!alunoRows.length) {
       mostrarErro('Treino não encontrado. Verifique o link com seu personal trainer.');
       return;
     }
-
+ 
     const a = alunoRows[0];
     aluno = {
       id: a.id,
@@ -288,19 +289,19 @@ async function carregarAluno() {
           }))
       }))
     };
-
+ 
     // Carrega progresso do dia de hoje do Supabase
     await carregarProgresso();
-
+ 
     renderApp();
     carregarHistorico(); // async, em background
-
+ 
   } catch(e) {
     console.error(e);
     mostrarErro('Erro ao carregar o treino. Verifique sua conexão.');
   }
 }
-
+ 
 async function carregarProgresso() {
   try {
     const rows = await sbGet('progresso_aluno',
@@ -322,7 +323,7 @@ async function carregarProgresso() {
     }
   } catch(e) {}
 }
-
+ 
 async function carregarHistorico() {
   try {
     const rows = await sbGet('progresso_aluno',
@@ -347,14 +348,14 @@ async function carregarHistorico() {
     }).join('');
   } catch(e) {}
 }
-
+ 
 // ═══════════════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════════════
 function renderApp() {
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('appContent').style.display = 'block';
-
+ 
   // Header
   const eyebrow = [aluno.objetivo, aluno.nivel, aluno.obs].filter(Boolean).join(' · ');
   const nomePrimeiro = aluno.nome.split(' ')[0].toUpperCase();
@@ -362,7 +363,7 @@ function renderApp() {
     ${eyebrow ? `<div class="header-eyebrow">${eyebrow}</div><br/>` : ''}
     <div class="header-title">TREINO <span>${nomePrimeiro}</span></div>
     <div class="header-meta">${[aluno.dias?aluno.dias+'x por semana':'', aluno.periodo].filter(Boolean).join(' · ')}</div>`;
-
+ 
   // Periodização
   if (aluno.semanas?.length) {
     document.getElementById('periodoCard').style.display = 'block';
@@ -375,29 +376,29 @@ function renderApp() {
       </div>`
     ).join('');
   }
-
+ 
   // Tabs + séries
   const tabsBar = document.getElementById('tabsBar');
   const seriesContainer = document.getElementById('seriesContainer');
-
+ 
   // Tab Resumo
   tabsBar.innerHTML = `<button class="tab-btn active" id="tabBtn_resumo" onclick="mudarAba('resumo')">📋 Resumo</button>`;
-
+ 
   // Tab por série
   aluno.series.forEach((s, si) => {
     const cor = SERIE_CORES[si % SERIE_CORES.length];
     tabsBar.innerHTML += `<button class="tab-btn" id="tabBtn_serie_${s.id}" onclick="mudarAba('serie_${s.id}')" style="border-color:${cor}44">${s.letra}${s.nome?' · '+s.nome:''}</button>`;
-
+ 
     const tagsH = s.grupos.map(g =>
       `<span class="serie-tag" style="background:${(GRUPO_COR[g]||cor)+'22'};color:${GRUPO_COR[g]||cor};border:1px solid ${(GRUPO_COR[g]||cor)+'44'}">${g}</span>`
     ).join('');
-
+ 
     const exH = s.exercicios.map((ex, ei) => {
       const mediaH = (ex.medias||[])
         .filter(m => m.type==='yt'||m.type==='link')
         .map(m => `<a href="${m.url}" target="_blank" class="media-link" style="background:${cor}22;color:${cor};border:1px solid ${cor}44">${m.type==='yt'?'▶ Vídeo':'↗ Ver exercício'}</a>`)
         .join('');
-
+ 
       const semsH = aluno.semanas.length
         ? aluno.semanas.map((sm,i) => `
             <div class="carga-sem">
@@ -408,7 +409,7 @@ function renderApp() {
             <div class="carga-sem-label">Carga</div>
             <input class="carga-inp" id="carga_${ex.id}_0" type="text" placeholder="ex: 80kg" oninput="salvarCarga('${ex.id}',0,this.value)"/>
            </div>`;
-
+ 
       return `<div class="ex-card">
         <div class="ex-top">
           <div class="ex-num" style="background:${cor}">${ei+1}</div>
@@ -429,7 +430,7 @@ function renderApp() {
         ${mediaH}
       </div>`;
     }).join('');
-
+ 
     seriesContainer.innerHTML += `
       <div class="tab-content" id="tab_serie_${s.id}">
         <div style="margin-bottom:20px">
@@ -444,23 +445,23 @@ function renderApp() {
         </div>
       </div>`;
   });
-
+ 
   // Tab Histórico
   tabsBar.innerHTML += `<button class="tab-btn" id="tabBtn_historico" onclick="mudarAba('historico')">📊 Histórico</button>`;
-
+ 
   // Footer
   document.getElementById('pageFooter').textContent = (aluno.consultoria||'PH PERFORMANCE').toUpperCase();
-
+ 
   // Aplica RPE buttons
   const rpeRow = document.getElementById('rpeRow');
   rpeRow.innerHTML = [1,2,3,4,5,6,7,8,9,10].map(v =>
     `<button class="rpe-btn" id="rpe_${v}" onclick="setRPE(${v})">${v}</button>`
   ).join('');
-
+ 
   // Restaura state na tela
   aplicarState();
 }
-
+ 
 function aplicarState() {
   // Checkin
   (state.checkin||[]).forEach(i => {
@@ -485,7 +486,7 @@ function aplicarState() {
     if (inp && v) inp.value = v;
   });
 }
-
+ 
 // ═══════════════════════════════════════════════════════
 //  NAVEGAÇÃO DE ABAS
 // ═══════════════════════════════════════════════════════
@@ -496,7 +497,7 @@ function mudarAba(id) {
   document.getElementById('tab_'+id)?.classList.add('active');
   document.getElementById('tabBtn_'+id)?.classList.add('active');
 }
-
+ 
 // ═══════════════════════════════════════════════════════
 //  INTERAÇÕES
 // ═══════════════════════════════════════════════════════
@@ -510,12 +511,12 @@ function toggleCheckin(i) {
   atualizarFreq();
   agendarSave();
 }
-
+ 
 function atualizarFreq() {
   const n = (state.checkin||[]).length;
   document.getElementById('freqLabel').textContent = n + ' de 7 dias esta semana';
 }
-
+ 
 function setRPE(v, silent=false) {
   state.rpe = v;
   document.querySelectorAll('.rpe-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.borderColor=''; });
@@ -525,7 +526,7 @@ function setRPE(v, silent=false) {
   if (lbl) { lbl.textContent = v+'/10 — '+RPE_LABELS[v]; lbl.style.color = RPE_CORES[v]; }
   if (!silent) agendarSave();
 }
-
+ 
 function salvarCarga(exId, semIdx, val) {
   if (!state.cargas) state.cargas = {};
   if (!state.cargas[exId]) state.cargas[exId] = [];
@@ -533,14 +534,14 @@ function salvarCarga(exId, semIdx, val) {
   localStorage.setItem(SK, JSON.stringify(state));
   agendarSave();
 }
-
+ 
 function salvarFeedEx(exId, val) {
   if (!state.feedbacks) state.feedbacks = {};
   state.feedbacks[exId] = val;
   localStorage.setItem(SK, JSON.stringify(state));
   agendarSave();
 }
-
+ 
 // ═══════════════════════════════════════════════════════
 //  SALVAR NO SUPABASE
 // ═══════════════════════════════════════════════════════
@@ -548,7 +549,7 @@ function agendarSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => enviarSupabase(), 1500);
 }
-
+ 
 async function enviarSupabase() {
   state.savedAt = new Date().toISOString();
   localStorage.setItem(SK, JSON.stringify(state));
@@ -568,13 +569,13 @@ async function enviarSupabase() {
     mostrarStatus('📱 Salvo localmente (sem internet)');
   }
 }
-
+ 
 async function salvarTudo() {
   state.feedbackGeral = document.getElementById('feedbackGeral').value;
   clearTimeout(saveTimer);
   await enviarSupabase();
 }
-
+ 
 // ═══════════════════════════════════════════════════════
 //  UI HELPERS
 // ═══════════════════════════════════════════════════════
@@ -584,13 +585,13 @@ function mostrarStatus(msg) {
   const bar = document.getElementById('statusBar');
   if (bar) { bar.textContent = msg; bar.classList.add('show'); setTimeout(()=>bar.classList.remove('show'),2500); }
 }
-
+ 
 function mostrarErro(msg) {
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('errorScreen').style.display = 'flex';
   document.getElementById('errorMsg').textContent = msg;
 }
-
+ 
 // ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
@@ -598,3 +599,4 @@ carregarAluno();
 </script>
 </body>
 </html>
+ 
