@@ -898,7 +898,7 @@ async function syncAlunoParaSupabase(a) {
     // 1. Aluno principal
     await sbUpsert('alunos', {
       id: a.id, nome: a.nome, objetivo: a.objetivo||null,
-      nivel: a.nivel||null, dias: a.dias||null, periodo: a.periodo||null,
+      nivel: a.nivel||null, dias: a.dias||null, periodo: a.periodo||null, data_inicio: a.dataInicio||null,
       obs: a.obs||null, foto: a.foto||null,
       financeiro: a.financeiro||null, anamnese: a.anamnese||null,
       proxima_avaliacao: a.proximaAvaliacao||null,
@@ -1231,7 +1231,7 @@ document.getElementById('modalBg').addEventListener('click',e=>{if(e.target===e.
 
 function criarAluno(){
   const nome=document.getElementById('mNome').value.trim();if(!nome)return document.getElementById('mNome').focus();
-  const a={id:'a'+Date.now(),nome,objetivo:document.getElementById('mObj').value.trim(),nivel:document.getElementById('mNivel').value.trim(),dias:document.getElementById('mDias').value.trim(),periodo:document.getElementById('mPeriodo').value.trim(),obs:document.getElementById('mObs').value.trim(),
+  const a={id:'a'+Date.now(),nome,objetivo:document.getElementById('mObj').value.trim(),nivel:document.getElementById('mNivel').value.trim(),dias:document.getElementById('mDias').value.trim(),periodo:document.getElementById('mPeriodo').value.trim(),obs:document.getElementById('mObs').value.trim(),dataInicio:new Date().toISOString().split('T')[0],
     semanas:[{nome:'Resistência',reps:'15–20',descanso:'30s'},{nome:'Hipertrofia',reps:'10–12',descanso:'60s'},{nome:'Força',reps:'4–6',descanso:'2min'},{nome:'Deload',reps:'12–15',descanso:'45s'}],series:[]};
   ['A','B','C'].forEach(l=>a.series.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),letra:l,nome:'',grupos:[],exercicios:[]}));
   db.alunos.push(a);saveDB();syncAlunoParaSupabase(a);fecharModal();renderAlunoList();selecionarAluno(a.id);
@@ -1437,8 +1437,7 @@ function buildExCard(sid,ex,num,cor){
     ${tecAtual!=='Nenhuma'?`<div id="tecInfo_${ex.id}" style="font-size:10px;color:var(--accent);background:var(--accent)18;padding:4px 9px;border-radius:6px;flex:1;line-height:1.3">${tecnicaInfo[tecAtual]||''}</div>`:`<div id="tecInfo_${ex.id}" style="font-size:10px;color:#3a3a3a;flex:1"></div>`}
   </div>`;
   return`<div class="ex-card" id="excard_${ex.id}" draggable="true" data-exid="${ex.id}" data-sid="${sid}"><div class="ex-top"><div class="drag-dots"><span></span><span></span><span></span></div><div class="ex-select-cb" id="excb_${ex.id}" onclick="toggleSelectEx('${sid}','${ex.id}')" title="Selecionar para bloco"></div><div class="ex-num" style="background:${cor}">${num}</div><input class="ex-name-inp" type="text" placeholder="Nome do exercício" value="${esc(ex.nome)}" oninput="updEx('${sid}','${ex.id}','nome',this.value)"/><button class="ex-del" onclick="delEx('${sid}','${ex.id}')">✕</button></div><div class="ex-params"><div class="ex-param"><label>Séries</label><input type="text" placeholder="4" value="${esc(ex.series)}" oninput="updEx('${sid}','${ex.id}','series',this.value)"/></div><div class="ex-param"><label>Repetições</label><input type="text" placeholder="10–12" value="${esc(ex.reps)}" oninput="updEx('${sid}','${ex.id}','reps',this.value)"/></div><div class="ex-param"><label>Descanso</label><input type="text" placeholder="60s" value="${esc(ex.descanso)}" oninput="updEx('${sid}','${ex.id}','descanso',this.value)"/></div></div><div style="padding:0 0 8px">${tecnicaH}</div><textarea class="ex-obs-inp" rows="2" placeholder="Observações: carga, cadência…" oninput="updEx('${sid}','${ex.id}','obs',this.value)">${esc(ex.obs)}</textarea><div class="ex-footer">
-      <button class="timer-btn" id="timerBtn_${ex.id}" onclick="toggleTimer('${ex.id}','${ex.descanso}')">⏱ Timer</button>
-      <span class="timer-display" id="timerDisp_${ex.id}" style="display:none"></span>
+
       <input class="ex-media-inp" id="mi_${ex.id}" type="text" placeholder="URL YouTube / imagem / MuscleWiki" onkeydown="if(event.key==='Enter')addMedia('${sid}','${ex.id}')"/>
       <button class="ex-media-btn" onclick="addMedia('${sid}','${ex.id}')">+ Mídia</button>
     </div>
@@ -1576,7 +1575,8 @@ body{background:#0e0e0e;font-family:'Space Grotesk',sans-serif;padding-bottom:60
 .link-box-btn{padding:6px 12px;background:#c9a84c;border:none;border-radius:7px;color:#111;font-size:11px;font-weight:800;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
 
 /* ── BLOCOS (bi-set, tri-set, conjugado) ── */
-.ex-select-cb{width:18px;height:18px;border-radius:5px;border:2px solid var(--border2);background:var(--bg3);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;user-select:none;font-size:11px}
+.ex-select-cb{width:20px;height:20px;border-radius:6px;border:2px solid #3a3a3a;background:var(--bg3);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;user-select:none;font-size:12px;color:transparent;font-weight:900}
+.ex-select-cb:hover{border-color:var(--accent);background:var(--accent)15}
 .ex-select-cb.sel{background:var(--accent);border-color:var(--accent);color:#111;font-weight:900}
 .bloco-toolbar{display:none;position:sticky;bottom:16px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--accent)44;border-radius:20px;padding:8px 14px;gap:8px;align-items:center;z-index:50;box-shadow:0 4px 24px rgba(0,0,0,.6);white-space:nowrap;flex-wrap:wrap;justify-content:center;max-width:98vw}
 .bloco-toolbar.show{display:flex}
@@ -2929,7 +2929,7 @@ async function verProgressoAluno(sid){
 
   let html=`<div class="content-inner">
     <div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      📈 Progresso — ${esc(alunoAtivo.nome)}<span style="flex:1;height:1px;background:var(--border);display:block"></span>
+      📈 Progressão de Carga — ${esc(alunoAtivo.nome)}<span style="flex:1;height:1px;background:var(--border);display:block"></span>
       <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">${rows.length} sessão${rows.length!==1?'ões':''}</span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
@@ -2952,7 +2952,7 @@ async function verProgressoAluno(sid){
     </div>`;
 
   if(forcaCards){
-    html+=`<div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#3a3a3a;margin-bottom:12px;display:flex;align-items:center;gap:8px">⚖️ Progressão de Carga por Exercício<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+    html+=`<div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#3a3a3a;margin-bottom:12px;display:flex;align-items:center;gap:8px">📈 Progressão de Carga por Exercício<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
     ${forcaCards}`;
   }
 
@@ -3010,10 +3010,19 @@ async function verProgressoAluno(sid){
 <!-- ── BLOCO TOOLBAR ── -->
 <div class="bloco-toolbar" id="blocoToolbar">
   <span class="bloco-toolbar-label" id="blocoCount">0 selecionados</span>
-  <button class="bloco-tb-btn" onclick="criarBloco('Bi-set','#63b3ed')">Bi-set</button>
-  <button class="bloco-tb-btn" onclick="criarBloco('Tri-set','#f6ad55')">Tri-set</button>
-  <button class="bloco-tb-btn" onclick="criarBloco('Conjugado','#ef7a98')">Conjugado</button>
-  <button class="bloco-tb-btn" onclick="criarBloco('Super-set','#9a75ea')">Super-set</button>
+  <div id="blocoOpcoes2" style="display:flex;gap:6px;flex-wrap:wrap">
+    <button class="bloco-tb-btn" id="btnBiset" onclick="criarBloco('Bi-set','#63b3ed')">Bi-set</button>
+    <button class="bloco-tb-btn" id="btnTriset" onclick="criarBloco('Tri-set','#f6ad55')">Tri-set</button>
+    <button class="bloco-tb-btn" id="btnConjugado" onclick="criarBloco('Conjugado','#ef7a98')">Conjugado</button>
+    <button class="bloco-tb-btn" id="btnSuperset" onclick="criarBloco('Super-set','#9a75ea')">Super-set</button>
+  </div>
+  <div id="blocoOpcoes1" style="display:none;gap:6px;flex-wrap:wrap">
+    <button class="bloco-tb-btn" style="background:#c9a84c18;border-color:#c9a84c44;color:#c9a84c" onclick="criarTecnicaSingle('Progressivo')">📈 Progressivo</button>
+    <button class="bloco-tb-btn" style="background:#63b3ed18;border-color:#63b3ed44;color:#63b3ed" onclick="criarTecnicaSingle('Pirâmide Crescente')">🔺 Pirâmide ↑</button>
+    <button class="bloco-tb-btn" style="background:#f6ad5518;border-color:#f6ad5544;color:#f6ad55" onclick="criarTecnicaSingle('Pirâmide Decrescente')">🔻 Pirâmide ↓</button>
+    <button class="bloco-tb-btn" style="background:#f8717118;border-color:#f8717144;color:#f87171" onclick="criarTecnicaSingle('Drop-set')">💧 Drop-set</button>
+    <button class="bloco-tb-btn" style="background:#9a75ea18;border-color:#9a75ea44;color:#9a75ea" onclick="criarTecnicaSingle('Rest-pause')">⏸ Rest-pause</button>
+  </div>
   <button class="bloco-tb-btn bloco-tb-cancel" onclick="cancelarSelecao()">✕ Cancelar</button>
 </div>
 
@@ -3026,21 +3035,27 @@ function toggleSelectEx(sid,eid){
   if(selecaoSid&&selecaoSid!==sid){cancelarSelecao();return}
   selecaoSid=sid;
   const cb=document.getElementById('excb_'+eid);
-  if(selectedExs.has(eid)){selectedExs.delete(eid);if(cb){cb.classList.remove('sel');cb.textContent=''}}
-  else{selectedExs.add(eid);if(cb){cb.classList.add('sel');cb.textContent='✓'}}
+  if(selectedExs.has(eid)){selectedExs.delete(eid);if(cb){cb.classList.remove('sel');cb.textContent='';cb.style.background='';}}
+  else{selectedExs.add(eid);if(cb){cb.classList.add('sel');cb.textContent='✓';cb.style.color='#111';cb.style.background='var(--accent)';cb.style.borderColor='var(--accent)';}}
   const toolbar=document.getElementById('blocoToolbar');
   const count=document.getElementById('blocoCount');
+  const op1=document.getElementById('blocoOpcoes1');
+  const op2=document.getElementById('blocoOpcoes2');
   if(selectedExs.size>0){
     toolbar.classList.add('show');
     count.textContent=selectedExs.size+' selecionado'+(selectedExs.size!==1?'s':'');
-    // valida tipo
-    const btns=toolbar.querySelectorAll('.bloco-tb-btn:not(.bloco-tb-cancel)');
-    btns.forEach(b=>{
-      const tipo=b.textContent;
-      const ok=(tipo==='Bi-set'&&selectedExs.size===2)||(tipo==='Tri-set'&&selectedExs.size===3)||(tipo==='Conjugado'&&selectedExs.size===2)||(tipo==='Super-set'&&selectedExs.size===2)||(selectedExs.size>=2);
-      b.style.opacity=ok?'1':'0.35';b.style.pointerEvents=ok?'auto':'none';
-    });
-  }else{toolbar.classList.remove('show');selecaoSid=null}
+    if(selectedExs.size===1){
+      // 1 selecionado: mostra técnicas individuais
+      op1.style.display='flex';op2.style.display='none';
+    } else {
+      // 2+ selecionados: mostra blocos
+      op1.style.display='none';op2.style.display='flex';
+      const bi=document.getElementById('btnBiset'),tri=document.getElementById('btnTriset');
+      const conj=document.getElementById('btnConjugado'),sup=document.getElementById('btnSuperset');
+      [bi,conj,sup].forEach(b=>{if(b){b.style.opacity=selectedExs.size===2?'1':'0.35';b.style.pointerEvents=selectedExs.size===2?'auto':'none';}});
+      if(tri){tri.style.opacity=selectedExs.size===3?'1':'0.35';tri.style.pointerEvents=selectedExs.size===3?'auto':'none';}
+    }
+  }else{toolbar.classList.remove('show');selecaoSid=null;op1.style.display='none';op2.style.display='flex';}
 }
 
 function cancelarSelecao(){
@@ -3067,6 +3082,18 @@ function criarBloco(tipo,cor){
   const si=alunoAtivo.series.indexOf(s);
   const serCor=SERIE_CORES[si%SERIE_CORES.length];
   renderExList(selecaoSid||s.id,s,serCor);
+}
+
+function criarTecnicaSingle(tecnica){
+  if(!selecaoSid||selectedExs.size!==1){return}
+  const s=getSerie(selecaoSid);if(!s)return;
+  const eid=[...selectedExs][0];
+  const ex=s.exercicios.find(x=>x.id===eid);
+  if(ex){ex.tecnica=tecnica;saveDB();}
+  cancelarSelecao();
+  const si=alunoAtivo.series.indexOf(s);
+  const cor=SERIE_CORES[si%SERIE_CORES.length];
+  renderExList(selecaoSid,s,cor);
 }
 
 function desfazerBloco(blocoId,sid){
