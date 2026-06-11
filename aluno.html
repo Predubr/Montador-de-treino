@@ -3,600 +3,556 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>Meu Treino</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+<title>PH Performance — Treino</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--accent:#c9a84c;--bg:#0e0e0e;--bg2:#161616;--bg3:#1e1e1e;--border:#2a2a2a;--text:#f5f3ee;--muted:#555;--green:#6ee7b7;--red:#f87171;--yellow:#fbbf24}
-body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;padding-bottom:60px}
-/* LOADING */
-#loadingScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px}
-.spinner{width:36px;height:36px;border:3px solid #1e1e1e;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+:root{--acc:#c9a84c;--bg:#0e0e0e;--bg2:#131313;--bg3:#1a1a1a;--border:#1e1e1e;--border2:#2a2a2a;--text:#f5f3ee;--muted:#555;--green:#6ee7b7;--yellow:#fbbf24;--red:#f87171}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;padding-bottom:80px;min-height:100vh}
+
+/* ── LOADING ── */
+#loadingScreen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100}
+.load-logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:var(--acc)}
+.load-spinner{width:28px;height:28px;border:3px solid #1a1a1a;border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#loadingMsg{font-size:13px;color:#444;letter-spacing:.05em}
-/* ERROR */
-#errorScreen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:32px}
-#errorScreen .e-icon{font-size:48px}
-#errorScreen .e-title{font-size:18px;font-weight:800;color:var(--text)}
-#errorScreen .e-msg{font-size:13px;color:#555;text-align:center;max-width:320px;line-height:1.6}
-/* HEADER */
-.header{background:#0a0a0a;border-bottom:1px solid var(--border);padding:24px 18px 20px}
-.header-eyebrow{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#3a3632;border:1px solid #2a2620;padding:4px 11px;border-radius:20px;display:inline-block;margin-bottom:12px}
-.header-title{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:.95;color:var(--text);margin-bottom:4px}
-.header-title span{color:var(--accent)}
-.header-meta{font-size:10px;color:#3a3a3a;margin-top:6px;letter-spacing:.04em}
-/* STATUS BAR */
-#statusBar{position:fixed;top:0;left:0;right:0;z-index:100;padding:8px 16px;font-size:12px;font-weight:700;text-align:center;transform:translateY(-100%);transition:transform .3s;background:#161616;border-bottom:1px solid var(--border)}
-#statusBar.show{transform:translateY(0)}
-/* MAIN */
-.main{padding:18px 16px}
-/* TABS */
-.tabs{display:flex;gap:4px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab-btn{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:none;color:#555;font-size:11px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap;transition:all .15s;flex-shrink:0}
-.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#111}
-.tab-content{display:none}
-.tab-content.active{display:block}
-/* CHECKIN */
-.card{background:#131313;border:1px solid #1e1e1e;border-radius:13px;padding:14px;margin-bottom:16px}
-.card-title{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#3a3a3a;margin-bottom:10px}
-.checkin-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
-.ci-day{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 10px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:9px;cursor:pointer;flex:1;min-width:40px;transition:all .15s;user-select:none}
-.ci-day.done{background:#6ee7b722;border-color:var(--green)}
-.ci-label{font-size:7px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#444}
+.load-msg{font-size:12px;color:var(--muted)}
+#errorScreen{display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;padding:24px;z-index:100}
+
+/* ── HEADER ── */
+.header{background:#0a0a0a;border-bottom:1px solid var(--border);padding:20px 18px 18px}
+.header-brand{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#2a2a2a;border:1px solid #1e1e1e;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:10px}
+.header-name{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--text);line-height:1;margin-bottom:4px}
+.header-name span{color:var(--acc)}
+.header-meta{font-size:10px;color:#3a3a3a;letter-spacing:.04em}
+.header-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.htag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:20px;background:#1a1a1a;color:#3a3a3a;border:1px solid #1e1e1e}
+.htag.hl{background:var(--acc)15;color:var(--acc);border-color:var(--acc)33}
+
+/* ── STATUS TOAST ── */
+.toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid #2a2a2a;border-radius:20px;padding:7px 16px;font-size:11px;font-weight:600;color:var(--green);z-index:200;display:none;white-space:nowrap;transition:all .2s}
+.toast.show{display:block}
+
+/* ── BODY ── */
+.body{padding:16px}
+
+/* ── CHECKIN ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:16px}
+.card-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
+.checkin-bar{display:flex;gap:5px}
+.ci-day{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;cursor:pointer;flex:1;transition:all .15s;user-select:none}
+.ci-day.done{background:var(--green)15;border-color:var(--green)44}
+.ci-lbl{font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .ci-icon{font-size:15px}
-.ci-day.done .ci-label{color:var(--green)}
-.freq-label{font-size:11px;color:#3a3a3a}
-/* RPE */
-.rpe-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
-.rpe-btn{width:36px;height:36px;border-radius:8px;border:1px solid #2a2a2a;background:none;color:#555;font-size:12px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;transition:all .15s}
-.rpe-btn.active{color:#111}
-.rpe-label{font-size:11px;color:#555;min-height:16px}
-/* SÉRIE */
-.serie-header{display:flex;align-items:flex-end;gap:12px;margin-bottom:10px;padding-bottom:10px;border-bottom-width:2px;border-bottom-style:solid}
-.serie-letter{font-family:'Bebas Neue',sans-serif;font-size:60px;line-height:.85}
-.serie-name{font-size:20px;font-weight:900;color:var(--text)}
-.serie-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
-.serie-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 10px;border-radius:20px;display:inline-block}
-/* EXERCÍCIO */
-.ex-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:13px;padding:14px;margin-bottom:9px}
+.ci-day.done .ci-lbl{color:var(--green)}
+.freq-label{font-size:11px;color:var(--muted);margin-top:8px}
+
+/* ── PERIODIZAÇÃO ── */
+.period-row{display:flex;align-items:baseline;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)}
+.period-row:last-child{border-bottom:none}
+.period-sem{font-size:9px;font-weight:700;color:var(--muted);min-width:46px;text-transform:uppercase;letter-spacing:.06em}
+.period-nome{font-size:12px;font-weight:700;color:var(--text);flex:1}
+.period-reps{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--acc)}
+.period-rest{font-size:10px;color:var(--muted)}
+
+/* ── SERIES TABS ── */
+.series-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:16px;scrollbar-width:none}
+.series-tabs::-webkit-scrollbar{display:none}
+.s-tab{flex-shrink:0;padding:8px 18px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;transition:all .15s;letter-spacing:.5px}
+.s-tab.active{border-color:var(--acc);background:var(--acc)18;color:var(--acc)}
+
+/* ── SERIE HEADER ── */
+.serie-header{display:flex;align-items:flex-end;gap:10px;margin-bottom:14px;padding-bottom:10px}
+.serie-letter{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:.85}
+.serie-info{}
+.serie-name{font-size:18px;font-weight:900;color:var(--text);line-height:1.1}
+.serie-grupos{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.grupo-tag{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:20px;border:1px solid}
+
+/* ── EXERCISE CARD ── */
+.ex-card{background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:14px;margin-bottom:10px;transition:border-color .2s}
+.ex-card.done{border-color:var(--green)44;background:var(--green)05}
 .ex-top{display:flex;align-items:center;gap:9px;margin-bottom:11px}
-.ex-num{width:30px;height:30px;border-radius:50%;color:#111;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ex-name{font-size:16px;font-weight:800;color:var(--text)}
-.ex-params{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.ex-param-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;display:block;margin-bottom:2px}
-.ex-param-val{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1}
-.ex-obs{font-size:12px;color:#555;line-height:1.5;border-top:1px solid #2a2a2a;padding-top:8px;margin-bottom:8px}
-/* CARGA */
-.carga-wrap{background:#111;border-radius:9px;padding:10px 12px;margin-top:6px}
-.carga-title{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;margin-bottom:6px}
-.carga-sems{display:flex;gap:6px;flex-wrap:wrap}
-.carga-sem{flex:1;min-width:70px}
-.carga-sem-label{font-size:8px;color:#3a3a3a;margin-bottom:3px}
-.carga-inp{width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;outline:none;transition:border-color .15s}
-.carga-inp:focus{border-color:var(--accent)}
+.ex-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;transition:all .2s}
+.ex-done-num{background:var(--green)22;color:var(--green)}
+.ex-name{font-size:15px;font-weight:800;color:var(--text);flex:1;line-height:1.2}
+.check-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;transition:all .2s;flex-shrink:0}
+.check-btn:hover{border-color:var(--green);color:var(--green)}
+.ex-card.done .check-btn{background:var(--green);border-color:var(--green);color:#111}
+.ex-params{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.ex-param{}
+.ex-plabel{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:2px}
+.ex-pval{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1}
+.ex-obs{font-size:11px;color:var(--muted);background:#111;border-radius:7px;padding:7px 10px;margin-bottom:10px;line-height:1.5}
+.ex-media{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.media-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--acc);color:#111;border-radius:7px;font-weight:800;font-size:11px;text-decoration:none;border:none;cursor:pointer}
+
+/* timer */
+.timer-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.timer-btn{padding:6px 14px;background:none;border:1px solid var(--border2);border-radius:8px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
+.timer-btn:hover{border-color:var(--acc);color:var(--acc)}
+.timer-btn.running{background:var(--acc)18;border-color:var(--acc);color:var(--acc)}
+.timer-display{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--acc);letter-spacing:1px;min-width:52px}
+.timer-done{color:var(--green);font-size:12px;font-weight:700}
+
+/* carga */
+.carga-section{background:#111;border-radius:9px;padding:10px 12px}
+.carga-section-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px}
+.series-carga-grid{display:grid;gap:6px;margin-bottom:8px}
+.serie-carga-row{display:flex;align-items:center;gap:8px}
+.serie-carga-lbl{font-size:11px;font-weight:700;color:var(--muted);min-width:22px;text-align:center}
+.carga-inp{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--text);font-size:14px;font-family:'Space Grotesk',sans-serif;outline:none;transition:border-color .15s;font-weight:600}
+.carga-inp:focus{border-color:var(--acc)}
+.carga-inp::placeholder{color:#2a2a2a}
+.tecnica-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px;flex-wrap:wrap}
+.aluno-bloco{border:2px solid;border-radius:16px;padding:12px 10px 6px;margin-bottom:12px;position:relative}
+.aluno-bloco-label{position:absolute;top:-11px;left:14px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:2px 10px;border-radius:10px;color:#111}
+.sem-banner-rows{display:flex;flex-direction:column;gap:4px}
+.sem-banner-row{display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 6px;border-radius:6px}
+.sem-banner-row.current{background:var(--acc)15}
+.sem-banner-num{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--acc);min-width:52px}
+.sem-banner-name{font-weight:600;color:var(--text);flex:1}
+.sem-banner-reps{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--acc)}
+.sem-banner-dates{font-size:10px;color:#3a3a3a;text-align:right}
 .feed-label{font-size:8px;color:#3a3a3a;margin-bottom:3px;margin-top:8px}
-.feed-ta{width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;font-family:'Space Grotesk',sans-serif;outline:none;resize:none;min-height:40px;transition:border-color .15s}
-.feed-ta:focus{border-color:var(--accent)}
-/* PERIODIZAÇÃO */
-.perio-row{display:flex;align-items:baseline;gap:9px;padding:7px 0;border-bottom:1px solid #1e1e1e}
-.perio-num{font-size:9px;font-weight:700;color:#3a3a3a;min-width:46px}
-.perio-nome{font-size:12px;font-weight:700;color:var(--text);flex:1}
-.perio-reps{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent)}
-.perio-rest{font-size:10px;color:#3a3a3a}
-/* BOTÃO SALVAR */
-.save-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:14px;background:var(--accent);border:none;border-radius:12px;color:#111;font-size:14px;font-weight:800;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s;margin-top:8px}
-.save-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.feed-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px;font-family:'Space Grotesk',sans-serif;outline:none;resize:none;min-height:38px;transition:border-color .15s}
+.feed-inp:focus{border-color:var(--acc)}
+.feed-inp::placeholder{color:#2a2a2a}
+
+/* RPE */
+.rpe-wrap{margin-bottom:14px}
+.rpe-title{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.rpe-row{display:flex;gap:4px;flex-wrap:wrap}
+.rpe-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:none;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
+.rpe-label-txt{font-size:11px;color:var(--muted);margin-top:6px;min-height:16px}
+
 /* FEEDBACK GERAL */
-.feed-geral-ta{width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:9px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;outline:none;resize:none;min-height:80px;transition:border-color .15s}
-.feed-geral-ta:focus{border-color:var(--accent)}
-/* HISTÓRICO */
-.hist-entry{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px}
-.hist-date{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
-.hist-chips{display:flex;gap:6px;flex-wrap:wrap}
-.hist-chip{font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;background:#1e1e1e;border:1px solid #2a2a2a;color:#aaa}
-/* MEDIA LINKS */
-.media-link{display:inline-block;margin-top:6px;padding:6px 14px;border-radius:7px;font-weight:800;font-size:12px;text-decoration:none}
-/* FOOTER */
-.footer{text-align:center;font-size:10px;color:#1e1e1e;padding-top:20px;letter-spacing:.08em}
-/* MOBILE */
-@media(max-width:500px){
-  .header-title{font-size:40px}
-  .serie-letter{font-size:48px}
-}
+.feed-geral{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;outline:none;resize:none;min-height:70px;margin-top:12px;transition:border-color .15s}
+.feed-geral:focus{border-color:var(--acc)}
+.feed-geral::placeholder{color:#2a2a2a}
+
+/* SALVAR */
+.save-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:14px;background:var(--acc);border:none;border-radius:12px;color:#111;font-size:14px;font-weight:900;cursor:pointer;margin-top:14px;font-family:'Space Grotesk',sans-serif;transition:all .15s}
+.save-btn:hover{background:#d4b05c;transform:translateY(-1px)}
+.save-btn:active{transform:none}
+
+.footer-brand{text-align:center;font-size:9px;color:#1a1a1a;padding-top:24px;letter-spacing:.1em;font-weight:700}
+
+/* SEMANAS ATIVAS highlight */
+.period-row.current{background:var(--acc)08;border-radius:8px;padding-left:8px;margin:0 -4px;border-bottom:none}
 </style>
 </head>
 <body>
- 
-<!-- LOADING -->
+
 <div id="loadingScreen">
-  <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--accent)">PH PERFORMANCE</div>
-  <div class="spinner"></div>
-  <div id="loadingMsg">Carregando seu treino...</div>
+  <div class="load-logo">PH PERFORMANCE</div>
+  <div class="load-spinner"></div>
+  <div class="load-msg" id="loadMsg">Carregando seu treino...</div>
 </div>
- 
-<!-- ERROR -->
+
 <div id="errorScreen">
-  <div class="e-icon">😕</div>
-  <div class="e-title">Treino não encontrado</div>
-  <div class="e-msg" id="errorMsg">O link pode estar errado ou o treino foi removido. Fale com seu personal trainer.</div>
+  <div style="font-size:36px">😕</div>
+  <div style="font-size:18px;font-weight:800;color:var(--text)">Treino não encontrado</div>
+  <div style="font-size:13px;color:var(--muted);max-width:280px;line-height:1.6" id="errorMsg">Verifique o link com seu professor.</div>
 </div>
- 
-<!-- CONTEÚDO (escondido até carregar) -->
-<div id="appContent" style="display:none">
-  <!-- STATUS BAR -->
-  <div id="statusBar"></div>
- 
-  <!-- HEADER -->
-  <div class="header" id="pageHeader"></div>
- 
-  <!-- MAIN -->
-  <div class="main">
-    <!-- TABS (Séries A, B, C...) -->
-    <div class="tabs" id="tabsBar"></div>
- 
-    <!-- TAB: RESUMO (periodização + checkin + rpe + feedback) -->
-    <div class="tab-content active" id="tab_resumo">
-      <!-- CHECKIN -->
-      <div class="card">
-        <div class="card-title">✅ Check-in da Semana</div>
-        <div class="checkin-bar" id="checkinBar">
-          <div class="ci-day" id="ci_0" onclick="toggleCheckin(0)"><div class="ci-icon">⬜</div><div class="ci-label">SEG</div></div>
-          <div class="ci-day" id="ci_1" onclick="toggleCheckin(1)"><div class="ci-icon">⬜</div><div class="ci-label">TER</div></div>
-          <div class="ci-day" id="ci_2" onclick="toggleCheckin(2)"><div class="ci-icon">⬜</div><div class="ci-label">QUA</div></div>
-          <div class="ci-day" id="ci_3" onclick="toggleCheckin(3)"><div class="ci-icon">⬜</div><div class="ci-label">QUI</div></div>
-          <div class="ci-day" id="ci_4" onclick="toggleCheckin(4)"><div class="ci-icon">⬜</div><div class="ci-label">SEX</div></div>
-          <div class="ci-day" id="ci_5" onclick="toggleCheckin(5)"><div class="ci-icon">⬜</div><div class="ci-label">SAB</div></div>
-          <div class="ci-day" id="ci_6" onclick="toggleCheckin(6)"><div class="ci-icon">⬜</div><div class="ci-label">DOM</div></div>
-        </div>
-        <div class="freq-label" id="freqLabel">0 de 7 dias</div>
-      </div>
- 
-      <!-- RPE -->
-      <div class="card">
-        <div class="card-title">💪 Como está o treino hoje? (RPE)</div>
-        <div class="rpe-row" id="rpeRow"></div>
-        <div class="rpe-label" id="rpeLabel">—</div>
-      </div>
- 
-      <!-- PERIODIZAÇÃO -->
-      <div class="card" id="periodoCard" style="display:none">
-        <div class="card-title">📅 Periodização</div>
-        <div id="periodoList"></div>
-      </div>
- 
-      <!-- FEEDBACK GERAL -->
-      <div class="card">
-        <div class="card-title">📝 Anotação geral do treino</div>
-        <textarea class="feed-geral-ta" id="feedbackGeral" placeholder="Como foi o treino hoje? Alguma dificuldade? Mudanças?" oninput="agendarSave()"></textarea>
-      </div>
- 
-      <button class="save-btn" onclick="salvarTudo()">☁️ Confirmar e salvar na nuvem</button>
-      <div style="text-align:center;font-size:12px;color:var(--green);margin-top:8px;min-height:18px" id="savedMsg"></div>
-    </div>
- 
-    <!-- TABS DE SÉRIE (geradas dinamicamente) -->
-    <div id="seriesContainer"></div>
- 
-    <!-- TAB: HISTÓRICO -->
-    <div class="tab-content" id="tab_historico">
-      <div class="card">
-        <div class="card-title">📊 Últimos 30 registros</div>
-        <div id="histList"><div style="font-size:12px;color:#3a3a3a;padding:8px 0">Carregando histórico...</div></div>
-      </div>
-    </div>
- 
-    <div class="footer" id="pageFooter"></div>
-  </div>
-</div>
- 
+
+<div class="toast" id="toast"></div>
+<div id="app" style="display:none"></div>
+
 <script>
-// ═══════════════════════════════════════════════════════
-//  CONSTANTES
-// ═══════════════════════════════════════════════════════
-const SB = 'https://fdojstrsiojbcoiumobv.supabase.co';
-const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkb2pzdHJzaW9qYmNvaXVtb2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDk3NjYsImV4cCI6MjA5NjU4NTc2Nn0.uDymw4Dsj40RH46dXxVLn6CjutJaruADrUFriQmqVbM';
-const HDRS = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' };
-const HOJE = new Date().toISOString().split('T')[0];
- 
-const SERIE_CORES = ['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7','#f87171','#fbbf24'];
-const GRUPO_COR = {'Peito':'#ff6b8a','Costas':'#63b3ed','Pernas':'#f6ad55','Glúteos':'#ff8fa3','Panturrilha':'#9a75ea','Ombros':'#60a5fa','Bíceps':'#6ee7b7','Tríceps':'#fbbf24','Abdômen':'#f87171'};
-const RPE_LABELS = ['','Muito leve','Leve','Moderado','Um pouco forte','Forte','Forte','Muito forte','Muito forte','Exaustivo','Esforço máx.'];
-const RPE_CORES  = ['','#6ee7b7','#6ee7b7','#6ee7b7','#a3e635','#fbbf24','#fbbf24','#f97316','#f97316','#f87171','#f87171'];
- 
-// ═══════════════════════════════════════════════════════
-//  ESTADO
-// ═══════════════════════════════════════════════════════
-const params = new URLSearchParams(location.search);
-const ALUNO_ID = params.get('id');
-const SK = 'ph_treino_' + ALUNO_ID;
- 
-let aluno = null;
-let state = JSON.parse(localStorage.getItem(SK) || '{}');
-let saveTimer = null;
-let abaAtiva = 'resumo';
- 
-// ═══════════════════════════════════════════════════════
-//  API HELPERS
-// ═══════════════════════════════════════════════════════
-async function sbGet(table, qs='') {
-  try {
-    const r = await fetch(SB+'/rest/v1/'+table+(qs?'?'+qs:''), { headers: HDRS });
-    if (!r.ok) { console.error('sbGet error', table, r.status, await r.text()); return []; }
-    return r.json();
-  } catch(e) { console.error('sbGet error', table, e); return []; }
+const SB='https://fdojstrsiojbcoiumobv.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkb2pzdHJzaW9qYmNvaXVtb2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDk3NjYsImV4cCI6MjA5NjU4NTc2Nn0.uDymw4Dsj40RH46dXxVLn6CjutJaruADrUFriQmqVbM';
+const HDR={'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY};
+const HOJE=new Date().toISOString().split('T')[0];
+
+// ── pega id da URL ────────────────────────────────────────
+const params=new URLSearchParams(location.search);
+const ALUNO_ID=params.get('id');
+const SK='ph_aluno_'+ALUNO_ID;
+
+let aluno=null;
+let state=JSON.parse(localStorage.getItem(SK)||'{}');
+let serieAtiva=0;
+let doneExs={};
+let timerInterval=null;
+let timerSeg=0;
+let timerRunning=false;
+let timerExId=null;
+let saveTimer=null;
+
+async function sbGet(table,q){
+  const r=await fetch(SB+'/rest/v1/'+table+(q?'?'+q:''),{headers:HDR});
+  if(!r.ok)throw new Error(await r.text());
+  return r.json();
 }
-async function sbUpsert(table, data) {
-  const h = {...HDRS, 'Prefer': 'resolution=merge-duplicates'};
-  const r = await fetch(SB+'/rest/v1/'+table, {
-    method:'POST', headers: h,
-    body: JSON.stringify(Array.isArray(data)?data:[data])
-  });
-  if (!r.ok) { console.error('sbUpsert error', table, r.status); }
+async function sbUpsert(table,body){
+  const h={...HDR,'Prefer':'resolution=merge-duplicates'};
+  const r=await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:h,body:JSON.stringify(body)});
   return r.ok;
 }
- 
-// ═══════════════════════════════════════════════════════
-//  CARREGAR ALUNO DO SUPABASE
-// ═══════════════════════════════════════════════════════
-async function carregarAluno() {
-  if (!ALUNO_ID) {
-    mostrarErro('Nenhum ID de aluno informado na URL.');
-    return;
-  }
-  try {
-    document.getElementById('loadingMsg').textContent = 'Buscando seu treino...';
- 
-    const [alunoRows, semanas, series, exercicios] = await Promise.all([
-      sbGet('alunos', 'id=eq.'+ALUNO_ID),
-      sbGet('semanas', 'aluno_id=eq.'+ALUNO_ID+'&order=ordem.asc'),
-      sbGet('series',  'aluno_id=eq.'+ALUNO_ID+'&order=ordem.asc'),
-      sbGet('exercicios', 'aluno_id=eq.'+ALUNO_ID+'&order=ordem.asc'),
-    ]);
- 
-    if (!alunoRows.length) {
-      mostrarErro('Treino não encontrado. Verifique o link com seu personal trainer.');
-      return;
-    }
- 
-    const a = alunoRows[0];
-    aluno = {
-      id: a.id,
-      nome: a.nome,
-      objetivo: a.objetivo,
-      nivel: a.nivel,
-      dias: a.dias,
-      periodo: a.periodo,
-      obs: a.obs,
-      consultoria: 'PH PERFORMANCE',
-      semanas: semanas.map(s => ({nome:s.nome, reps:s.reps, descanso:s.descanso})),
-      series: series.map(se => ({
-        id: se.id,
-        letra: se.letra,
-        nome: se.nome,
-        grupos: se.grupos||[],
-        exercicios: exercicios
-          .filter(ex => ex.serie_id === se.id)
-          .sort((x,y) => x.ordem - y.ordem)
-          .map(ex => ({
-            id: ex.id,
-            nome: ex.nome,
-            series: ex.series_num,
-            reps: ex.reps,
-            descanso: ex.descanso,
-            obs: ex.obs,
-            medias: ex.medias||[]
-          }))
+
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',async()=>{
+  if(!ALUNO_ID){showError('Link inválido — falta o ID do aluno.');return}
+  try{
+    setLoadMsg('Buscando dados...');
+    // 1. Aluno
+    const alunosArr=await sbGet('alunos','id=eq.'+ALUNO_ID+'&limit=1');
+    if(!alunosArr.length){showError('Aluno não encontrado. Verifique o link com seu professor.');return}
+    const a=alunosArr[0];
+    // 2. Semanas
+    const semsArr=await sbGet('semanas','aluno_id=eq.'+ALUNO_ID+'&order=ordem');
+    // 3. Séries
+    const seriesArr=await sbGet('series','aluno_id=eq.'+ALUNO_ID+'&order=ordem');
+    // 4. Exercícios
+    const exsArr=await sbGet('exercicios','aluno_id=eq.'+ALUNO_ID+'&order=ordem');
+    // Monta objeto
+    aluno={
+      id:a.id, nome:a.nome, objetivo:a.objetivo, nivel:a.nivel,
+      dias:a.dias, periodo:a.periodo,
+      semanas:semsArr.length?semsArr:[{nome:'Semana 1',reps:'10–12',descanso:'60s'}],
+      series:seriesArr.map(s=>({
+        id:s.id, letra:s.letra, nome:s.nome, grupos:s.grupos||[],
+        exercicios:exsArr.filter(e=>e.serie_id===s.id).sort((a,b)=>a.ordem-b.ordem)
+          .map(e=>({id:e.id,nome:e.nome,series:e.series_num,reps:e.reps,descanso:e.descanso,obs:e.obs,medias:e.medias||[]}))
       }))
     };
- 
-    // Carrega progresso do dia de hoje do Supabase
-    await carregarProgresso();
- 
+    // 5. Carrega progresso de hoje do Supabase
+    setLoadMsg('Carregando progresso...');
+    try{
+      const progArr=await sbGet('progresso_aluno','aluno_id=eq.'+ALUNO_ID+'&data=eq.'+HOJE+'&limit=1');
+      if(progArr.length){
+        const p=progArr[0];
+        if(p.cargas)Object.assign(state.cargas||(state.cargas={}),p.cargas);
+        if(p.checkin)state.checkin=p.checkin;
+        if(p.rpe)state.rpe=p.rpe;
+        if(p.feedback)state.feedbackGeral=p.feedback;
+        if(p.feedbacks_ex)Object.assign(state.feedbacks||(state.feedbacks={}),p.feedbacks_ex);
+        localStorage.setItem(SK,JSON.stringify(state));
+      }
+    }catch(e){}
+    // Renderiza
     renderApp();
-    carregarHistorico(); // async, em background
- 
-  } catch(e) {
-    console.error(e);
-    mostrarErro('Erro ao carregar o treino. Verifique sua conexão.');
+    document.getElementById('loadingScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    toast('☁️ Treino carregado');
+  }catch(e){
+    showError('Erro ao carregar: '+e.message);
   }
+});
+
+function setLoadMsg(m){document.getElementById('loadMsg').textContent=m}
+function showError(msg){
+  document.getElementById('loadingScreen').style.display='none';
+  const el=document.getElementById('errorScreen');
+  el.style.display='flex';
+  document.getElementById('errorMsg').textContent=msg;
 }
- 
-async function carregarProgresso() {
-  try {
-    const rows = await sbGet('progresso_aluno',
-      'aluno_id=eq.'+ALUNO_ID+'&data=eq.'+HOJE+'&limit=1');
-    if (rows.length) {
-      const r = rows[0];
-      if (r.checkin) state.checkin = r.checkin;
-      if (r.rpe) state.rpe = r.rpe;
-      if (r.feedback) state.feedbackGeral = r.feedback;
-      if (r.cargas) Object.keys(r.cargas).forEach(k => {
-        if (!state.cargas) state.cargas = {};
-        state.cargas[k] = r.cargas[k];
-      });
-      if (r.feedbacks_ex) Object.keys(r.feedbacks_ex).forEach(k => {
-        if (!state.feedbacks) state.feedbacks = {};
-        state.feedbacks[k] = r.feedbacks_ex[k];
-      });
-      localStorage.setItem(SK, JSON.stringify(state));
-    }
-  } catch(e) {}
+
+// ── RENDER ────────────────────────────────────────────────
+function buildCargaGrid(exId,series,state){
+  const n=parseInt(series)||3;
+  const saved=(state.cargas||{})[exId]||[];
+  let h='';
+  for(let i=0;i<n;i++){
+    h+='<div class="serie-carga-row"><div class="serie-carga-lbl">'+(i+1)+'</div><input class="carga-inp" type="text" id="carga_'+exId+'_'+i+'" placeholder="kg / reps" value="'+(saved[i]||'')+'" oninput="salvarCarga(\''+exId+'\','+i+',this.value)"/></div>';
+  }
+  return h;
 }
- 
-async function carregarHistorico() {
-  try {
-    const rows = await sbGet('progresso_aluno',
-      'aluno_id=eq.'+ALUNO_ID+'&order=data.desc&limit=30');
-    const el = document.getElementById('histList');
-    if (!rows.length) {
-      el.innerHTML = '<div style="font-size:12px;color:#3a3a3a;padding:8px 0">Nenhum registro ainda.</div>';
-      return;
-    }
-    el.innerHTML = rows.map(r => {
-      const chips = [];
-      if (r.checkin?.length) chips.push('✅ '+r.checkin.length+' dia'+(r.checkin.length>1?'s':''));
-      if (r.rpe) chips.push('RPE '+r.rpe+'/10');
-      if (r.feedback) chips.push('📝 Feedback');
-      const cargasN = r.cargas ? Object.keys(r.cargas).length : 0;
-      if (cargasN) chips.push('⚖️ '+cargasN+' ex.');
-      return `<div class="hist-entry">
-        <div class="hist-date">${r.data.split('-').reverse().join('/')}</div>
-        <div class="hist-chips">${chips.map(c=>`<span class="hist-chip">${c}</span>`).join('')}</div>
-        ${r.feedback?`<div style="font-size:11px;color:#555;margin-top:8px;line-height:1.5">"${r.feedback}"</div>`:''}
-      </div>`;
+
+function renderApp(){
+  const app=document.getElementById('app');
+  const nome=aluno.nome.split(' ')[0].toUpperCase();
+  const sobrenome=aluno.nome.split(' ').slice(1).join(' ').toUpperCase();
+  const CORES=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7'];
+  const DIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+
+  // HEADER
+  let html=`<div class="header">
+    <div class="header-brand">PH PERFORMANCE</div>
+    <div class="header-name">TREINO <span>${nome}</span></div>
+    <div class="header-meta">${aluno.dias||''}${aluno.dias&&aluno.periodo?' · ':''}${aluno.periodo||''}</div>
+    <div class="header-tags">
+      ${aluno.objetivo?`<div class="htag hl">${aluno.objetivo}</div>`:''}
+      ${aluno.nivel?`<div class="htag">${aluno.nivel}</div>`:''}
+      <div class="htag">${aluno.series.length} séries</div>
+    </div>
+  </div>
+  <div class="body">`;
+
+  // CHECK-IN
+  html+=`<div class="card">
+    <div class="card-label">✅ Check-in da semana</div>
+    <div class="checkin-bar" id="checkinBar">
+      ${DIAS.map((d,i)=>`<div class="ci-day${(state.checkin||[]).includes(i)?' done':''}" id="ci_${i}" onclick="toggleCheckin(${i})">
+        <div class="ci-icon">${(state.checkin||[]).includes(i)?'✅':'⬜'}</div>
+        <div class="ci-lbl">${d}</div>
+      </div>`).join('')}
+    </div>
+    <div class="freq-label" id="freqLabel">${(state.checkin||[]).length} de 7 dias esta semana</div>
+  </div>`;
+
+  // PERIODIZAÇÃO com datas calculadas
+  if(aluno.semanas.length){
+    const startDate=aluno.dataInicio?new Date(aluno.dataInicio):null;
+    const hoje=new Date();
+    const semsH=aluno.semanas.map((s,i)=>{
+      let dateStr='',isCurrent=false;
+      if(startDate){
+        const d0=new Date(startDate);d0.setDate(d0.getDate()+i*7);
+        const d1=new Date(d0);d1.setDate(d1.getDate()+6);d1.setHours(23,59,59);
+        const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+        dateStr=fmt(d0)+'–'+fmt(d1);
+        isCurrent=hoje>=d0&&hoje<=d1;
+      }
+      return '<div class="sem-banner-row'+(isCurrent?' current':'')+'"><div class="sem-banner-num">SEM '+(i+1)+'</div><div class="sem-banner-name">'+(s.nome||'—')+(isCurrent?' 📍':'')+'</div><div class="sem-banner-reps">'+(s.reps||'—')+'</div><div class="sem-banner-dates">'+dateStr+'</div></div>';
     }).join('');
-  } catch(e) {}
-}
- 
-// ═══════════════════════════════════════════════════════
-//  RENDER
-// ═══════════════════════════════════════════════════════
-function renderApp() {
-  document.getElementById('loadingScreen').style.display = 'none';
-  document.getElementById('appContent').style.display = 'block';
- 
-  // Header
-  const eyebrow = [aluno.objetivo, aluno.nivel, aluno.obs].filter(Boolean).join(' · ');
-  const nomePrimeiro = aluno.nome.split(' ')[0].toUpperCase();
-  document.getElementById('pageHeader').innerHTML = `
-    ${eyebrow ? `<div class="header-eyebrow">${eyebrow}</div><br/>` : ''}
-    <div class="header-title">TREINO <span>${nomePrimeiro}</span></div>
-    <div class="header-meta">${[aluno.dias?aluno.dias+'x por semana':'', aluno.periodo].filter(Boolean).join(' · ')}</div>`;
- 
-  // Periodização
-  if (aluno.semanas?.length) {
-    document.getElementById('periodoCard').style.display = 'block';
-    document.getElementById('periodoList').innerHTML = aluno.semanas.map((s,i) =>
-      `<div class="perio-row">
-        <div class="perio-num">SEM ${i+1}</div>
-        <div class="perio-nome">${s.nome||'—'}</div>
-        <div class="perio-reps">${s.reps||'—'}</div>
-        <div class="perio-rest">${s.descanso||''}</div>
-      </div>`
-    ).join('');
+    html+=`<div class="card"><div class="card-label">📅 Periodização</div><div class="sem-banner-rows">${semsH}</div></div>`;
   }
- 
-  // Tabs + séries
-  const tabsBar = document.getElementById('tabsBar');
-  const seriesContainer = document.getElementById('seriesContainer');
- 
-  // Tab Resumo
-  tabsBar.innerHTML = `<button class="tab-btn active" id="tabBtn_resumo" onclick="mudarAba('resumo')">📋 Resumo</button>`;
- 
-  // Tab por série
-  aluno.series.forEach((s, si) => {
-    const cor = SERIE_CORES[si % SERIE_CORES.length];
-    tabsBar.innerHTML += `<button class="tab-btn" id="tabBtn_serie_${s.id}" onclick="mudarAba('serie_${s.id}')" style="border-color:${cor}44">${s.letra}${s.nome?' · '+s.nome:''}</button>`;
- 
-    const tagsH = s.grupos.map(g =>
-      `<span class="serie-tag" style="background:${(GRUPO_COR[g]||cor)+'22'};color:${GRUPO_COR[g]||cor};border:1px solid ${(GRUPO_COR[g]||cor)+'44'}">${g}</span>`
-    ).join('');
- 
-    const exH = s.exercicios.map((ex, ei) => {
-      const mediaH = (ex.medias||[])
-        .filter(m => m.type==='yt'||m.type==='link')
-        .map(m => `<a href="${m.url}" target="_blank" class="media-link" style="background:${cor}22;color:${cor};border:1px solid ${cor}44">${m.type==='yt'?'▶ Vídeo':'↗ Ver exercício'}</a>`)
-        .join('');
- 
-      const semsH = aluno.semanas.length
-        ? aluno.semanas.map((sm,i) => `
-            <div class="carga-sem">
-              <div class="carga-sem-label">Sem ${i+1}${sm.nome?' · '+sm.nome.substring(0,8):''}</div>
-              <input class="carga-inp" id="carga_${ex.id}_${i}" type="text" placeholder="ex: 80kg" oninput="salvarCarga('${ex.id}',${i},this.value)"/>
-            </div>`).join('')
-        : `<div class="carga-sem">
-            <div class="carga-sem-label">Carga</div>
-            <input class="carga-inp" id="carga_${ex.id}_0" type="text" placeholder="ex: 80kg" oninput="salvarCarga('${ex.id}',0,this.value)"/>
-           </div>`;
- 
-      return `<div class="ex-card">
+
+  // TABS DAS SÉRIES
+  html+=`<div class="series-tabs" id="seriesTabs">
+    ${aluno.series.map((s,i)=>`<div class="s-tab${i===serieAtiva?' active':''}" id="stab_${i}" onclick="trocarSerie(${i})" style="${i===serieAtiva?'color:'+CORES[i%CORES.length]+';border-color:'+CORES[i%CORES.length]+'44;background:'+CORES[i%CORES.length]+'15':''}">${s.letra}${s.nome?' · '+s.nome.substring(0,8):''}</div>`).join('')}
+  </div>`;
+
+  // SÉRIES
+  aluno.series.forEach((s,si)=>{
+    const cor=CORES[si%CORES.length];
+    const exTotal=s.exercicios.length;
+    const exDone=s.exercicios.filter(e=>doneExs[e.id]).length;
+    const todosFeitos=exTotal>0&&exDone===exTotal;
+
+    html+=`<div id="serie_${si}" style="display:${si===serieAtiva?'block':'none'}">
+      <div class="serie-header" style="border-bottom:2px solid ${cor}">
+        <div class="serie-letter" style="color:${cor}">${s.letra}</div>
+        <div class="serie-info">
+          <div class="serie-name">${s.nome||'Série '+s.letra}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${exDone}/${exTotal} exercícios</div>
+          ${s.grupos.length?`<div class="serie-grupos">${s.grupos.map(g=>`<span class="grupo-tag" style="color:${cor};border-color:${cor}44">${g}</span>`).join('')}</div>`:''}
+        </div>
+      </div>`;
+
+    s.exercicios.forEach((ex,ei)=>{
+      const done=!!doneExs[ex.id];
+      const cargasSalvas=(state.cargas||{})[ex.id]||[];
+      const descSeg=parseSeg(ex.descanso);
+
+      // mídias
+      let mediaH='';
+      (ex.medias||[]).forEach(m=>{
+        if(m.type==='yt'||m.type==='link')mediaH+=`<a href="${m.url}" target="_blank" class="media-btn">▶ Ver exercício</a>`;
+        else if(m.type==='img')mediaH+=`<a href="${m.url}" target="_blank" class="media-btn">🖼 Ver imagem</a>`;
+      });
+
+      html+=`<div class="ex-card${done?' done':''}" id="exc_${ex.id}">
         <div class="ex-top">
-          <div class="ex-num" style="background:${cor}">${ei+1}</div>
+          <div class="ex-num${done?' ex-done-num':''}" style="${!done?'background:'+cor+'20;color:'+cor:''}">${done?'✓':ei+1}</div>
           <div class="ex-name">${ex.nome||'Exercício '+(ei+1)}</div>
+          <button class="check-btn" onclick="toggleDone('${ex.id}')" title="${done?'Desmarcar':'Marcar como feito'}">${done?'✓':'○'}</button>
         </div>
+        ${(ex.tecnica&&ex.tecnica!=="Nenhuma")?'<div class="tecnica-badge" style="background:'+({"Progressivo":"#c9a84c","Pirâmide Crescente":"#63b3ed","Pirâmide Decrescente":"#f6ad55","Drop-set":"#f87171","Rest-pause":"#9a75ea"}[ex.tecnica]||"#c9a84c")+'22;color:'+({"Progressivo":"#c9a84c","Pirâmide Crescente":"#63b3ed","Pirâmide Decrescente":"#f6ad55","Drop-set":"#f87171","Rest-pause":"#9a75ea"}[ex.tecnica]||"#c9a84c")+'">'+({Progressivo:"📈","Pirâmide Crescente":"🔺","Pirâmide Decrescente":"🔻","Drop-set":"💧","Rest-pause":"⏸"}[ex.tecnica]||"🔧")+' '+ex.tecnica+'</div>':''}
         <div class="ex-params">
-          ${ex.series ? `<div><span class="ex-param-label">Séries</span><span class="ex-param-val">${ex.series}</span></div>` : ''}
-          ${ex.reps   ? `<div><span class="ex-param-label">Repetições</span><span class="ex-param-val" style="color:${cor}">${ex.reps}</span></div>` : ''}
-          ${ex.descanso ? `<div><span class="ex-param-label">Descanso</span><span class="ex-param-val">${ex.descanso}</span></div>` : ''}
+          ${ex.series?`<div class="ex-param"><div class="ex-plabel">Séries</div><div class="ex-pval" style="color:var(--text)">${ex.series}</div></div>`:''}
+          ${ex.reps?`<div class="ex-param"><div class="ex-plabel">Repetições</div><div class="ex-pval" style="color:${cor}">${ex.reps}</div></div>`:''}
+          ${ex.descanso?`<div class="ex-param"><div class="ex-plabel">Descanso</div><div class="ex-pval" style="color:var(--text)">${ex.descanso}</div></div>`:''}
         </div>
-        ${ex.obs ? `<div class="ex-obs">${ex.obs}</div>` : ''}
-        <div class="carga-wrap">
-          <div class="carga-title">⚖️ Anotar Carga Usada</div>
-          <div class="carga-sems">${semsH}</div>
+        ${ex.obs?`<div class="ex-obs">${ex.obs}</div>`:''}
+        ${mediaH?`<div class="ex-media">${mediaH}</div>`:''}
+        ${descSeg?`<div class="timer-row">
+          <button class="timer-btn" id="tbtn_${ex.id}" onclick="toggleTimer('${ex.id}',${descSeg})">⏱ Iniciar descanso</button>
+          <div class="timer-display" id="tdisp_${ex.id}"></div>
+        </div>`:''}
+        <div class="carga-section">
+          <div class="carga-section-label">⚖️ Carga por série</div>
+          <div class="series-carga-grid">${buildCargaGrid(ex.id,ex.series,state)}</div>
           <div class="feed-label">📓 Como foi? (opcional)</div>
-          <textarea class="feed-ta" id="feedEx_${ex.id}" placeholder="Ex: difícil, boa execução, dor no ombro..." oninput="salvarFeedEx('${ex.id}',this.value)"></textarea>
-        </div>
-        ${mediaH}
-      </div>`;
-    }).join('');
- 
-    seriesContainer.innerHTML += `
-      <div class="tab-content" id="tab_serie_${s.id}">
-        <div style="margin-bottom:20px">
-          <div class="serie-header" style="border-bottom-color:${cor}">
-            <div class="serie-letter" style="color:${cor}">${s.letra}</div>
-            <div>
-              <div class="serie-name">${s.nome||'Série '+s.letra}</div>
-              <div class="serie-tags">${tagsH}</div>
-            </div>
-          </div>
-          ${exH}
+          <textarea class="feed-inp" id="feed_${ex.id}" placeholder="Ex: difícil, boa execução, dor no ombro…" oninput="salvarFeedEx('${ex.id}',this.value)">${(state.feedbacks||{})[ex.id]||''}</textarea>
         </div>
       </div>`;
-  });
- 
-  // Tab Histórico
-  tabsBar.innerHTML += `<button class="tab-btn" id="tabBtn_historico" onclick="mudarAba('historico')">📊 Histórico</button>`;
- 
-  // Footer
-  document.getElementById('pageFooter').textContent = (aluno.consultoria||'PH PERFORMANCE').toUpperCase();
- 
-  // Aplica RPE buttons
-  const rpeRow = document.getElementById('rpeRow');
-  rpeRow.innerHTML = [1,2,3,4,5,6,7,8,9,10].map(v =>
-    `<button class="rpe-btn" id="rpe_${v}" onclick="setRPE(${v})">${v}</button>`
-  ).join('');
- 
-  // Restaura state na tela
-  aplicarState();
-}
- 
-function aplicarState() {
-  // Checkin
-  (state.checkin||[]).forEach(i => {
-    const el = document.getElementById('ci_'+i);
-    if (el) { el.classList.add('done'); el.querySelector('.ci-icon').textContent = '✅'; }
-  });
-  atualizarFreq();
-  // RPE
-  if (state.rpe) setRPE(state.rpe, true);
-  // Feedback geral
-  if (state.feedbackGeral) document.getElementById('feedbackGeral').value = state.feedbackGeral;
-  // Cargas
-  Object.entries(state.cargas||{}).forEach(([exId, sems]) => {
-    sems.forEach((v,i) => {
-      const inp = document.getElementById('carga_'+exId+'_'+i);
-      if (inp && v) inp.value = v;
     });
+
+    // Botão concluir
+    html+=`<button class="save-btn" id="concluirBtn_${si}" onclick="concluirSerie(${si})" ${!todosFeitos?'disabled style="background:#1a1a1a;color:#333;cursor:not-allowed;transform:none"':''}>
+      ${todosFeitos?'✅ Concluir série '+s.letra:'Marque todos os exercícios para concluir'}
+    </button>`;
+    if(!todosFeitos&&exTotal>0)html+=`<div style="text-align:center;font-size:11px;color:var(--muted);margin-top:6px">${exDone} de ${exTotal} marcados</div>`;
+
+    html+=`</div>`; // fecha serie_si
   });
-  // Feedbacks por exercício
-  Object.entries(state.feedbacks||{}).forEach(([exId, v]) => {
-    const inp = document.getElementById('feedEx_'+exId);
-    if (inp && v) inp.value = v;
+
+  // RPE + FEEDBACK GERAL
+  html+=`<div class="card" style="margin-top:8px">
+    <div class="rpe-wrap">
+      <div class="rpe-title">📊 Como foi o treino hoje? (RPE)</div>
+      <div class="rpe-row">
+        ${[1,2,3,4,5,6,7,8,9,10].map(v=>`<button class="rpe-btn" id="rpe_${v}" onclick="setRPE(${v})">${v}</button>`).join('')}
+      </div>
+      <div class="rpe-label-txt" id="rpeLabel"></div>
+    </div>
+    <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px">💬 Observação geral</div>
+    <textarea class="feed-geral" id="feedbackGeral" placeholder="Como foi o treino hoje? Alguma dificuldade…" oninput="agendarSave()">${state.feedbackGeral||''}</textarea>
+    <button class="save-btn" onclick="salvarTudo()">☁️ Confirmar e salvar na nuvem</button>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;display:none" id="savedMsg"></div>
+  </div>
+  <div class="footer-brand">PH PERFORMANCE</div>
+  </div>`; // fecha .body
+
+  app.innerHTML=html;
+  // Aplica RPE se já tinha
+  if(state.rpe)setRPE(state.rpe,true);
+}
+
+// ── SÉRIE ATIVA ───────────────────────────────────────────
+function trocarSerie(i){
+  serieAtiva=i;
+  aluno.series.forEach((_,j)=>{
+    const el=document.getElementById('serie_'+j);if(el)el.style.display=j===i?'block':'none';
+    const tab=document.getElementById('stab_'+j);
+    if(tab){
+      const cor=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7'][j%6];
+      tab.className='s-tab'+(j===i?' active':'');
+      tab.style.cssText=j===i?'color:'+cor+';border-color:'+cor+'44;background:'+cor+'15':'';
+    }
   });
+  window.scrollTo({top:0,behavior:'smooth'});
 }
- 
-// ═══════════════════════════════════════════════════════
-//  NAVEGAÇÃO DE ABAS
-// ═══════════════════════════════════════════════════════
-function mudarAba(id) {
-  abaAtiva = id;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab_'+id)?.classList.add('active');
-  document.getElementById('tabBtn_'+id)?.classList.add('active');
-}
- 
-// ═══════════════════════════════════════════════════════
-//  INTERAÇÕES
-// ═══════════════════════════════════════════════════════
-function toggleCheckin(i) {
-  if (!state.checkin) state.checkin = [];
-  const idx = state.checkin.indexOf(i);
-  const el = document.getElementById('ci_'+i);
-  const icon = el.querySelector('.ci-icon');
-  if (idx === -1) { state.checkin.push(i); el.classList.add('done'); icon.textContent = '✅'; }
-  else { state.checkin.splice(idx,1); el.classList.remove('done'); icon.textContent = '⬜'; }
-  atualizarFreq();
+
+// ── CHECK-IN ──────────────────────────────────────────────
+function toggleCheckin(i){
+  if(!state.checkin)state.checkin=[];
+  const idx=state.checkin.indexOf(i);
+  const el=document.getElementById('ci_'+i);
+  const ic=el.querySelector('.ci-icon');
+  if(idx===-1){state.checkin.push(i);el.classList.add('done');ic.textContent='✅'}
+  else{state.checkin.splice(idx,1);el.classList.remove('done');ic.textContent='⬜'}
+  document.getElementById('freqLabel').textContent=(state.checkin.length)+' de 7 dias esta semana';
   agendarSave();
 }
- 
-function atualizarFreq() {
-  const n = (state.checkin||[]).length;
-  document.getElementById('freqLabel').textContent = n + ' de 7 dias esta semana';
-}
- 
-function setRPE(v, silent=false) {
-  state.rpe = v;
-  document.querySelectorAll('.rpe-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.borderColor=''; });
-  const btn = document.getElementById('rpe_'+v);
-  if (btn) { btn.classList.add('active'); btn.style.background = RPE_CORES[v]; btn.style.borderColor = RPE_CORES[v]; }
-  const lbl = document.getElementById('rpeLabel');
-  if (lbl) { lbl.textContent = v+'/10 — '+RPE_LABELS[v]; lbl.style.color = RPE_CORES[v]; }
-  if (!silent) agendarSave();
-}
- 
-function salvarCarga(exId, semIdx, val) {
-  if (!state.cargas) state.cargas = {};
-  if (!state.cargas[exId]) state.cargas[exId] = [];
-  state.cargas[exId][semIdx] = val;
-  localStorage.setItem(SK, JSON.stringify(state));
-  agendarSave();
-}
- 
-function salvarFeedEx(exId, val) {
-  if (!state.feedbacks) state.feedbacks = {};
-  state.feedbacks[exId] = val;
-  localStorage.setItem(SK, JSON.stringify(state));
-  agendarSave();
-}
- 
-// ═══════════════════════════════════════════════════════
-//  SALVAR NO SUPABASE
-// ═══════════════════════════════════════════════════════
-function agendarSave() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => enviarSupabase(), 1500);
-}
- 
-async function enviarSupabase() {
-  state.savedAt = new Date().toISOString();
-  localStorage.setItem(SK, JSON.stringify(state));
-  try {
-    const ok = await sbUpsert('progresso_aluno', {
-      id: 'pg_'+ALUNO_ID+'_'+HOJE,
-      aluno_id: ALUNO_ID,
-      data: HOJE,
-      checkin: state.checkin||[],
-      rpe: state.rpe||null,
-      feedback: state.feedbackGeral||'',
-      cargas: state.cargas||{},
-      feedbacks_ex: state.feedbacks||{}
-    });
-    mostrarStatus(ok ? '✅ Salvo na nuvem' : '⚠️ Salvo no dispositivo');
-  } catch(e) {
-    mostrarStatus('📱 Salvo localmente (sem internet)');
+
+// ── MARCAR EXERCÍCIO ──────────────────────────────────────
+function toggleDone(eid){
+  doneExs[eid]=!doneExs[eid];
+  const card=document.getElementById('exc_'+eid);
+  const btn=card?.querySelector('.check-btn');
+  const num=card?.querySelector('.ex-num');
+  if(card){
+    card.classList.toggle('done',!!doneExs[eid]);
+    if(btn)btn.textContent=doneExs[eid]?'✓':'○';
+    if(num){num.textContent=doneExs[eid]?'✓':num.dataset.num||num.textContent;num.className='ex-num'+(doneExs[eid]?' ex-done-num':'');if(!doneExs[eid]){const cor=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7'][serieAtiva%6];num.style.cssText='background:'+cor+'20;color:'+cor}else num.style.cssText=''}
   }
+  // atualiza contador e botão concluir
+  const s=aluno.series[serieAtiva];
+  const exDone=s.exercicios.filter(e=>doneExs[e.id]).length;
+  const todosFeitos=s.exercicios.length>0&&exDone===s.exercicios.length;
+  const cBtn=document.getElementById('concluirBtn_'+serieAtiva);
+  if(cBtn){
+    cBtn.disabled=!todosFeitos;
+    cBtn.style.cssText=todosFeitos?'':'background:#1a1a1a;color:#333;cursor:not-allowed;transform:none';
+    cBtn.textContent=todosFeitos?'✅ Concluir série '+s.letra:'Marque todos os exercícios para concluir';
+  }
+  const hint=cBtn?.nextElementSibling;
+  if(hint&&hint.style!==undefined)hint.textContent=!todosFeitos&&s.exercicios.length>0?exDone+' de '+s.exercicios.length+' marcados':'';
 }
- 
-async function salvarTudo() {
-  state.feedbackGeral = document.getElementById('feedbackGeral').value;
+
+// ── TIMER ─────────────────────────────────────────────────
+function parseSeg(str){
+  if(!str)return 0;
+  const m=str.match(/(\d+)\s*(min|s|seg)?/i);if(!m)return 0;
+  const v=parseInt(m[1]);const u=(m[2]||'s').toLowerCase();
+  return u.startsWith('m')?v*60:v;
+}
+function toggleTimer(eid,seg){
+  if(timerRunning&&timerExId===eid){clearInterval(timerInterval);timerRunning=false;timerExId=null;
+    const btn=document.getElementById('tbtn_'+eid);const disp=document.getElementById('tdisp_'+eid);
+    if(btn){btn.textContent='⏱ Iniciar descanso';btn.classList.remove('running')}if(disp)disp.textContent='';return}
+  if(timerRunning&&timerExId!==eid){clearInterval(timerInterval);
+    const ob=document.getElementById('tbtn_'+timerExId);const od=document.getElementById('tdisp_'+timerExId);
+    if(ob){ob.textContent='⏱ Iniciar descanso';ob.classList.remove('running')}if(od)od.textContent='';}
+  timerSeg=seg;timerExId=eid;timerRunning=true;
+  const btn=document.getElementById('tbtn_'+eid);const disp=document.getElementById('tdisp_'+eid);
+  if(btn){btn.textContent='⏹ Parar';btn.classList.add('running')}
+  function tick(){
+    if(timerSeg<=0){clearInterval(timerInterval);timerRunning=false;
+      if(disp)disp.textContent='✅ Pronto!';if(btn){btn.textContent='⏱ Iniciar descanso';btn.classList.remove('running')}
+      try{const ctx=new AudioContext();const o=ctx.createOscillator();const g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(0.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5)}catch(e){}
+      try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}return}
+    const m=Math.floor(timerSeg/60);const s=timerSeg%60;
+    if(disp)disp.textContent=(m?m+':':'')+(s<10&&m?'0':'')+s+'s';
+    timerSeg--;
+  }
+  tick();timerInterval=setInterval(tick,1000);
+}
+
+// ── CARGA / FEEDBACK ──────────────────────────────────────
+function salvarCarga(eid,semIdx,val){
+  if(!state.cargas)state.cargas={};if(!state.cargas[eid])state.cargas[eid]=[];
+  state.cargas[eid][semIdx]=val;localStorage.setItem(SK,JSON.stringify(state));agendarSave();
+}
+function salvarFeedEx(eid,val){
+  if(!state.feedbacks)state.feedbacks={};state.feedbacks[eid]=val;
+  localStorage.setItem(SK,JSON.stringify(state));agendarSave();
+}
+
+// ── RPE ───────────────────────────────────────────────────
+const RPE_LABELS=['','Muito leve','Leve','Moderado','Um pouco forte','Forte','Forte','Muito forte','Muito forte','Exaustivo','Esforço máximo'];
+const RPE_CORES=['','#6ee7b7','#6ee7b7','#6ee7b7','#a3e635','#fbbf24','#fbbf24','#f97316','#f97316','#f87171','#f87171'];
+function setRPE(v,silent){
+  state.rpe=v;
+  document.querySelectorAll('.rpe-btn').forEach(b=>{b.style.background='';b.style.borderColor=''});
+  const btn=document.getElementById('rpe_'+v);
+  if(btn){btn.style.background=RPE_CORES[v];btn.style.borderColor=RPE_CORES[v];btn.style.color='#111'}
+  const lbl=document.getElementById('rpeLabel');
+  if(lbl){lbl.textContent=v+'/10 — '+RPE_LABELS[v];lbl.style.color=RPE_CORES[v]}
+  if(!silent)agendarSave();
+}
+
+// ── CONCLUIR SÉRIE ────────────────────────────────────────
+async function concluirSerie(si){
+  const s=aluno.series[si];
+  // reseta exercícios dessa série
+  s.exercicios.forEach(ex=>{doneExs[ex.id]=false;
+    const card=document.getElementById('exc_'+ex.id);if(card)card.classList.remove('done');
+  });
+  // re-renderiza botão
+  const cBtn=document.getElementById('concluirBtn_'+si);
+  if(cBtn){cBtn.disabled=true;cBtn.style.cssText='background:#1a1a1a;color:#333;cursor:not-allowed;transform:none';cBtn.textContent='Marque todos os exercícios para concluir'}
+  // salva
+  await enviarSupabase();
+  toast('🎉 Série '+s.letra+' concluída! Continue assim 💪');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── AUTO SAVE ─────────────────────────────────────────────
+function agendarSave(){clearTimeout(saveTimer);saveTimer=setTimeout(enviarSupabase,1500)}
+
+async function enviarSupabase(){
+  state.feedbackGeral=(document.getElementById('feedbackGeral')?.value)||state.feedbackGeral||'';
+  state.savedAt=new Date().toISOString();
+  localStorage.setItem(SK,JSON.stringify(state));
+  try{
+    const ok=await sbUpsert('progresso_aluno',{
+      id:'pg_'+ALUNO_ID+'_'+HOJE,
+      aluno_id:ALUNO_ID,data:HOJE,
+      checkin:state.checkin||[],rpe:state.rpe||null,
+      feedback:state.feedbackGeral||'',
+      cargas:state.cargas||{},feedbacks_ex:state.feedbacks||{}
+    });
+    if(ok)toast('✅ Salvo na nuvem');
+  }catch(e){toast('📱 Salvo no dispositivo')}
+}
+
+async function salvarTudo(){
   clearTimeout(saveTimer);
   await enviarSupabase();
 }
- 
-// ═══════════════════════════════════════════════════════
-//  UI HELPERS
-// ═══════════════════════════════════════════════════════
-function mostrarStatus(msg) {
-  const el = document.getElementById('savedMsg');
-  if (el) { el.textContent = msg; el.style.display = 'block'; setTimeout(()=>el.style.display='none',3000); }
-  const bar = document.getElementById('statusBar');
-  if (bar) { bar.textContent = msg; bar.classList.add('show'); setTimeout(()=>bar.classList.remove('show'),2500); }
+
+// ── TOAST ─────────────────────────────────────────────────
+let toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
 }
- 
-function mostrarErro(msg) {
-  document.getElementById('loadingScreen').style.display = 'none';
-  document.getElementById('errorScreen').style.display = 'flex';
-  document.getElementById('errorMsg').textContent = msg;
-}
- 
-// ═══════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════
-carregarAluno();
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 </script>
 </body>
 </html>
- 
