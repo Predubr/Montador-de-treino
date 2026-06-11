@@ -1210,7 +1210,7 @@ function renderSerieEditor(sid){
   serieAtivaMap[alunoAtivo.id]=sid;saveDB();
   const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];
   const gH=GRUPOS_MW.map(g=>`<span class="g-tag${s.grupos.includes(g)?' on':''}" data-g="${g}" onclick="toggleGrupo('${sid}','${g}',this)">${GRUPO_EMOJI[g]||''} ${g}</span>`).join('')+`<input class="g-custom-inp" type="text" placeholder="+ outro grupo" onkeydown="if(event.key==='Enter')addGrupoCustom('${sid}',this)"/>`;
-  const exH=s.exercicios.map((ex,ei)=>buildExCard(sid,ex,ei+1,cor)).join('');
+  const exH='';
   document.getElementById('serieContent').innerHTML=`<div class="content-inner">
     <div class="serie-header-block">
       <div class="serie-eyebrow">${esc(alunoAtivo.nome)} &nbsp;·&nbsp; Série de treino</div>
@@ -1262,7 +1262,7 @@ function renderSerieEditor(sid){
     <div id="tabContent_metas_${sid}" style="display:none"></div>
     <div id="tabContent_fotos_${sid}" style="display:none"></div>
   </div>`;
-  initDrag(document.getElementById('exlist_'+sid),sid);
+  renderExList(sid,s,cor);
   buscarMW(sid);
 }
 
@@ -1345,13 +1345,13 @@ function getMWDB(){
   const overrides=JSON.parse(localStorage.getItem('fitficha_overrides')||'{}');
   return [...MW_BUILTIN.map(e=>e.slug&&overrides[e.slug]?{...e,url:overrides[e.slug]}:e),...getCustomEx()];
 }
-function mwAd(sid,nome,url){const s=getSerie(sid);if(!s)return;const ex={id:'ex'+Date.now(),nome,series:'',reps:'',descanso:'',obs:'',medias:[{id:'m'+Date.now(),type:'link',url}]};s.exercicios.push(ex);saveDB();const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];const lista=document.getElementById('exlist_'+sid);const d=document.createElement('div');d.innerHTML=buildExCard(sid,ex,s.exercicios.length,cor);lista.appendChild(d.firstElementChild);initDrag(lista,sid);renderSeriesNav();const inp=document.getElementById('mwInp_'+sid);if(inp)inp.value='';buscarMW(sid);document.getElementById('excard_'+ex.id)?.scrollIntoView({behavior:'smooth',block:'center'})}
+function mwAd(sid,nome,url){const s=getSerie(sid);if(!s)return;const ex={id:'ex'+Date.now(),nome,series:'',reps:'',descanso:'',obs:'',medias:[{id:'m'+Date.now(),type:'link',url}]};s.exercicios.push(ex);saveDB();const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];renderExList(sid,s,cor);renderSeriesNav();const inp=document.getElementById('mwInp_'+sid);if(inp)inp.value='';buscarMW(sid);setTimeout(()=>document.getElementById('excard_'+ex.id)?.scrollIntoView({behavior:'smooth',block:'center'}),80)}
 function mwDel(id,sid){saveCustomEx(getCustomEx().filter(e=>e.id!==id));buscarMW(sid)}
 function toggleCad(sid){const f=document.getElementById('mwCF_'+sid);const b=document.getElementById('mwCT_'+sid);const op=f.style.display==='flex';f.style.display=op?'none':'flex';b.textContent=op?'＋ Cadastrar exercício personalizado':'✕ Fechar cadastro'}
 function mwCadastrar(sid){const n=(document.getElementById('mwCN_'+sid)?.value||'').trim();const m=document.getElementById('mwCM_'+sid)?.value||'';const u=(document.getElementById('mwCU_'+sid)?.value||'').trim();if(!n)return alert('Digite o nome.');const arr=getCustomEx();arr.push({id:'cex'+Date.now(),nome:n,musculo:m,url:u||null,custom:true});saveCustomEx(arr);document.getElementById('mwCN_'+sid).value='';document.getElementById('mwCU_'+sid).value='';buscarMW(sid);toggleCad(sid)}
 
-function addEx(sid){const s=getSerie(sid);if(!s)return;const ex={id:'ex'+Date.now(),nome:'',series:'',reps:'',descanso:'',obs:'',medias:[]};s.exercicios.push(ex);saveDB();const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];const lista=document.getElementById('exlist_'+sid);const d=document.createElement('div');d.innerHTML=buildExCard(sid,ex,s.exercicios.length,cor);lista.appendChild(d.firstElementChild);initDrag(lista,sid);lista.querySelector('#excard_'+ex.id+' .ex-name-inp').focus();renderSeriesNav()}
-function delEx(sid,eid){const s=getSerie(sid);if(!s)return;s.exercicios=s.exercicios.filter(e=>e.id!==eid);saveDB();document.getElementById('excard_'+eid)?.remove();document.querySelectorAll('#exlist_'+sid+' .ex-card .ex-num').forEach((n,i)=>n.textContent=i+1);renderSeriesNav()}
+function addEx(sid){const s=getSerie(sid);if(!s)return;const ex={id:'ex'+Date.now(),nome:'',series:'',reps:'',descanso:'',obs:'',medias:[]};s.exercicios.push(ex);saveDB();const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];renderExList(sid,s,cor);setTimeout(()=>document.querySelector('#excard_'+ex.id+' .ex-name-inp')?.focus(),50);renderSeriesNav()}
+function delEx(sid,eid){const s=getSerie(sid);if(!s)return;s.exercicios=s.exercicios.filter(e=>e.id!==eid);saveDB();const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];renderExList(sid,s,cor);renderSeriesNav()}
 function updEx(sid,eid,c,v){const s=getSerie(sid);if(!s)return;const ex=s.exercicios.find(x=>x.id===eid);if(ex)ex[c]=v;saveDB()}
 function addMedia(sid,eid){const inp=document.getElementById('mi_'+eid);if(!inp)return;const url=inp.value.trim();if(!url)return;const s=getSerie(sid);if(!s)return;const ex=s.exercicios.find(x=>x.id===eid);if(!ex)return;const yt=url.match(/(?:youtu\.be\/|v=|\/embed\/)([A-Za-z0-9_-]{11})/);const img=/\.(jpg|jpeg|png|gif|webp)/i.test(url);const type=yt?'yt':img?'img':'link';const mid='m'+Date.now();ex.medias.push({id:mid,type,url});saveDB();inp.value='';document.getElementById('mt_'+eid)?.appendChild(makeThumb(sid,eid,{id:mid,type,url}))}
 function delMedia(sid,eid,mid){const s=getSerie(sid);if(!s)return;const ex=s.exercicios.find(x=>x.id===eid);if(!ex)return;ex.medias=ex.medias.filter(m=>m.id!==mid);saveDB();document.getElementById('md_'+mid)?.remove()}
@@ -1390,7 +1390,7 @@ function initDrag(lista,sid){
   lista.addEventListener('dragstart',e=>{const c=e.target.closest('.ex-card');if(!c)return;dragSrc=c.dataset.exid;c.classList.add('dragging');e.dataTransfer.effectAllowed='move'});
   lista.addEventListener('dragend',()=>document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('dragging','drag-over')));
   lista.addEventListener('dragover',e=>{e.preventDefault();const c=e.target.closest('.ex-card');document.querySelectorAll('.ex-card').forEach(x=>x.classList.remove('drag-over'));if(c&&c.dataset.exid!==dragSrc)c.classList.add('drag-over')});
-  lista.addEventListener('drop',e=>{e.preventDefault();const tc=e.target.closest('.ex-card');if(!tc||!dragSrc||tc.dataset.exid===dragSrc)return;const s=getSerie(sid);if(!s)return;const fi=s.exercicios.findIndex(x=>x.id===dragSrc);const ti=s.exercicios.findIndex(x=>x.id===tc.dataset.exid);if(fi===-1||ti===-1)return;const[m]=s.exercicios.splice(fi,1);s.exercicios.splice(ti,0,m);saveDB();const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];lista.innerHTML=s.exercicios.map((ex,ei)=>buildExCard(sid,ex,ei+1,cor)).join('');initDrag(lista,sid)});
+  lista.addEventListener('drop',e=>{e.preventDefault();const tc=e.target.closest('.ex-card');if(!tc||!dragSrc||tc.dataset.exid===dragSrc)return;const s=getSerie(sid);if(!s)return;const fi=s.exercicios.findIndex(x=>x.id===dragSrc);const ti=s.exercicios.findIndex(x=>x.id===tc.dataset.exid);if(fi===-1||ti===-1)return;const[m]=s.exercicios.splice(fi,1);s.exercicios.splice(ti,0,m);saveDB();const si=alunoAtivo.series.indexOf(s);const cor=SERIE_CORES[si%SERIE_CORES.length];renderExList(sid,s,cor)});
 }
 </script>
 <script>
@@ -3039,18 +3039,7 @@ function renderExList(sid,s,cor){
   initDrag(lista,sid);
 }
 
-// Patch: após salvar/carregar série, usar renderExList
-const _origRenderSerieEditor=renderSerieEditor;
-function renderSerieEditor(sid){
-  _origRenderSerieEditor(sid);
-  // após render, reagrupa blocos se existirem
-  const s=getSerie(sid);
-  if(s&&s.exercicios.some(e=>e.blocoId)){
-    const si=alunoAtivo.series.indexOf(s);
-    const cor=SERIE_CORES[si%SERIE_CORES.length];
-    renderExList(sid,s,cor);
-  }
-}
+
 </script>
 
 </body>
