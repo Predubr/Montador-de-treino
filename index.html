@@ -1076,66 +1076,135 @@ async function carregarProgressoAluno(alunoId) {
   return rows;
 }
 
-const MW_BUILTIN=[];
-// Carrega exercícios da API MuscleWiki
-let mwApiLoaded=false;
-async function carregarMWAPI(){
-  if(mwApiLoaded)return;
-  try{
-    const res=await fetch('https://musclewiki.com/api/v1/exercises/?lang=pt-BR&limit=300',{
-      headers:{'X-API-KEY':'mw_UZf5avdijU_jE5jJDzZ5gzoKzPcwFyozHDjFDU3PYbo','Accept':'application/json'}
-    });
-    if(!res.ok)throw new Error('API falhou');
-    const data=await res.json();
-    const exs=data.results||data||[];
-    MW_BUILTIN.length=0;
-    const MUSCLE_MAP={'chest':'Peito','back':'Costas','legs':'Pernas','shoulders':'Ombros','biceps':'Bíceps','triceps':'Tríceps','abs':'Abdômen','glutes':'Glúteos','calves':'Panturrilha','forearms':'Antebraço','traps':'Trapézio','quads':'Quadríceps','hamstrings':'Isquiotibiais','adductors':'Adutores','abductors':'Abdutores'};
-    exs.forEach(e=>{
-      const musGroup=(e.muscles&&e.muscles[0])?e.muscles[0].name_pt||e.muscles[0].name:'';
-      const musculo=MUSCLE_MAP[musGroup.toLowerCase()]||musGroup||'Outro';
-      const slug=e.slug||e.id||'';
-      const urlPt=e.url_pt||e.url||('https://musclewiki.com/pt-br/exercise/'+slug);
-      MW_BUILTIN.push({
-        id:'mw_'+slug,
-        slug,
-        nome:e.name_pt||e.name||'',
-        musculo,
-        url:urlPt,
-        gif:e.gif_url||e.gif||null
-      });
-    });
-    mwApiLoaded=true;
-    console.log('✓ MuscleWiki: '+MW_BUILTIN.length+' exercícios carregados');
-  }catch(err){
-    console.warn('MuscleWiki API offline, usando banco local:',err.message);
-    // fallback: exercícios locais básicos
-    const fallback=[
-      {id:'mw_bench-press',slug:'bench-press',nome:'Supino Reto',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/bench-press'},
-      {id:'mw_incline-bench-press',slug:'incline-bench-press',nome:'Supino Inclinado',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/incline-bench-press'},
-      {id:'mw_chest-fly',slug:'chest-fly',nome:'Crucifixo',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/chest-fly'},
-      {id:'mw_pull-up',slug:'pull-up',nome:'Barra Fixa',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/pull-up'},
-      {id:'mw_lat-pulldown',slug:'lat-pulldown',nome:'Puxada Frontal',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/lat-pulldown'},
-      {id:'mw_seated-cable-row',slug:'seated-cable-row',nome:'Remada Sentado',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/seated-cable-row'},
-      {id:'mw_squat',slug:'squat',nome:'Agachamento Livre',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/squat'},
-      {id:'mw_leg-press',slug:'leg-press',nome:'Leg Press',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/leg-press'},
-      {id:'mw_romanian-deadlift',slug:'romanian-deadlift',nome:'Stiff',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/romanian-deadlift'},
-      {id:'mw_shoulder-press',slug:'shoulder-press',nome:'Desenvolvimento',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/shoulder-press'},
-      {id:'mw_lateral-raise',slug:'lateral-raise',nome:'Elevação Lateral',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/lateral-raise'},
-      {id:'mw_barbell-curl',slug:'barbell-curl',nome:'Rosca Direta',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/barbell-curl'},
-      {id:'mw_hammer-curl',slug:'hammer-curl',nome:'Rosca Martelo',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/hammer-curl'},
-      {id:'mw_tricep-pushdown',slug:'tricep-pushdown',nome:'Tríceps Corda',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/tricep-pushdown'},
-      {id:'mw_skull-crusher',slug:'skull-crusher',nome:'Tríceps Testa',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/skull-crusher'},
-      {id:'mw_hip-thrust',slug:'hip-thrust',nome:'Hip Thrust',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/hip-thrust'},
-      {id:'mw_glute-bridge',slug:'glute-bridge',nome:'Glute Bridge',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/glute-bridge'},
-      {id:'mw_crunch',slug:'crunch',nome:'Abdominal Crunch',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/crunch'},
-      {id:'mw_plank',slug:'plank',nome:'Prancha',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/plank'},
-      {id:'mw_standing-calf-raise',slug:'standing-calf-raise',nome:'Panturrilha em Pé',musculo:'Panturrilha',url:'https://musclewiki.com/pt-br/exercise/standing-calf-raise'},
-    ];
-    MW_BUILTIN.push(...fallback);
-    mwApiLoaded=true;
-  }
-}
-const GRUPOS_MW=['Peito','Costas','Pernas','Glúteos','Panturrilha','Ombros','Bíceps','Tríceps','Abdômen'];
+const MW_BUILTIN=[
+  // PEITO
+  {id:'mw001',slug:'bench-press',nome:'Supino Reto com Barra',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/bench-press'},
+  {id:'mw002',slug:'incline-bench-press',nome:'Supino Inclinado com Barra',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/incline-bench-press'},
+  {id:'mw003',slug:'decline-bench-press',nome:'Supino Declinado com Barra',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/decline-bench-press'},
+  {id:'mw004',slug:'dumbbell-bench-press',nome:'Supino Reto com Halteres',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/dumbbell-bench-press'},
+  {id:'mw005',slug:'incline-dumbbell-press',nome:'Supino Inclinado com Halteres',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/incline-dumbbell-press'},
+  {id:'mw006',slug:'chest-fly',nome:'Crucifixo com Halteres',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/chest-fly'},
+  {id:'mw007',slug:'incline-dumbbell-fly',nome:'Crucifixo Inclinado com Halteres',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/incline-dumbbell-fly'},
+  {id:'mw008',slug:'cable-crossover',nome:'Crossover no Cabo',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/cable-crossover'},
+  {id:'mw009',slug:'pec-deck',nome:'Crucifixo na Máquina (Pec Deck)',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/pec-deck'},
+  {id:'mw010',slug:'push-up',nome:'Flexão de Braço',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/push-up'},
+  {id:'mw011',slug:'dips',nome:'Mergulho (Dips)',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/dips'},
+  {id:'mw012',slug:'smith-machine-bench-press',nome:'Supino no Smith',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/smith-machine-bench-press'},
+  {id:'mw013',slug:'cable-fly-low',nome:'Crucifixo no Cabo Baixo',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/cable-fly-low'},
+  {id:'mw014',slug:'cable-fly-high',nome:'Crucifixo no Cabo Alto',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/cable-fly-high'},
+  // COSTAS
+  {id:'mw020',slug:'pull-up',nome:'Barra Fixa (Pull-up)',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/pull-up'},
+  {id:'mw021',slug:'chin-up',nome:'Barra Supinada (Chin-up)',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/chin-up'},
+  {id:'mw022',slug:'lat-pulldown',nome:'Puxada Frontal no Cabo',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/lat-pulldown'},
+  {id:'mw023',slug:'seated-cable-row',nome:'Remada Sentado no Cabo',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/seated-cable-row'},
+  {id:'mw024',slug:'barbell-row',nome:'Remada Curvada com Barra',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/barbell-row'},
+  {id:'mw025',slug:'dumbbell-row',nome:'Remada Unilateral com Halter',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/dumbbell-row'},
+  {id:'mw026',slug:'t-bar-row',nome:'Remada T com Barra',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/t-bar-row'},
+  {id:'mw027',slug:'deadlift',nome:'Levantamento Terra',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/deadlift'},
+  {id:'mw028',slug:'rack-pull',nome:'Rack Pull',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/rack-pull'},
+  {id:'mw029',slug:'straight-arm-pulldown',nome:'Pullover no Cabo',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/straight-arm-pulldown'},
+  {id:'mw030',slug:'dumbbell-pullover',nome:'Pullover com Halter',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/dumbbell-pullover'},
+  {id:'mw031',slug:'machine-row',nome:'Remada na Máquina',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/machine-row'},
+  {id:'mw032',slug:'face-pull',nome:'Face Pull no Cabo',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/face-pull'},
+  {id:'mw033',slug:'hyperextension',nome:'Hiperextensão Lombar',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/hyperextension'},
+  {id:'mw034',slug:'lat-pulldown-behind-neck',nome:'Puxada por Trás da Nuca',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/lat-pulldown-behind-neck'},
+  // PERNAS
+  {id:'mw040',slug:'squat',nome:'Agachamento Livre com Barra',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/squat'},
+  {id:'mw041',slug:'leg-press',nome:'Leg Press 45°',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/leg-press'},
+  {id:'mw042',slug:'hack-squat',nome:'Hack Squat',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/hack-squat'},
+  {id:'mw043',slug:'leg-extension',nome:'Extensão de Pernas',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/leg-extension'},
+  {id:'mw044',slug:'leg-curl',nome:'Mesa Flexora (Leg Curl)',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/leg-curl'},
+  {id:'mw045',slug:'romanian-deadlift',nome:'Stiff (RDL)',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/romanian-deadlift'},
+  {id:'mw046',slug:'sumo-deadlift',nome:'Levantamento Terra Sumo',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/sumo-deadlift'},
+  {id:'mw047',slug:'lunge',nome:'Avanço (Lunge)',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/lunge'},
+  {id:'mw048',slug:'bulgarian-split-squat',nome:'Agachamento Búlgaro',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/bulgarian-split-squat'},
+  {id:'mw049',slug:'goblet-squat',nome:'Agachamento Goblet',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/goblet-squat'},
+  {id:'mw050',slug:'front-squat',nome:'Agachamento Frontal',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/front-squat'},
+  {id:'mw051',slug:'smith-machine-squat',nome:'Agachamento no Smith',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/smith-machine-squat'},
+  {id:'mw052',slug:'step-up',nome:'Step Up com Halteres',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/step-up'},
+  {id:'mw053',slug:'seated-leg-curl',nome:'Cadeira Flexora',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/seated-leg-curl'},
+  {id:'mw054',slug:'lying-leg-curl',nome:'Mesa Flexora Deitado',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/lying-leg-curl'},
+  // GLÚTEOS
+  {id:'mw060',slug:'hip-thrust',nome:'Hip Thrust com Barra',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/hip-thrust'},
+  {id:'mw061',slug:'glute-bridge',nome:'Glute Bridge',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/glute-bridge'},
+  {id:'mw062',slug:'cable-kickback',nome:'Coice no Cabo (Kickback)',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/cable-kickback'},
+  {id:'mw063',slug:'donkey-kick',nome:'Donkey Kick',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/donkey-kick'},
+  {id:'mw064',slug:'romanian-deadlift-single-leg',nome:'Stiff Unilateral',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/romanian-deadlift-single-leg'},
+  {id:'mw065',slug:'sumo-squat',nome:'Agachamento Sumo',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/sumo-squat'},
+  {id:'mw066',slug:'hip-abduction-machine',nome:'Abdutora na Máquina',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/hip-abduction-machine'},
+  {id:'mw067',slug:'hip-adduction-machine',nome:'Adutora na Máquina',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/hip-adduction-machine'},
+  {id:'mw068',slug:'cable-pull-through',nome:'Pull-Through no Cabo',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/cable-pull-through'},
+  {id:'mw069',slug:'single-leg-hip-thrust',nome:'Hip Thrust Unilateral',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/single-leg-hip-thrust'},
+  // OMBROS
+  {id:'mw070',slug:'overhead-press',nome:'Desenvolvimento com Barra',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/overhead-press'},
+  {id:'mw071',slug:'dumbbell-shoulder-press',nome:'Desenvolvimento com Halteres',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/dumbbell-shoulder-press'},
+  {id:'mw072',slug:'lateral-raise',nome:'Elevação Lateral com Halteres',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/lateral-raise'},
+  {id:'mw073',slug:'cable-lateral-raise',nome:'Elevação Lateral no Cabo',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/cable-lateral-raise'},
+  {id:'mw074',slug:'front-raise',nome:'Elevação Frontal',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/front-raise'},
+  {id:'mw075',slug:'arnold-press',nome:'Arnold Press',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/arnold-press'},
+  {id:'mw076',slug:'reverse-fly',nome:'Crucifixo Invertido (Posterior)',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/reverse-fly'},
+  {id:'mw077',slug:'cable-face-pull',nome:'Face Pull no Cabo',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/cable-face-pull'},
+  {id:'mw078',slug:'upright-row',nome:'Remada Alta com Barra',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/upright-row'},
+  {id:'mw079',slug:'shrug',nome:'Encolhimento de Ombros (Shrug)',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/shrug'},
+  {id:'mw080',slug:'machine-shoulder-press',nome:'Desenvolvimento na Máquina',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/machine-shoulder-press'},
+  {id:'mw081',slug:'behind-neck-press',nome:'Desenvolvimento por Trás da Nuca',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/behind-neck-press'},
+  // BÍCEPS
+  {id:'mw090',slug:'barbell-curl',nome:'Rosca Direta com Barra',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/barbell-curl'},
+  {id:'mw091',slug:'dumbbell-curl',nome:'Rosca Alternada com Halteres',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/dumbbell-curl'},
+  {id:'mw092',slug:'hammer-curl',nome:'Rosca Martelo',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/hammer-curl'},
+  {id:'mw093',slug:'concentration-curl',nome:'Rosca Concentrada',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/concentration-curl'},
+  {id:'mw094',slug:'preacher-curl',nome:'Rosca Scott',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/preacher-curl'},
+  {id:'mw095',slug:'cable-curl',nome:'Rosca no Cabo',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/cable-curl'},
+  {id:'mw096',slug:'incline-dumbbell-curl',nome:'Rosca Inclinada com Halter',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/incline-dumbbell-curl'},
+  {id:'mw097',slug:'ez-bar-curl',nome:'Rosca com Barra EZ',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/ez-bar-curl'},
+  {id:'mw098',slug:'machine-curl',nome:'Rosca na Máquina',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/machine-curl'},
+  {id:'mw099',slug:'cross-body-curl',nome:'Rosca Cross Body',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/cross-body-curl'},
+  // TRÍCEPS
+  {id:'mw100',slug:'tricep-pushdown',nome:'Tríceps na Corda',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/tricep-pushdown'},
+  {id:'mw101',slug:'skull-crusher',nome:'Tríceps Testa (Skull Crusher)',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/skull-crusher'},
+  {id:'mw102',slug:'overhead-tricep-extension',nome:'Tríceps Francês (Overhead)',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/overhead-tricep-extension'},
+  {id:'mw103',slug:'close-grip-bench-press',nome:'Supino Pegada Fechada',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/close-grip-bench-press'},
+  {id:'mw104',slug:'tricep-dips',nome:'Mergulho no Banco (Tríceps)',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/tricep-dips'},
+  {id:'mw105',slug:'cable-overhead-extension',nome:'Tríceps no Cabo Acima da Cabeça',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/cable-overhead-extension'},
+  {id:'mw106',slug:'kickback',nome:'Tríceps Coice (Kickback)',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/kickback'},
+  {id:'mw107',slug:'tricep-pushdown-bar',nome:'Tríceps na Barra (Cabo)',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/tricep-pushdown-bar'},
+  {id:'mw108',slug:'machine-tricep-extension',nome:'Tríceps na Máquina',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/machine-tricep-extension'},
+  // ABDÔMEN
+  {id:'mw110',slug:'crunch',nome:'Abdominal Crunch',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/crunch'},
+  {id:'mw111',slug:'plank',nome:'Prancha Frontal',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/plank'},
+  {id:'mw112',slug:'side-plank',nome:'Prancha Lateral',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/side-plank'},
+  {id:'mw113',slug:'leg-raise',nome:'Elevação de Pernas Deitado',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/leg-raise'},
+  {id:'mw114',slug:'hanging-leg-raise',nome:'Elevação de Pernas Suspenso',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/hanging-leg-raise'},
+  {id:'mw115',slug:'russian-twist',nome:'Rotação Russa',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/russian-twist'},
+  {id:'mw116',slug:'cable-crunch',nome:'Abdominal no Cabo',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/cable-crunch'},
+  {id:'mw117',slug:'bicycle-crunch',nome:'Abdominal Bicicleta',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/bicycle-crunch'},
+  {id:'mw118',slug:'mountain-climber',nome:'Escalador (Mountain Climber)',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/mountain-climber'},
+  {id:'mw119',slug:'ab-wheel',nome:'Roda Abdominal',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/ab-wheel'},
+  {id:'mw120',slug:'toe-touch',nome:'Toque no Dedão do Pé',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/toe-touch'},
+  {id:'mw121',slug:'decline-crunch',nome:'Abdominal Declinado',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/decline-crunch'},
+  // PANTURRILHA
+  {id:'mw130',slug:'standing-calf-raise',nome:'Panturrilha em Pé',musculo:'Panturrilha',url:'https://musclewiki.com/pt-br/exercise/standing-calf-raise'},
+  {id:'mw131',slug:'seated-calf-raise',nome:'Panturrilha Sentado',musculo:'Panturrilha',url:'https://musclewiki.com/pt-br/exercise/seated-calf-raise'},
+  {id:'mw132',slug:'leg-press-calf-raise',nome:'Panturrilha no Leg Press',musculo:'Panturrilha',url:'https://musclewiki.com/pt-br/exercise/leg-press-calf-raise'},
+  {id:'mw133',slug:'single-leg-calf-raise',nome:'Panturrilha Unilateral',musculo:'Panturrilha',url:'https://musclewiki.com/pt-br/exercise/single-leg-calf-raise'},
+  {id:'mw134',slug:'donkey-calf-raise',nome:'Panturrilha Burro',musculo:'Panturrilha',url:'https://musclewiki.com/pt-br/exercise/donkey-calf-raise'},
+  // TRAPÉZIO
+  {id:'mw140',slug:'barbell-shrug',nome:'Encolhimento com Barra',musculo:'Trapézio',url:'https://musclewiki.com/pt-br/exercise/barbell-shrug'},
+  {id:'mw141',slug:'dumbbell-shrug',nome:'Encolhimento com Halteres',musculo:'Trapézio',url:'https://musclewiki.com/pt-br/exercise/dumbbell-shrug'},
+  {id:'mw142',slug:'rack-pull-trap',nome:'Rack Pull (Trapézio)',musculo:'Trapézio',url:'https://musclewiki.com/pt-br/exercise/rack-pull'},
+  // CARDIO / AERÓBICO
+  {id:'mw150',slug:'treadmill',nome:'Esteira',musculo:'Cardio',url:'https://musclewiki.com/pt-br/exercise/treadmill'},
+  {id:'mw151',slug:'rowing-machine',nome:'Remo Ergométrico',musculo:'Cardio',url:'https://musclewiki.com/pt-br/exercise/rowing-machine'},
+  {id:'mw152',slug:'cycling',nome:'Bicicleta Ergométrica',musculo:'Cardio',url:'https://musclewiki.com/pt-br/exercise/cycling'},
+  {id:'mw153',slug:'jump-rope',nome:'Corda de Pular',musculo:'Cardio',url:'https://musclewiki.com/pt-br/exercise/jump-rope'},
+  {id:'mw154',slug:'burpee',nome:'Burpee',musculo:'Cardio',url:'https://musclewiki.com/pt-br/exercise/burpee'},
+  {id:'mw155',slug:'box-jump',nome:'Box Jump',musculo:'Cardio',url:'https://musclewiki.com/pt-br/exercise/box-jump'},
+  {id:'mw156',slug:'elliptical',nome:'Elíptico',musculo:'Cardio',url:'https://musclewiki.com/pt-br/exercise/elliptical'},
+  {id:'mw157',slug:'stair-climber',nome:'Escada (StairMaster)',musculo:'Cardio',url:'https://musclewiki.com/pt-br/exercise/stair-climber'},
+];
+let mwApiLoaded=true;
+async function carregarMWAPI(){/* banco embutido, sem necessidade de API */}
+const GRUPOS_MW=['Peito','Costas','Pernas','Glúteos','Panturrilha','Ombros','Bíceps','Tríceps','Abdômen','Trapézio','Cardio'];
 const GRUPO_EMOJI={'Peito':'🫀','Costas':'🔵','Pernas':'🦵','Glúteos':'🍑','Panturrilha':'🦶','Ombros':'⬆️','Bíceps':'💪','Tríceps':'💪','Abdômen':'⭕'};
 const GRUPO_COR={'Peito':'#ff6b8a','Costas':'#63b3ed','Pernas':'#f6ad55','Glúteos':'#ff8fa3','Panturrilha':'#9a75ea','Ombros':'#60a5fa','Bíceps':'#6ee7b7','Tríceps':'#fbbf24','Abdômen':'#f87171'};
 const SERIE_CORES=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7','#f87171','#fbbf24'];
