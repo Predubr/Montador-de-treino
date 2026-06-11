@@ -1076,78 +1076,65 @@ async function carregarProgressoAluno(alunoId) {
   return rows;
 }
 
-const MW_BUILTIN=[
-  {nome:'Supino Reto (Barra)',musculo:'Peito',slug:'barbell-bench-press'},
-  {nome:'Supino Inclinado (Barra)',musculo:'Peito',slug:'incline-barbell-bench-press'},
-  {nome:'Supino Declinado (Barra)',musculo:'Peito',slug:'decline-barbell-bench-press'},
-  {nome:'Supino Reto (Halteres)',musculo:'Peito',slug:'dumbbell-bench-press'},
-  {nome:'Supino Inclinado (Halteres)',musculo:'Peito',slug:'incline-dumbbell-bench-press'},
-  {nome:'Crucifixo (Halteres)',musculo:'Peito',slug:'dumbbell-fly'},
-  {nome:'Crucifixo Inclinado (Halteres)',musculo:'Peito',slug:'incline-dumbbell-fly'},
-  {nome:'Crossover (Cabo)',musculo:'Peito',slug:'cable-fly'},
-  {nome:'Flexão de Braços',musculo:'Peito',slug:'push-up'},
-  {nome:'Peck Deck / Voador',musculo:'Peito',slug:'pec-deck'},
-  {nome:'Supino no Smith',musculo:'Peito',slug:'smith-machine-bench-press'},
-  {nome:'Pulldown (Puxada na Frente)',musculo:'Costas',slug:'lat-pulldown'},
-  {nome:'Puxada Neutra (Triângulo)',musculo:'Costas',slug:'neutral-grip-lat-pulldown'},
-  {nome:'Remada Curvada (Barra)',musculo:'Costas',slug:'barbell-row'},
-  {nome:'Remada com Haltere',musculo:'Costas',slug:'dumbbell-row'},
-  {nome:'Barra Fixa (Pull-up)',musculo:'Costas',slug:'pull-up'},
-  {nome:'Barra Fixa Supinada (Chin-up)',musculo:'Costas',slug:'chin-up'},
-  {nome:'Levantamento Terra',musculo:'Costas',slug:'deadlift'},
-  {nome:'Remada Baixa (Cabo)',musculo:'Costas',slug:'cable-row'},
-  {nome:'Remada Cavalinho (T-Bar)',musculo:'Costas',slug:'t-bar-row'},
-  {nome:'Pull Over (Haltere)',musculo:'Costas',slug:'dumbbell-pullover'},
-  {nome:'Remada Unilateral no Cabo',musculo:'Costas',slug:'single-arm-cable-row'},
-  {nome:'Agachamento Livre (Barra)',musculo:'Pernas',slug:'barbell-squat'},
-  {nome:'Agachamento Goblet (Haltere)',musculo:'Pernas',slug:'goblet-squat'},
-  {nome:'Leg Press 45°',musculo:'Pernas',slug:'leg-press'},
-  {nome:'Extensora',musculo:'Pernas',slug:'leg-extension'},
-  {nome:'Flexora Deitado',musculo:'Pernas',slug:'lying-leg-curl'},
-  {nome:'Flexora Sentado',musculo:'Pernas',slug:'seated-leg-curl'},
-  {nome:'Stiff / Terra Romeno',musculo:'Pernas',slug:'romanian-deadlift'},
-  {nome:'Agachamento Búlgaro',musculo:'Pernas',slug:'bulgarian-split-squat'},
-  {nome:'Avanço com Halteres (Lunge)',musculo:'Pernas',slug:'dumbbell-lunge'},
-  {nome:'Hack Squat (Máquina)',musculo:'Pernas',slug:'hack-squat'},
-  {nome:'Agachamento Sumô',musculo:'Pernas',slug:'sumo-squat'},
-  {nome:'Hip Thrust (Barra)',musculo:'Glúteos',slug:'barbell-hip-thrust'},
-  {nome:'Hip Thrust (Haltere)',musculo:'Glúteos',slug:'dumbbell-hip-thrust'},
-  {nome:'Abdução (Máquina)',musculo:'Glúteos',slug:'hip-abduction-machine'},
-  {nome:'Pull Through no Cabo',musculo:'Glúteos',slug:'cable-pull-through'},
-  {nome:'Glúteo no Cabo (4 apoios)',musculo:'Glúteos',slug:'cable-glute-kickback'},
-  {nome:'Panturrilha em Pé (Máquina)',musculo:'Panturrilha',slug:'standing-calf-raise'},
-  {nome:'Panturrilha Sentado (Máquina)',musculo:'Panturrilha',slug:'seated-calf-raise'},
-  {nome:'Panturrilha no Leg Press',musculo:'Panturrilha',slug:'leg-press-calf-raise'},
-  {nome:'Desenvolvimento (Barra)',musculo:'Ombros',slug:'barbell-overhead-press'},
-  {nome:'Desenvolvimento (Halteres)',musculo:'Ombros',slug:'dumbbell-shoulder-press'},
-  {nome:'Desenvolvimento Arnold',musculo:'Ombros',slug:'arnold-press'},
-  {nome:'Elevação Lateral (Haltere)',musculo:'Ombros',slug:'dumbbell-lateral-raise'},
-  {nome:'Elevação Lateral (Cabo)',musculo:'Ombros',slug:'cable-lateral-raise'},
-  {nome:'Elevação Frontal (Haltere)',musculo:'Ombros',slug:'dumbbell-front-raise'},
-  {nome:'Face Pull (Cabo)',musculo:'Ombros',slug:'face-pull'},
-  {nome:'Remada Alta (Barra)',musculo:'Ombros',slug:'upright-row'},
-  {nome:'Rosca Direta (Barra)',musculo:'Bíceps',slug:'barbell-curl'},
-  {nome:'Rosca Direta (Halteres)',musculo:'Bíceps',slug:'dumbbell-curl'},
-  {nome:'Rosca Martelo',musculo:'Bíceps',slug:'hammer-curl'},
-  {nome:'Rosca Concentrada',musculo:'Bíceps',slug:'concentration-curl'},
-  {nome:'Rosca Scott (Preacher Curl)',musculo:'Bíceps',slug:'preacher-curl'},
-  {nome:'Rosca no Cabo (Baixo)',musculo:'Bíceps',slug:'cable-curl'},
-  {nome:'Rosca Inclinada (Halteres)',musculo:'Bíceps',slug:'incline-dumbbell-curl'},
-  {nome:'Tríceps Pulley (Cabo)',musculo:'Tríceps',slug:'tricep-pushdown'},
-  {nome:'Tríceps Corda (Cabo)',musculo:'Tríceps',slug:'rope-pushdown'},
-  {nome:'Tríceps Testa (Barra)',musculo:'Tríceps',slug:'skull-crusher'},
-  {nome:'Tríceps Coice (Haltere)',musculo:'Tríceps',slug:'tricep-kickback'},
-  {nome:'Mergulho (Paralelas)',musculo:'Tríceps',slug:'dips'},
-  {nome:'Tríceps Francês (Haltere)',musculo:'Tríceps',slug:'overhead-tricep-extension'},
-  {nome:'Tríceps no Cabo (Alto)',musculo:'Tríceps',slug:'cable-overhead-tricep-extension'},
-  {nome:'Abdominal Crunch',musculo:'Abdômen',slug:'crunch'},
-  {nome:'Prancha (Plank)',musculo:'Abdômen',slug:'plank'},
-  {nome:'Abdominal na Roldana',musculo:'Abdômen',slug:'cable-crunch'},
-  {nome:'Elevação de Pernas',musculo:'Abdômen',slug:'leg-raise'},
-  {nome:'Bicicleta (Bicycle Crunch)',musculo:'Abdômen',slug:'bicycle-crunch'},
-  {nome:'Russian Twist',musculo:'Abdômen',slug:'russian-twist'},
-  {nome:'Roda Abdominal (Ab Wheel)',musculo:'Abdômen',slug:'ab-wheel-rollout'},
-];
+const MW_BUILTIN=[];
+// Carrega exercícios da API MuscleWiki
+let mwApiLoaded=false;
+async function carregarMWAPI(){
+  if(mwApiLoaded)return;
+  try{
+    const res=await fetch('https://musclewiki.com/api/v1/exercises/?lang=pt-BR&limit=300',{
+      headers:{'X-API-KEY':'mw_UZf5avdijU_jE5jJDzZ5gzoKzPcwFyozHDjFDU3PYbo','Accept':'application/json'}
+    });
+    if(!res.ok)throw new Error('API falhou');
+    const data=await res.json();
+    const exs=data.results||data||[];
+    MW_BUILTIN.length=0;
+    const MUSCLE_MAP={'chest':'Peito','back':'Costas','legs':'Pernas','shoulders':'Ombros','biceps':'Bíceps','triceps':'Tríceps','abs':'Abdômen','glutes':'Glúteos','calves':'Panturrilha','forearms':'Antebraço','traps':'Trapézio','quads':'Quadríceps','hamstrings':'Isquiotibiais','adductors':'Adutores','abductors':'Abdutores'};
+    exs.forEach(e=>{
+      const musGroup=(e.muscles&&e.muscles[0])?e.muscles[0].name_pt||e.muscles[0].name:'';
+      const musculo=MUSCLE_MAP[musGroup.toLowerCase()]||musGroup||'Outro';
+      const slug=e.slug||e.id||'';
+      const urlPt=e.url_pt||e.url||('https://musclewiki.com/pt-br/exercise/'+slug);
+      MW_BUILTIN.push({
+        id:'mw_'+slug,
+        slug,
+        nome:e.name_pt||e.name||'',
+        musculo,
+        url:urlPt,
+        gif:e.gif_url||e.gif||null
+      });
+    });
+    mwApiLoaded=true;
+    console.log('✓ MuscleWiki: '+MW_BUILTIN.length+' exercícios carregados');
+  }catch(err){
+    console.warn('MuscleWiki API offline, usando banco local:',err.message);
+    // fallback: exercícios locais básicos
+    const fallback=[
+      {id:'mw_bench-press',slug:'bench-press',nome:'Supino Reto',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/bench-press'},
+      {id:'mw_incline-bench-press',slug:'incline-bench-press',nome:'Supino Inclinado',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/incline-bench-press'},
+      {id:'mw_chest-fly',slug:'chest-fly',nome:'Crucifixo',musculo:'Peito',url:'https://musclewiki.com/pt-br/exercise/chest-fly'},
+      {id:'mw_pull-up',slug:'pull-up',nome:'Barra Fixa',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/pull-up'},
+      {id:'mw_lat-pulldown',slug:'lat-pulldown',nome:'Puxada Frontal',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/lat-pulldown'},
+      {id:'mw_seated-cable-row',slug:'seated-cable-row',nome:'Remada Sentado',musculo:'Costas',url:'https://musclewiki.com/pt-br/exercise/seated-cable-row'},
+      {id:'mw_squat',slug:'squat',nome:'Agachamento Livre',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/squat'},
+      {id:'mw_leg-press',slug:'leg-press',nome:'Leg Press',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/leg-press'},
+      {id:'mw_romanian-deadlift',slug:'romanian-deadlift',nome:'Stiff',musculo:'Pernas',url:'https://musclewiki.com/pt-br/exercise/romanian-deadlift'},
+      {id:'mw_shoulder-press',slug:'shoulder-press',nome:'Desenvolvimento',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/shoulder-press'},
+      {id:'mw_lateral-raise',slug:'lateral-raise',nome:'Elevação Lateral',musculo:'Ombros',url:'https://musclewiki.com/pt-br/exercise/lateral-raise'},
+      {id:'mw_barbell-curl',slug:'barbell-curl',nome:'Rosca Direta',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/barbell-curl'},
+      {id:'mw_hammer-curl',slug:'hammer-curl',nome:'Rosca Martelo',musculo:'Bíceps',url:'https://musclewiki.com/pt-br/exercise/hammer-curl'},
+      {id:'mw_tricep-pushdown',slug:'tricep-pushdown',nome:'Tríceps Corda',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/tricep-pushdown'},
+      {id:'mw_skull-crusher',slug:'skull-crusher',nome:'Tríceps Testa',musculo:'Tríceps',url:'https://musclewiki.com/pt-br/exercise/skull-crusher'},
+      {id:'mw_hip-thrust',slug:'hip-thrust',nome:'Hip Thrust',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/hip-thrust'},
+      {id:'mw_glute-bridge',slug:'glute-bridge',nome:'Glute Bridge',musculo:'Glúteos',url:'https://musclewiki.com/pt-br/exercise/glute-bridge'},
+      {id:'mw_crunch',slug:'crunch',nome:'Abdominal Crunch',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/crunch'},
+      {id:'mw_plank',slug:'plank',nome:'Prancha',musculo:'Abdômen',url:'https://musclewiki.com/pt-br/exercise/plank'},
+      {id:'mw_standing-calf-raise',slug:'standing-calf-raise',nome:'Panturrilha em Pé',musculo:'Panturrilha',url:'https://musclewiki.com/pt-br/exercise/standing-calf-raise'},
+    ];
+    MW_BUILTIN.push(...fallback);
+    mwApiLoaded=true;
+  }
+}
 const GRUPOS_MW=['Peito','Costas','Pernas','Glúteos','Panturrilha','Ombros','Bíceps','Tríceps','Abdômen'];
 const GRUPO_EMOJI={'Peito':'🫀','Costas':'🔵','Pernas':'🦵','Glúteos':'🍑','Panturrilha':'🦶','Ombros':'⬆️','Bíceps':'💪','Tríceps':'💪','Abdômen':'⭕'};
 const GRUPO_COR={'Peito':'#ff6b8a','Costas':'#63b3ed','Pernas':'#f6ad55','Glúteos':'#ff8fa3','Panturrilha':'#9a75ea','Ombros':'#60a5fa','Bíceps':'#6ee7b7','Tríceps':'#fbbf24','Abdômen':'#f87171'};
@@ -1241,6 +1228,7 @@ function renderSerieEditor(sid){
       <button class="tab-btn" id="tab_diario_${sid}" onclick="abrirTab('diario','${sid}')">📓 Diário</button>
       <button class="tab-btn" id="tab_metas_${sid}" onclick="abrirTab('metas','${sid}')">🏆 Metas</button>
       <button class="tab-btn" id="tab_fotos_${sid}" onclick="abrirTab('fotos','${sid}')">📸 Fotos</button>
+      <button class="tab-btn" id="tab_progresso_${sid}" onclick="verProgressoAluno('${sid}')" style="color:var(--green);border-color:var(--green)33">📊 Progresso</button>
     </div>
     <div id="tabContent_treino_${sid}">
     <div id="exlist_${sid}">${exH}</div>
@@ -1282,7 +1270,7 @@ function toggleGrupo(sid,g,el){const s=getSerie(sid);if(!s)return;if(s.grupos.in
 function addGrupoCustom(sid,inp){const v=inp.value.trim();if(!v)return;const s=getSerie(sid);if(!s)return;if(!s.grupos.includes(v))s.grupos.push(v);saveDB();const row=document.getElementById('gRow_'+sid);const sp=document.createElement('span');sp.className='g-tag on';sp.dataset.g=v;sp.textContent='✦ '+v;sp.onclick=function(){toggleGrupo(sid,v,this)};row.insertBefore(sp,inp);inp.value=''}
 
 function setFiltro(sid,g,el){const row=document.getElementById('mwF_'+sid);row.querySelectorAll('.mw-filter-btn').forEach(b=>b.classList.remove('on'));if(mwFiltro[sid]===g){mwFiltro[sid]=''}else{mwFiltro[sid]=g;el.classList.add('on')}buscarMW(sid)}
-function buscarMW(sid){const q=(document.getElementById('mwInp_'+sid)?.value||'').trim().toLowerCase();const fil=mwFiltro[sid]||'';const found=getMWDB().filter(e=>(!q||e.nome.toLowerCase().includes(q)||e.musculo.toLowerCase().includes(q))&&(!fil||e.musculo===fil)).slice(0,10);renderMWR(sid,found)}
+async function buscarMW(sid){await carregarMWAPI();const q=(document.getElementById('mwInp_'+sid)?.value||'').trim().toLowerCase();const fil=mwFiltro[sid]||'';const found=getMWDB().filter(e=>(!q||e.nome.toLowerCase().includes(q)||e.musculo.toLowerCase().includes(q))&&(!fil||e.musculo===fil)).slice(0,20);renderMWR(sid,found)}
 function renderMWR(sid,found){
   const el=document.getElementById('mwR_'+sid);if(!el)return;
   if(!found.length){el.innerHTML=`<div class="mw-empty">Nenhum resultado. <a href="https://musclewiki.com/pt-br" target="_blank">Abrir MuscleWiki ↗</a> ou cadastre abaixo.</div>`;return}
@@ -1379,7 +1367,7 @@ function buildExCard(sid,ex,num,cor){
     <select style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:5px 9px;color:${tecAtual!=='Nenhuma'?'var(--accent)':'#555'};font-size:11px;font-weight:700;outline:none;font-family:'Space Grotesk',sans-serif" onchange="updEx('${sid}','${ex.id}','tecnica',this.value);atualizarTecnicaInfo('${ex.id}',this.value)">${tecnicaOpts.map(t=>`<option value="${t}"${t===tecAtual?' selected':''}>${t}</option>`).join('')}</select>
     ${tecAtual!=='Nenhuma'?`<div id="tecInfo_${ex.id}" style="font-size:10px;color:var(--accent);background:var(--accent)18;padding:4px 9px;border-radius:6px;flex:1;line-height:1.3">${tecnicaInfo[tecAtual]||''}</div>`:`<div id="tecInfo_${ex.id}" style="font-size:10px;color:#3a3a3a;flex:1"></div>`}
   </div>`;
-  return`<div class="ex-card" id="excard_${ex.id}" draggable="true" data-exid="${ex.id}" data-sid="${sid}"><div class="ex-top"><div class="drag-dots"><span></span><span></span><span></span></div><div class="ex-num" style="background:${cor}">${num}</div><input class="ex-name-inp" type="text" placeholder="Nome do exercício" value="${esc(ex.nome)}" oninput="updEx('${sid}','${ex.id}','nome',this.value)"/><button class="ex-del" onclick="delEx('${sid}','${ex.id}')">✕</button></div><div class="ex-params"><div class="ex-param"><label>Séries</label><input type="text" placeholder="4" value="${esc(ex.series)}" oninput="updEx('${sid}','${ex.id}','series',this.value)"/></div><div class="ex-param"><label>Repetições</label><input type="text" placeholder="10–12" value="${esc(ex.reps)}" oninput="updEx('${sid}','${ex.id}','reps',this.value)"/></div><div class="ex-param"><label>Descanso</label><input type="text" placeholder="60s" value="${esc(ex.descanso)}" oninput="updEx('${sid}','${ex.id}','descanso',this.value)"/></div></div><div style="padding:0 0 8px">${tecnicaH}</div><textarea class="ex-obs-inp" rows="2" placeholder="Observações: carga, cadência…" oninput="updEx('${sid}','${ex.id}','obs',this.value)">${esc(ex.obs)}</textarea><div class="ex-footer">
+  return`<div class="ex-card" id="excard_${ex.id}" draggable="true" data-exid="${ex.id}" data-sid="${sid}"><div class="ex-top"><div class="drag-dots"><span></span><span></span><span></span></div><div class="ex-select-cb" id="excb_${ex.id}" onclick="toggleSelectEx('${sid}','${ex.id}')" title="Selecionar para bloco"></div><div class="ex-num" style="background:${cor}">${num}</div><input class="ex-name-inp" type="text" placeholder="Nome do exercício" value="${esc(ex.nome)}" oninput="updEx('${sid}','${ex.id}','nome',this.value)"/><button class="ex-del" onclick="delEx('${sid}','${ex.id}')">✕</button></div><div class="ex-params"><div class="ex-param"><label>Séries</label><input type="text" placeholder="4" value="${esc(ex.series)}" oninput="updEx('${sid}','${ex.id}','series',this.value)"/></div><div class="ex-param"><label>Repetições</label><input type="text" placeholder="10–12" value="${esc(ex.reps)}" oninput="updEx('${sid}','${ex.id}','reps',this.value)"/></div><div class="ex-param"><label>Descanso</label><input type="text" placeholder="60s" value="${esc(ex.descanso)}" oninput="updEx('${sid}','${ex.id}','descanso',this.value)"/></div></div><div style="padding:0 0 8px">${tecnicaH}</div><textarea class="ex-obs-inp" rows="2" placeholder="Observações: carga, cadência…" oninput="updEx('${sid}','${ex.id}','obs',this.value)">${esc(ex.obs)}</textarea><div class="ex-footer">
       <button class="timer-btn" id="timerBtn_${ex.id}" onclick="toggleTimer('${ex.id}','${ex.descanso}')">⏱ Timer</button>
       <span class="timer-display" id="timerDisp_${ex.id}" style="display:none"></span>
       <input class="ex-media-inp" id="mi_${ex.id}" type="text" placeholder="URL YouTube / imagem / MuscleWiki" onkeydown="if(event.key==='Enter')addMedia('${sid}','${ex.id}')"/>
@@ -1517,6 +1505,23 @@ body{background:#0e0e0e;font-family:'Space Grotesk',sans-serif;padding-bottom:60
 .link-box{background:#131313;border:1px solid #c9a84c44;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .link-box a{color:#c9a84c;font-size:11px;font-weight:700;text-decoration:none;word-break:break-all;flex:1}
 .link-box-btn{padding:6px 12px;background:#c9a84c;border:none;border-radius:7px;color:#111;font-size:11px;font-weight:800;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
+
+/* ── BLOCOS (bi-set, tri-set, conjugado) ── */
+.ex-select-cb{width:18px;height:18px;border-radius:5px;border:2px solid var(--border2);background:var(--bg3);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;user-select:none;font-size:11px}
+.ex-select-cb.sel{background:var(--accent);border-color:var(--accent);color:#111;font-weight:900}
+.bloco-toolbar{display:none;position:sticky;bottom:16px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--accent)44;border-radius:20px;padding:8px 14px;gap:8px;align-items:center;z-index:50;box-shadow:0 4px 24px rgba(0,0,0,.6);white-space:nowrap;flex-wrap:wrap;justify-content:center;max-width:98vw}
+.bloco-toolbar.show{display:flex}
+.bloco-toolbar-label{font-size:11px;color:var(--accent);font-weight:700}
+.bloco-tb-btn{padding:5px 13px;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Space Grotesk',sans-serif}
+.bloco-tb-btn:hover{border-color:var(--accent);color:var(--accent)}
+.bloco-tb-cancel{color:#555;border-color:transparent;background:none}
+.bloco-wrap{position:relative;margin-bottom:4px}
+.bloco-container{border:2px solid;border-radius:18px;padding:10px 10px 4px;margin-bottom:12px;position:relative}
+.bloco-label{position:absolute;top:-11px;left:14px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:2px 10px;border-radius:10px;color:#111}
+.bloco-container .ex-card{margin-bottom:6px}
+.bloco-container .ex-card:last-child{margin-bottom:0}
+.modo-selecao .ex-card{border-style:dashed;cursor:pointer}
+.modo-selecao .ex-card:hover{border-color:var(--accent)!important}
 </style>
 </head><body>
 <div style="background:#0a0a0a;border-bottom:1px solid #1e1e1e;padding:24px 18px 20px">
@@ -2932,5 +2937,121 @@ async function verProgressoAluno(sid){
     </div>
   </div>
 </div>
+
+<!-- ── BLOCO TOOLBAR ── -->
+<div class="bloco-toolbar" id="blocoToolbar">
+  <span class="bloco-toolbar-label" id="blocoCount">0 selecionados</span>
+  <button class="bloco-tb-btn" onclick="criarBloco('Bi-set','#63b3ed')">Bi-set</button>
+  <button class="bloco-tb-btn" onclick="criarBloco('Tri-set','#f6ad55')">Tri-set</button>
+  <button class="bloco-tb-btn" onclick="criarBloco('Conjugado','#ef7a98')">Conjugado</button>
+  <button class="bloco-tb-btn" onclick="criarBloco('Super-set','#9a75ea')">Super-set</button>
+  <button class="bloco-tb-btn bloco-tb-cancel" onclick="cancelarSelecao()">✕ Cancelar</button>
+</div>
+
+<script>
+// ── SISTEMA DE BLOCOS ────────────────────────────────────
+let selectedExs=new Set();
+let selecaoSid=null;
+
+function toggleSelectEx(sid,eid){
+  if(selecaoSid&&selecaoSid!==sid){cancelarSelecao();return}
+  selecaoSid=sid;
+  const cb=document.getElementById('excb_'+eid);
+  if(selectedExs.has(eid)){selectedExs.delete(eid);if(cb){cb.classList.remove('sel');cb.textContent=''}}
+  else{selectedExs.add(eid);if(cb){cb.classList.add('sel');cb.textContent='✓'}}
+  const toolbar=document.getElementById('blocoToolbar');
+  const count=document.getElementById('blocoCount');
+  if(selectedExs.size>0){
+    toolbar.classList.add('show');
+    count.textContent=selectedExs.size+' selecionado'+(selectedExs.size!==1?'s':'');
+    // valida tipo
+    const btns=toolbar.querySelectorAll('.bloco-tb-btn:not(.bloco-tb-cancel)');
+    btns.forEach(b=>{
+      const tipo=b.textContent;
+      const ok=(tipo==='Bi-set'&&selectedExs.size===2)||(tipo==='Tri-set'&&selectedExs.size===3)||(tipo==='Conjugado'&&selectedExs.size===2)||(tipo==='Super-set'&&selectedExs.size===2)||(selectedExs.size>=2);
+      b.style.opacity=ok?'1':'0.35';b.style.pointerEvents=ok?'auto':'none';
+    });
+  }else{toolbar.classList.remove('show');selecaoSid=null}
+}
+
+function cancelarSelecao(){
+  selectedExs.forEach(eid=>{const cb=document.getElementById('excb_'+eid);if(cb){cb.classList.remove('sel');cb.textContent=''}});
+  selectedExs.clear();selecaoSid=null;
+  document.getElementById('blocoToolbar').classList.remove('show');
+}
+
+function criarBloco(tipo,cor){
+  if(!selecaoSid||selectedExs.size<2){alert('Selecione pelo menos 2 exercícios.');return}
+  const s=getSerie(selecaoSid);if(!s)return;
+  const ids=[...selectedExs];
+  // Valida quantidade
+  if((tipo==='Bi-set'||tipo==='Conjugado'||tipo==='Super-set')&&ids.length!==2){alert(tipo+' precisa de exatamente 2 exercícios.');return}
+  if(tipo==='Tri-set'&&ids.length!==3){alert('Tri-set precisa de exatamente 3 exercícios.');return}
+  // Marca bloco nos exercícios
+  const blocoId='bloco_'+Date.now();
+  ids.forEach(eid=>{
+    const ex=s.exercicios.find(x=>x.id===eid);
+    if(ex){ex.blocoId=blocoId;ex.blocoTipo=tipo;ex.blocoCor=cor;ex.tecnica=tipo}
+  });
+  saveDB();cancelarSelecao();
+  // Re-renderiza lista
+  const si=alunoAtivo.series.indexOf(s);
+  const serCor=SERIE_CORES[si%SERIE_CORES.length];
+  renderExList(selecaoSid||s.id,s,serCor);
+}
+
+function desfazerBloco(blocoId,sid){
+  const s=getSerie(sid);if(!s)return;
+  s.exercicios.forEach(ex=>{if(ex.blocoId===blocoId){delete ex.blocoId;delete ex.blocoTipo;delete ex.blocoCor;ex.tecnica='Nenhuma'}});
+  saveDB();
+  const si=alunoAtivo.series.indexOf(s);
+  const cor=SERIE_CORES[si%SERIE_CORES.length];
+  renderExList(sid,s,cor);
+}
+
+// Renderiza exercícios agrupando blocos
+function renderExList(sid,s,cor){
+  const lista=document.getElementById('exlist_'+sid);if(!lista)return;
+  // Agrupa exercícios em blocos
+  const rendered=new Set();
+  let html='';
+  let num=1;
+  s.exercicios.forEach((ex,i)=>{
+    if(rendered.has(ex.id))return;
+    if(ex.blocoId){
+      // pega todos do mesmo bloco na ordem
+      const blocoExs=s.exercicios.filter(e=>e.blocoId===ex.blocoId);
+      const tipo=ex.blocoTipo||'Bloco';
+      const bc=ex.blocoCor||'#c9a84c';
+      html+=`<div class="bloco-container" style="border-color:${bc}44">
+        <div class="bloco-label" style="background:${bc}">${tipo}</div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+          <button onclick="desfazerBloco('${ex.blocoId}','${sid}')" style="font-size:9px;padding:2px 8px;border-radius:8px;border:1px solid ${bc}44;background:${bc}15;color:${bc};cursor:pointer;font-family:'Space Grotesk',sans-serif">✕ Desfazer bloco</button>
+        </div>`;
+      blocoExs.forEach(bex=>{html+=buildExCard(sid,bex,num++,cor);rendered.add(bex.id)});
+      html+=`</div>`;
+    } else {
+      html+=buildExCard(sid,ex,num++,cor);
+      rendered.add(ex.id);
+    }
+  });
+  lista.innerHTML=html;
+  initDrag(lista,sid);
+}
+
+// Patch: após salvar/carregar série, usar renderExList
+const _origRenderSerieEditor=renderSerieEditor;
+function renderSerieEditor(sid){
+  _origRenderSerieEditor(sid);
+  // após render, reagrupa blocos se existirem
+  const s=getSerie(sid);
+  if(s&&s.exercicios.some(e=>e.blocoId)){
+    const si=alunoAtivo.series.indexOf(s);
+    const cor=SERIE_CORES[si%SERIE_CORES.length];
+    renderExList(sid,s,cor);
+  }
+}
+</script>
+
 </body>
 </html>
