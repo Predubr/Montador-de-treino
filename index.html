@@ -783,6 +783,11 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
       <div class="sb-label">Séries</div>
       <button class="sb-icon-btn" onclick="addSerie()">＋</button>
     </div>
+    <div class="fichas-header" id="fichasHeader" style="display:none">
+      <div class="fichas-label">Fichas de treino</div>
+      <button class="btn-nova-ficha" onclick="abrirModalNovaFicha()">＋ nova ficha</button>
+    </div>
+    <div class="fichas-list" id="fichasList"></div>
     <div class="series-nav" id="seriesNav"></div>
     <button class="btn-add-serie" onclick="addSerie()">＋ nova série</button>
     <div class="action-wrap">
@@ -1591,6 +1596,49 @@ body{background:#0e0e0e;font-family:'Space Grotesk',sans-serif;padding-bottom:60
 .bloco-container .ex-card:last-child{margin-bottom:0}
 .modo-selecao .ex-card{border-style:dashed;cursor:pointer}
 .modo-selecao .ex-card:hover{border-color:var(--accent)!important}
+
+/* ── FICHAS (múltiplas fichas por aluno) ── */
+.fichas-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px;border-top:1px solid var(--border)}
+.fichas-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.btn-nova-ficha{font-size:11px;padding:4px 10px;border:1px solid var(--border2);border-radius:6px;background:none;color:var(--muted);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
+.btn-nova-ficha:hover{border-color:var(--accent);color:var(--accent)}
+.fichas-list{display:flex;flex-direction:column;gap:3px;padding:0 8px 8px}
+.ficha-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all .15s;position:relative}
+.ficha-item:hover{background:var(--bg2)}
+.ficha-item.active{background:var(--bg2);border-color:var(--border2)}
+.ficha-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ficha-item-info{flex:1;min-width:0}
+.ficha-item-nome{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ficha-item-meta{font-size:10px;color:var(--muted)}
+.ficha-status-badge{font-size:8px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+.fs-ativa{background:#6ee7b722;color:#6ee7b7;border:1px solid #6ee7b733}
+.fs-pendente{background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2433}
+.fs-agendada{background:#63b3ed22;color:#63b3ed;border:1px solid #63b3ed33}
+.fs-inativa{background:#33333322;color:#555;border:1px solid #33333333}
+.ficha-item-del{opacity:0;background:none;border:none;color:#444;cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:opacity .15s}
+.ficha-item:hover .ficha-item-del{opacity:1}
+.ficha-item-del:hover{color:#f87171}
+
+/* Modal ficha */
+.ficha-status-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ficha-status-opt{flex:1;min-width:80px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border2);background:none;cursor:pointer;text-align:center;transition:all .15s;font-family:'Space Grotesk',sans-serif}
+.ficha-status-opt:hover{border-color:var(--border)}
+.ficha-status-opt.sel{border-width:2px}
+.ficha-status-opt .opt-icon{font-size:18px;display:block;margin-bottom:3px}
+.ficha-status-opt .opt-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+
+/* Banner status na área principal */
+.ficha-status-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:12px;font-weight:500}
+.fsb-ativa{background:#6ee7b712;border:1px solid #6ee7b733;color:#6ee7b7}
+.fsb-pendente{background:#fbbf2412;border:1px solid #fbbf2433;color:#fbbf24}
+.fsb-agendada{background:#63b3ed12;border:1px solid #63b3ed33;color:#63b3ed}
+.fsb-inativa{background:#1a1a1a;border:1px solid var(--border2);color:var(--muted)}
+.fsb-icon{font-size:18px}
+.fsb-info{flex:1}
+.fsb-title{font-weight:700;font-size:13px}
+.fsb-sub{font-size:11px;opacity:.8;margin-top:1px}
+.btn-status-change{font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid currentColor;background:none;cursor:pointer;color:inherit;font-family:'Space Grotesk',sans-serif;font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-status-change:hover{opacity:.75}
 </style>
 </head><body>
 <div style="background:#0a0a0a;border-bottom:1px solid #1e1e1e;padding:24px 18px 20px">
@@ -3138,5 +3186,346 @@ function renderExList(sid,s,cor){
 
 </script>
 
+
+<!-- Modal nova/editar ficha -->
+<div class="modal-bg" id="modalFicha" style="display:none;align-items:center;justify-content:center">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-heading" id="mFichaTitle">Nova ficha de treino</div>
+    <div class="modal-sub">Cada aluno pode ter várias fichas. Apenas a <strong>Ativa</strong> aparece para o aluno.</div>
+    <div class="modal-field" style="margin-bottom:10px">
+      <label>Nome da ficha</label>
+      <input id="mFichaNome" type="text" placeholder="ex: Treino Hipertrofia — Fase 1"/>
+    </div>
+    <div class="modal-field" style="margin-bottom:10px">
+      <label>Status</label>
+      <div class="ficha-status-row" id="mFichaStatusRow">
+        <div class="ficha-status-opt sel" data-status="ativa" onclick="selecionarStatusModal('ativa')" style="border-color:#6ee7b7">
+          <span class="opt-icon">🟢</span><span class="opt-label" style="color:#6ee7b7">Ativa</span>
+        </div>
+        <div class="ficha-status-opt" data-status="pendente" onclick="selecionarStatusModal('pendente')">
+          <span class="opt-icon">⏸️</span><span class="opt-label" style="color:#fbbf24">Pendente</span>
+        </div>
+        <div class="ficha-status-opt" data-status="agendada" onclick="selecionarStatusModal('agendada')">
+          <span class="opt-icon">📅</span><span class="opt-label" style="color:#63b3ed">Agendada</span>
+        </div>
+        <div class="ficha-status-opt" data-status="inativa" onclick="selecionarStatusModal('inativa')">
+          <span class="opt-icon">🔒</span><span class="opt-label" style="color:#555">Inativa</span>
+        </div>
+      </div>
+    </div>
+    <div id="mFichaDataWrap" style="display:none;margin-bottom:12px">
+      <div class="modal-field">
+        <label>Data de início</label>
+        <input id="mFichaData" type="date"/>
+      </div>
+    </div>
+    <div class="modal-field" style="margin-bottom:4px">
+      <label>Observação (opcional)</label>
+      <input id="mFichaObs" type="text" placeholder="ex: Aguardando liberação médica"/>
+    </div>
+    <input type="hidden" id="mFichaId"/>
+    <div class="modal-footer" style="margin-top:18px">
+      <button class="modal-cancel" onclick="fecharModalFicha()">Cancelar</button>
+      <button class="modal-ok" onclick="salvarFicha()">Salvar ficha</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA DE FICHAS (status: ativa / pendente / agendada / inativa)
+// ═══════════════════════════════════════════════════════════
+
+const FICHA_STATUS_CONFIG = {
+  ativa:    { cor:'#6ee7b7', icone:'🟢', label:'Ativa',    banner:'fsb-ativa',    dot:'#6ee7b7' },
+  pendente: { cor:'#fbbf24', icone:'⏸️', label:'Pendente', banner:'fsb-pendente', dot:'#fbbf24' },
+  agendada: { cor:'#63b3ed', icone:'📅', label:'Agendada', banner:'fsb-agendada', dot:'#63b3ed' },
+  inativa:  { cor:'#333',    icone:'🔒', label:'Inativa',  banner:'fsb-inativa',  dot:'#444'    },
+};
+
+let fichaAtiva = null; // ficha selecionada do aluno atual
+let modalFichaStatus = 'ativa';
+
+// ── Inicializa fichas do aluno ────────────────────────────
+function inicializarFichas(aluno) {
+  // Garante que o aluno tem o array de fichas
+  if (!aluno.fichas) {
+    // Migra a ficha atual (séries existentes) como "Ficha 1 — Ativa"
+    aluno.fichas = [{
+      id: 'f_' + aluno.id,
+      nome: 'Ficha 1',
+      status: 'ativa',
+      dataInicio: aluno.dataInicio || new Date().toISOString().split('T')[0],
+      dataAgendada: null,
+      obs: '',
+      series: aluno.series || [],
+      semanas: aluno.semanas || [],
+    }];
+    saveDB();
+  }
+  // Define ficha ativa (primeira ativa, ou a primeira)
+  fichaAtiva = aluno.fichas.find(f => f.status === 'ativa') || aluno.fichas[0];
+}
+
+// ── Renderiza lista de fichas no sidebar ─────────────────
+function renderFichasList() {
+  if (!alunoAtivo) return;
+  inicializarFichas(alunoAtivo);
+  document.getElementById('fichasHeader').style.display = 'flex';
+  const list = document.getElementById('fichasList');
+  list.innerHTML = alunoAtivo.fichas.map(f => {
+    const cfg = FICHA_STATUS_CONFIG[f.status] || FICHA_STATUS_CONFIG.inativa;
+    const isAt = fichaAtiva?.id === f.id;
+    let meta = cfg.label;
+    if (f.status === 'agendada' && f.dataAgendada) {
+      meta += ' para ' + new Date(f.dataAgendada).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    }
+    if (f.obs) meta += ' · ' + f.obs.substring(0, 20);
+    return `<div class="ficha-item${isAt?' active':''}" onclick="selecionarFicha('${f.id}')">
+      <div class="ficha-item-dot" style="background:${cfg.dot}"></div>
+      <div class="ficha-item-info">
+        <div class="ficha-item-nome">${esc(f.nome)}</div>
+        <div class="ficha-item-meta">${meta} · ${(f.series||[]).length} séries</div>
+      </div>
+      <span class="ficha-status-badge fs-${f.status}">${cfg.icone}</span>
+      <button class="ficha-item-del" onclick="editarFicha('${f.id}',event)" title="Editar">✎</button>
+      <button class="ficha-item-del" onclick="deletarFicha('${f.id}',event)" title="Remover">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Seleciona uma ficha ───────────────────────────────────
+function selecionarFicha(fid) {
+  if (!alunoAtivo) return;
+  fichaAtiva = alunoAtivo.fichas.find(f => f.id === fid);
+  if (!fichaAtiva) return;
+  // Carrega séries e semanas da ficha selecionada no objeto do aluno (para compatibilidade)
+  alunoAtivo._fichaId = fid;
+  renderFichasList();
+  renderSeriesNav();
+  // Renderiza banner de status
+  renderFichaBanner();
+  const sid = fichaAtiva.series[0]?.id;
+  if (sid) renderSerieEditor(sid);
+  else renderEmpty();
+}
+
+// ── Banner de status na área principal ───────────────────
+function renderFichaBanner() {
+  if (!fichaAtiva) return;
+  const cfg = FICHA_STATUS_CONFIG[fichaAtiva.status] || FICHA_STATUS_CONFIG.inativa;
+  let sub = '';
+  if (fichaAtiva.status === 'agendada' && fichaAtiva.dataAgendada) {
+    sub = 'Ativa a partir de ' + new Date(fichaAtiva.dataAgendada).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  } else if (fichaAtiva.status === 'pendente') {
+    sub = 'Esta ficha ainda não foi ativada para o aluno';
+  } else if (fichaAtiva.status === 'inativa') {
+    sub = 'Ficha arquivada — não aparece para o aluno';
+  } else {
+    sub = fichaAtiva.dataInicio ? 'Desde ' + new Date(fichaAtiva.dataInicio).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}) : 'Ficha em uso pelo aluno';
+  }
+  if (fichaAtiva.obs) sub += (sub?' · ':'')+fichaAtiva.obs;
+
+  const banner = `<div class="ficha-status-banner ${cfg.banner}">
+    <div class="fsb-icon">${cfg.icone}</div>
+    <div class="fsb-info">
+      <div class="fsb-title">${esc(fichaAtiva.nome)} — ${cfg.label}</div>
+      <div class="fsb-sub">${sub}</div>
+    </div>
+    <button class="btn-status-change" onclick="abrirModalEditarFicha('${fichaAtiva.id}')">⚙ Alterar status</button>
+  </div>`;
+
+  // Injeta banner logo após o header da série se já estiver renderizado
+  const sc = document.getElementById('serieContent');
+  if (!sc) return;
+  // Remove banner anterior se existir
+  sc.querySelector('.ficha-status-banner')?.remove();
+  const inner = sc.querySelector('.content-inner');
+  if (inner) inner.insertAdjacentHTML('afterbegin', banner);
+}
+
+// ── Override selecionarAluno para inicializar fichas ─────
+const _origSelecionarAluno = selecionarAluno;
+function selecionarAluno(id) {
+  _origSelecionarAluno(id);
+  if (!alunoAtivo) return;
+  inicializarFichas(alunoAtivo);
+  renderFichasList();
+  renderFichaBanner();
+}
+
+// ── Override renderSeriesNav para usar fichaAtiva.series ──
+const _origRenderSeriesNav = renderSeriesNav;
+function renderSeriesNav() {
+  if (!alunoAtivo || !fichaAtiva) { _origRenderSeriesNav(); return; }
+  // Temporariamente aponta alunoAtivo.series para a ficha ativa
+  const _bkp = alunoAtivo.series;
+  alunoAtivo.series = fichaAtiva.series || [];
+  _origRenderSeriesNav();
+  alunoAtivo.series = _bkp;
+}
+
+// Override getSerie para usar fichaAtiva
+const _origGetSerie = getSerie;
+function getSerie(sid) {
+  if (fichaAtiva) {
+    return fichaAtiva.series?.find(x => x.id === sid) || _origGetSerie(sid);
+  }
+  return _origGetSerie(sid);
+}
+
+// Override addSerie para adicionar na fichaAtiva
+const _origAddSerie = addSerie;
+function addSerie() {
+  if (!fichaAtiva) { _origAddSerie(); return; }
+  if (!fichaAtiva.series) fichaAtiva.series = [];
+  const i = fichaAtiva.series.length;
+  const l = LETRAS[i] || ('S'+(i+1));
+  const s = {id:'s'+Date.now()+Math.random().toString(36).slice(2),letra:l,nome:'',grupos:[],exercicios:[]};
+  fichaAtiva.series.push(s);
+  saveDB(); renderSeriesNav(); renderSerieEditor(s.id);
+}
+
+// Override delSerie para usar fichaAtiva
+const _origDelSerie = delSerie;
+function delSerie(sid, e) {
+  e.stopPropagation();
+  if (!fichaAtiva || fichaAtiva.series.length <= 1) return;
+  fichaAtiva.series = fichaAtiva.series.filter(s => s.id !== sid);
+  fichaAtiva.series.forEach((s,i) => s.letra = LETRAS[i]||('S'+(i+1)));
+  saveDB();
+  const n = fichaAtiva.series[0].id;
+  serieAtivaMap[alunoAtivo.id] = n;
+  renderSeriesNav(); renderSerieEditor(n);
+}
+
+// ── MODAL: abrir/fechar/selecionar status ─────────────────
+function abrirModalNovaFicha() {
+  document.getElementById('mFichaTitle').textContent = 'Nova ficha de treino';
+  document.getElementById('mFichaNome').value = 'Ficha ' + ((alunoAtivo?.fichas?.length||0)+1);
+  document.getElementById('mFichaObs').value = '';
+  document.getElementById('mFichaId').value = '';
+  document.getElementById('mFichaData').value = '';
+  selecionarStatusModal('pendente');
+  document.getElementById('modalFicha').style.display = 'flex';
+  setTimeout(()=>document.getElementById('mFichaNome').select(),50);
+}
+
+function abrirModalEditarFicha(fid) {
+  const f = alunoAtivo?.fichas?.find(x => x.id === fid);
+  if (!f) return;
+  document.getElementById('mFichaTitle').textContent = 'Editar ficha';
+  document.getElementById('mFichaNome').value = f.nome || '';
+  document.getElementById('mFichaObs').value = f.obs || '';
+  document.getElementById('mFichaId').value = fid;
+  document.getElementById('mFichaData').value = f.dataAgendada || f.dataInicio || '';
+  selecionarStatusModal(f.status || 'pendente');
+  document.getElementById('modalFicha').style.display = 'flex';
+}
+
+function editarFicha(fid, e) { e.stopPropagation(); abrirModalEditarFicha(fid); }
+
+function fecharModalFicha() { document.getElementById('modalFicha').style.display = 'none'; }
+
+function selecionarStatusModal(status) {
+  modalFichaStatus = status;
+  document.querySelectorAll('.ficha-status-opt').forEach(el => {
+    const s = el.dataset.status;
+    const cfg = FICHA_STATUS_CONFIG[s];
+    el.classList.toggle('sel', s === status);
+    el.style.borderColor = s === status ? cfg.cor : '';
+    el.style.background = s === status ? cfg.cor+'22' : '';
+  });
+  // Mostra campo de data só para agendada
+  document.getElementById('mFichaDataWrap').style.display = status === 'agendada' ? 'block' : 'none';
+}
+
+function salvarFicha() {
+  if (!alunoAtivo) return;
+  inicializarFichas(alunoAtivo);
+  const nome = document.getElementById('mFichaNome').value.trim() || 'Nova ficha';
+  const obs  = document.getElementById('mFichaObs').value.trim();
+  const data = document.getElementById('mFichaData').value;
+  const fid  = document.getElementById('mFichaId').value;
+
+  // Se mudar para ativa, desativa as outras
+  if (modalFichaStatus === 'ativa') {
+    alunoAtivo.fichas.forEach(f => { if (f.status === 'ativa') f.status = 'inativa'; });
+  }
+
+  if (fid) {
+    // Editar ficha existente
+    const f = alunoAtivo.fichas.find(x => x.id === fid);
+    if (f) {
+      f.nome = nome; f.obs = obs; f.status = modalFichaStatus;
+      if (modalFichaStatus === 'agendada') f.dataAgendada = data;
+      else if (modalFichaStatus === 'ativa') f.dataInicio = data || new Date().toISOString().split('T')[0];
+    }
+    fichaAtiva = alunoAtivo.fichas.find(x => x.id === fid);
+  } else {
+    // Nova ficha com séries padrão
+    const novaFicha = {
+      id: 'f_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+      nome, obs, status: modalFichaStatus,
+      dataInicio: modalFichaStatus === 'ativa' ? (data || new Date().toISOString().split('T')[0]) : null,
+      dataAgendada: modalFichaStatus === 'agendada' ? data : null,
+      series: ['A','B','C'].map((l,i) => ({
+        id:'s'+Date.now()+i+Math.random().toString(36).slice(2),
+        letra:l, nome:'', grupos:[], exercicios:[]
+      })),
+      semanas: [{nome:'Resistência',reps:'15–20',descanso:'30s'},{nome:'Hipertrofia',reps:'10–12',descanso:'60s'},{nome:'Força',reps:'4–6',descanso:'2min'},{nome:'Deload',reps:'12–15',descanso:'45s'}],
+    };
+    alunoAtivo.fichas.push(novaFicha);
+    fichaAtiva = novaFicha;
+  }
+
+  saveDB();
+  fecharModalFicha();
+  renderFichasList();
+  renderSeriesNav();
+  renderFichaBanner();
+  const sid = fichaAtiva?.series[0]?.id;
+  if (sid) renderSerieEditor(sid);
+}
+
+function deletarFicha(fid, e) {
+  e.stopPropagation();
+  if (!alunoAtivo) return;
+  const f = alunoAtivo.fichas.find(x => x.id === fid);
+  if (!f) return;
+  if (alunoAtivo.fichas.length <= 1) { alert('O aluno precisa ter pelo menos uma ficha.'); return; }
+  if (!confirm('Remover a ficha "'+f.nome+'"? Isso não pode ser desfeito.')) return;
+  alunoAtivo.fichas = alunoAtivo.fichas.filter(x => x.id !== fid);
+  if (fichaAtiva?.id === fid) {
+    fichaAtiva = alunoAtivo.fichas.find(x => x.status === 'ativa') || alunoAtivo.fichas[0];
+  }
+  saveDB(); renderFichasList(); renderSeriesNav(); renderFichaBanner();
+  const sid = fichaAtiva?.series[0]?.id;
+  if (sid) renderSerieEditor(sid);
+}
+
+// Verifica fichas agendadas (ativa automaticamente no dia certo)
+function verificarFichasAgendadas() {
+  if (!alunoAtivo?.fichas) return;
+  const hoje = new Date().toISOString().split('T')[0];
+  let alterou = false;
+  alunoAtivo.fichas.forEach(f => {
+    if (f.status === 'agendada' && f.dataAgendada && f.dataAgendada <= hoje) {
+      // Desativa as outras ativas
+      alunoAtivo.fichas.forEach(x => { if (x.status === 'ativa') x.status = 'inativa'; });
+      f.status = 'ativa';
+      f.dataInicio = f.dataAgendada;
+      alterou = true;
+    }
+  });
+  if (alterou) { saveDB(); renderFichasList(); }
+}
+
+// Roda verificação ao carregar
+setTimeout(verificarFichasAgendadas, 1000);
+
+</script>
 </body>
 </html>
