@@ -531,11 +531,13 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
       <button class="sb-icon-btn" onclick="addSerie()">＋</button>
     </div>
     <div id="fichasSection" style="display:none">
-      <div class="fichas-top">
-        <span class="fichas-top-lbl">Fichas de treino</span>
-        <button class="btn-nf" onclick="_abrirMF(null)">＋ nova</button>
+      <div class="fichas-section">
+        <div class="fichas-header">
+          <span class="fichas-header-lbl">Fichas de treino</span>
+          <button class="btn-nf" onclick="_abrirMF(null)">＋ Nova</button>
+        </div>
+        <div class="fichas-list" id="fichasWrap"></div>
       </div>
-      <div class="fichas-wrap" id="fichasWrap"></div>
     </div>
     <div class="series-nav" id="seriesNav"></div>
     <button class="btn-add-serie" onclick="addSerie()">＋ nova série</button>
@@ -1272,42 +1274,61 @@ body{background:#0e0e0e;font-family:'Space Grotesk',sans-serif;padding-bottom:60
 .link-box a{color:#c9a84c;font-size:11px;font-weight:700;text-decoration:none;word-break:break-all;flex:1}
 .link-box-btn{padding:6px 12px;background:#c9a84c;border:none;border-radius:7px;color:#111;font-size:11px;font-weight:800;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
 
-/* ── FICHAS ── */
-.fichas-wrap{padding:4px 8px 8px}
-.fichas-top{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 6px;border-top:1px solid var(--border)}
-.fichas-top-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.btn-nf{font-size:10px;padding:3px 9px;border:1px solid var(--border2);border-radius:6px;background:none;color:var(--muted);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
+/* ── FICHAS SIDEBAR ── */
+.fichas-section{margin:0 6px 6px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.fichas-header{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-bottom:1px solid var(--border);background:#0d0d0d}
+.fichas-header-lbl{font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#555;display:flex;align-items:center;gap:5px}
+.fichas-header-lbl::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.btn-nf{display:flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:3px 8px;border:1px solid var(--border2);border-radius:5px;background:none;color:#555;cursor:pointer;font-family:'Space Grotesk',sans-serif;letter-spacing:.04em;transition:all .15s}
 .btn-nf:hover{border-color:var(--accent);color:var(--accent)}
-.fi{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all .15s;margin-bottom:2px}
-.fi:hover{background:var(--bg2)}
-.fi.on{background:var(--bg2);border-color:var(--border2)}
-.fi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.fi-info{flex:1;min-width:0}
-.fi-nome{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fi-sub{font-size:10px;color:var(--muted)}
-.fi-ic{font-size:13px;flex-shrink:0}
-.fi-edit{opacity:0;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 3px}
-.fi:hover .fi-edit{opacity:1}
-.fi-edit:hover{color:var(--accent)}
-.fi-del{opacity:0;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 3px}
-.fi:hover .fi-del{opacity:1}
-.fi-del:hover{color:#f87171}
-/* Banner status */
-.fi-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:12px}
-.fi-b-ativa{background:#6ee7b710;border:1px solid #6ee7b733;color:#6ee7b7}
-.fi-b-pendente{background:#fbbf2410;border:1px solid #fbbf2433;color:#fbbf24}
-.fi-b-agendada{background:#63b3ed10;border:1px solid #63b3ed33;color:#63b3ed}
-.fi-b-inativa{background:#1a1a1a;border:1px solid var(--border2);color:var(--muted)}
-.fi-b-icon{font-size:18px;flex-shrink:0}
-.fi-b-info{flex:1}
-.fi-b-title{font-weight:700;font-size:13px}
-.fi-b-sub{font-size:11px;opacity:.75;margin-top:1px}
-.fi-b-btn{font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid currentColor;background:none;cursor:pointer;color:inherit;font-family:'Space Grotesk',sans-serif;font-weight:600;white-space:nowrap;flex-shrink:0}
-/* Modal */
-.fso-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.fso{flex:1;min-width:68px;padding:8px 6px;border-radius:8px;border:1.5px solid var(--border2);background:none;cursor:pointer;text-align:center;transition:all .15s}
-.fso .fi-opt-icon{font-size:15px;display:block;margin-bottom:2px}
-.fso .fi-opt-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.fichas-list{padding:5px}
+.fi{display:flex;align-items:center;gap:0;border-radius:7px;cursor:pointer;border:1px solid transparent;transition:all .15s;margin-bottom:3px;overflow:hidden;position:relative}
+.fi:hover{background:var(--bg3);border-color:var(--border)}
+.fi.on{background:var(--bg3);border-color:var(--border2)}
+.fi-status-bar{width:3px;min-height:42px;flex-shrink:0;align-self:stretch}
+.fi-body{flex:1;min-width:0;padding:7px 8px}
+.fi-nome{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.fi-meta{display:flex;align-items:center;gap:5px;margin-top:3px}
+.fi-badge{font-size:7px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;padding:1px 5px;border-radius:3px}
+.fi-nseries{font-size:9px;color:#3a3a3a}
+.fi-actions{display:flex;gap:1px;padding:0 5px;opacity:0;transition:opacity .15s;flex-shrink:0}
+.fi:hover .fi-actions{opacity:1}
+.fi-act{background:none;border:none;cursor:pointer;color:#3a3a3a;font-size:11px;padding:4px 5px;border-radius:5px;transition:all .15s;line-height:1}
+.fi-act:hover{background:var(--bg2);color:var(--accent)}
+.fi-act.danger:hover{color:var(--red)}
+.fichas-add-btn{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;padding:7px;border:1px dashed var(--border);border-radius:7px;background:none;color:#333;cursor:pointer;font-size:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;transition:all .15s;margin-top:2px}
+.fichas-add-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* Banner status no editor */
+.fi-banner{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:11px;margin-bottom:18px;position:relative;overflow:hidden}
+.fi-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.fi-b-ativa{background:#6ee7b708;border:1px solid #6ee7b722}
+.fi-b-ativa::before{background:#6ee7b7}
+.fi-b-pendente{background:#fbbf2408;border:1px solid #fbbf2422}
+.fi-b-pendente::before{background:#fbbf24}
+.fi-b-agendada{background:#63b3ed08;border:1px solid #63b3ed22}
+.fi-b-agendada::before{background:#63b3ed}
+.fi-b-inativa{background:#1a1a1a;border:1px solid var(--border)}
+.fi-b-inativa::before{background:#333}
+.fi-b-icon{font-size:22px;flex-shrink:0}
+.fi-b-info{flex:1;min-width:0}
+.fi-b-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:2px}
+.fi-b-sub{font-size:11px;opacity:.6;color:var(--text)}
+.fi-b-actions{display:flex;gap:6px;flex-shrink:0}
+.fi-b-btn{font-size:10px;font-weight:700;padding:5px 12px;border-radius:7px;border:1px solid currentColor;background:none;cursor:pointer;color:inherit;font-family:'Space Grotesk',sans-serif;white-space:nowrap;transition:all .15s;opacity:.8}
+.fi-b-btn:hover{opacity:1}
+/* Modal fichas */
+.fso-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.fso{padding:10px 8px;border-radius:9px;border:1.5px solid var(--border2);background:var(--bg3);cursor:pointer;text-align:center;transition:all .18s;position:relative}
+.fso:hover{border-color:var(--border2);transform:translateY(-1px)}
+.fso .fso-icon{font-size:20px;display:block;margin-bottom:4px}
+.fso .fso-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;display:block}
+.fso .fso-desc{font-size:9px;opacity:.5;margin-top:2px;font-weight:400;text-transform:none;letter-spacing:0}
+.fi-copiar-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;margin-top:4px}
+.fi-copiar-title{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#555;margin-bottom:8px}
+.fi-copiar-sel{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;color:var(--text);font-size:12px;outline:none;margin-bottom:8px;font-family:'Space Grotesk',sans-serif}
+.fi-copiar-sel:focus{border-color:var(--accent)}
+.fi-copiar-btn{width:100%;padding:8px;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
+.fi-copiar-btn:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head><body>
 <div style="background:#0a0a0a;border-bottom:1px solid #1e1e1e;padding:24px 18px 20px">
@@ -2725,33 +2746,77 @@ async function verProgressoAluno(sid){
 </div>
 
 <div class="modal-bg" id="mFichaModal" style="display:none;align-items:center;justify-content:center">
-  <div class="modal-box" style="max-width:440px">
-    <div class="modal-heading" id="mFichaHeading">Nova ficha</div>
-    <div class="modal-sub">Só a ficha <strong>Ativa</strong> aparece para o aluno. As outras ficam salvas.</div>
-    <div class="modal-field" style="margin-bottom:10px">
-      <label>Nome da ficha</label>
-      <input id="mFichaNome" type="text" placeholder="ex: Fase 1 — Hipertrofia" onkeydown="if(event.key==='Enter')_salvarFicha()"/>
-    </div>
-    <div class="modal-field" style="margin-bottom:10px">
-      <label>Status</label>
-      <div class="fso-row">
-        <div class="fso" data-s="ativa"    onclick="_selFS('ativa')">   <span class="fi-opt-icon">🟢</span><span class="fi-opt-lbl" style="color:#6ee7b7">Ativa</span></div>
-        <div class="fso" data-s="pendente" onclick="_selFS('pendente')"><span class="fi-opt-icon">⏸️</span><span class="fi-opt-lbl" style="color:#fbbf24">Pendente</span></div>
-        <div class="fso" data-s="agendada" onclick="_selFS('agendada')"><span class="fi-opt-icon">📅</span><span class="fi-opt-lbl" style="color:#63b3ed">Agendada</span></div>
-        <div class="fso" data-s="inativa"  onclick="_selFS('inativa')"> <span class="fi-opt-icon">🔒</span><span class="fi-opt-lbl" style="color:#555">Inativa</span></div>
+  <div class="modal-box" style="max-width:460px">
+
+    <!-- Cabeçalho -->
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px">
+      <div id="mFichaIcone" style="width:42px;height:42px;border-radius:10px;background:#6ee7b722;border:1px solid #6ee7b733;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🟢</div>
+      <div>
+        <div class="modal-heading" id="mFichaHeading" style="font-size:22px">Nova Ficha</div>
+        <div class="modal-sub" style="margin-bottom:0">Só a ficha <strong style="color:var(--accent)">Ativa</strong> aparece para o aluno</div>
       </div>
     </div>
-    <div id="mFichaDataWrap" style="display:none;margin-bottom:10px">
-      <div class="modal-field"><label>Data de início</label><input id="mFichaData" type="date"/></div>
+
+    <!-- Nome -->
+    <div class="modal-field" style="margin-bottom:14px">
+      <label>Nome da ficha</label>
+      <input id="mFichaNome" type="text" placeholder="ex: Fase 1 — Hipertrofia · Iniciante" onkeydown="if(event.key==='Enter')_salvarFicha()" style="font-size:14px;font-weight:600"/>
     </div>
-    <div class="modal-field" style="margin-bottom:4px">
+
+    <!-- Status -->
+    <div style="font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#444;margin-bottom:8px">Status da ficha</div>
+    <div class="fso-grid" style="margin-bottom:14px">
+      <div class="fso" data-s="ativa" onclick="_selFS('ativa')">
+        <span class="fso-icon">🟢</span>
+        <span class="fso-lbl" style="color:#6ee7b7">Ativa</span>
+        <span class="fso-desc">Visível para o aluno agora</span>
+      </div>
+      <div class="fso" data-s="pendente" onclick="_selFS('pendente')">
+        <span class="fso-icon">⏸️</span>
+        <span class="fso-lbl" style="color:#fbbf24">Pendente</span>
+        <span class="fso-desc">Salva, ainda não liberada</span>
+      </div>
+      <div class="fso" data-s="agendada" onclick="_selFS('agendada')">
+        <span class="fso-icon">📅</span>
+        <span class="fso-lbl" style="color:#63b3ed">Agendada</span>
+        <span class="fso-desc">Ativa automaticamente na data</span>
+      </div>
+      <div class="fso" data-s="inativa" onclick="_selFS('inativa')">
+        <span class="fso-icon">🔒</span>
+        <span class="fso-lbl" style="color:#666">Inativa</span>
+        <span class="fso-desc">Arquivada, pode reativar</span>
+      </div>
+    </div>
+
+    <!-- Data (só agendada) -->
+    <div id="mFichaDataWrap" style="display:none">
+      <div class="modal-field" style="margin-bottom:14px">
+        <label>📅 Data de ativação automática</label>
+        <input id="mFichaData" type="date" style="font-size:13px"/>
+      </div>
+    </div>
+
+    <!-- Obs -->
+    <div class="modal-field" style="margin-bottom:14px">
       <label>Observação (opcional)</label>
-      <input id="mFichaObs" type="text" placeholder="ex: Aguardando liberação médica"/>
+      <input id="mFichaObs" type="text" placeholder="ex: Pré-temporada · Foco inferior"/>
     </div>
+
+    <!-- Copiar para outro aluno (só em edição) -->
+    <div id="mFichaCopiarWrap" style="display:none">
+      <div class="fi-copiar-wrap">
+        <div class="fi-copiar-title">↗ Copiar esta ficha para outro aluno</div>
+        <select class="fi-copiar-sel" id="mFichaCopiarDest">
+          <option value="">— Selecione o aluno destino —</option>
+        </select>
+        <button class="fi-copiar-btn" onclick="_copiarFichaParaAluno()">Copiar ficha completa</button>
+      </div>
+    </div>
+
     <input type="hidden" id="mFichaEditId"/>
     <div class="modal-footer" style="margin-top:18px">
       <button class="modal-cancel" onclick="_fecharMF()">Cancelar</button>
-      <button class="modal-ok" onclick="_salvarFicha()">Salvar ficha</button>
+      <button class="modal-ok" onclick="_salvarFicha()" id="mFichaSalvarBtn">Salvar ficha</button>
     </div>
   </div>
 </div>
@@ -2803,47 +2868,61 @@ function _renderFichas(){
   if(!alunoAtivo)return;
   document.getElementById('fichasSection').style.display='block';
   const wrap=document.getElementById('fichasWrap');
-  wrap.innerHTML=alunoAtivo.fichas.map(f=>{
+  const fichas=alunoAtivo.fichas||[];
+  wrap.innerHTML=fichas.map(f=>{
     const cfg=_FST[f.status]||_FST.inativa;
     const on=_FA?.id===f.id;
-    let sub=cfg.lbl;
+    const nSeries=(f.series||[]).length;
+    const nEx=(f.series||[]).reduce((s,sr)=>s+(sr.exercicios||[]).length,0);
+    let dataInfo='';
     if(f.status==='agendada'&&f.dataAgendada)
-      sub+=' · '+new Date(f.dataAgendada+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-    if(f.obs)sub+=' · '+f.obs.substring(0,16);
+      dataInfo='Ativa em '+new Date(f.dataAgendada+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    else if(f.dataInicio&&f.status==='ativa')
+      dataInfo='Desde '+new Date(f.dataInicio+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
     return`<div class="fi${on?' on':''}" onclick="_selFicha('${f.id}')">
-      <div class="fi-dot" style="background:${cfg.dot}"></div>
-      <div class="fi-info">
+      <div class="fi-status-bar" style="background:${cfg.dot}"></div>
+      <div class="fi-body">
         <div class="fi-nome">${esc(f.nome)}</div>
-        <div class="fi-sub">${sub} · ${(f.series||[]).length} séries</div>
+        <div class="fi-meta">
+          <span class="fi-badge" style="background:${cfg.dot}22;color:${cfg.dot}">${cfg.ic} ${cfg.lbl}</span>
+          <span class="fi-nseries">${nSeries} séries · ${nEx} ex.</span>
+          ${dataInfo?`<span style="font-size:8px;color:#2a2a2a">· ${dataInfo}</span>`:''}
+        </div>
       </div>
-      <span class="fi-ic">${cfg.ic}</span>
-      <button class="fi-edit" onclick="_abrirMF('${f.id}',event)" title="Editar">✎</button>
-      <button class="fi-del"  onclick="_delFicha('${f.id}',event)" title="Remover">✕</button>
+      <div class="fi-actions">
+        <button class="fi-act" onclick="_abrirMF('${f.id}',event)" title="Editar ficha">✎</button>
+        <button class="fi-act danger" onclick="_delFicha('${f.id}',event)" title="Remover">✕</button>
+      </div>
     </div>`;
-  }).join('');
+  }).join('')+`<button class="fichas-add-btn" onclick="_abrirMF(null)">＋ Nova ficha</button>`;
 }
 
 function _renderBanner(){
   if(!_FA)return;
   const cfg=_FST[_FA.status]||_FST.inativa;
+  const fichas=alunoAtivo?.fichas||[];
+  const outrasAtivas=fichas.filter(f=>f.id!==_FA.id&&f.status!=='inativa').length;
   let sub='';
   if(_FA.status==='agendada'&&_FA.dataAgendada)
-    sub='Ativa em '+new Date(_FA.dataAgendada+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
-  else if(_FA.status==='pendente') sub='Não liberada para o aluno ainda';
-  else if(_FA.status==='inativa')  sub='Arquivada — não aparece para o aluno';
-  else sub=_FA.dataInicio?'Desde '+new Date(_FA.dataInicio+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
-  if(_FA.obs)sub+=(sub?' · ':'')+_FA.obs;
+    sub='Ativação automática em '+new Date(_FA.dataAgendada+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  else if(_FA.status==='pendente') sub='Não visível para o aluno ainda — clique em Alterar para ativar';
+  else if(_FA.status==='inativa')  sub='Arquivada — clique em Alterar para reativar';
+  else sub=_FA.dataInicio?'Em uso desde '+new Date(_FA.dataInicio+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):'Ficha atual do aluno';
+  if(_FA.obs)sub+=' · '+_FA.obs;
   const sc=document.getElementById('serieContent');if(!sc)return;
   sc.querySelector('.fi-banner')?.remove();
   const inner=sc.querySelector('.content-inner');if(!inner)return;
   inner.insertAdjacentHTML('afterbegin',
-    `<div class="fi-banner ${cfg.bc}">
+    `<div class="fi-banner ${cfg.bc}" style="padding-left:20px">
       <div class="fi-b-icon">${cfg.ic}</div>
       <div class="fi-b-info">
-        <div class="fi-b-title">${esc(_FA.nome)} — ${cfg.lbl}</div>
+        <div class="fi-b-title">${esc(_FA.nome)}</div>
         <div class="fi-b-sub">${sub}</div>
       </div>
-      <button class="fi-b-btn" onclick="_abrirMF('${_FA.id}',{stopPropagation:()=>{}})">⚙ Alterar</button>
+      <div class="fi-b-actions">
+        ${fichas.length>1?`<button class="fi-b-btn" onclick="_abrirMF('${_FA.id}',{stopPropagation:()=>{}})" style="color:${cfg.dot}">✎ Alterar</button>`:''}
+        <button class="fi-b-btn" onclick="_abrirMF(null)" style="color:var(--accent)">＋ Nova</button>
+      </div>
     </div>`);
 }
 
@@ -2865,6 +2944,17 @@ function _abrirMF(fid,e){
   document.getElementById('mFichaEditId').value=fid||'';
   document.getElementById('mFichaData').value=f?.dataAgendada||f?.dataInicio||'';
   _selFS(f?.status||'pendente');
+  // Seção de copiar para outro aluno (só aparece na edição)
+  const copiarWrap=document.getElementById('mFichaCopiarWrap');
+  if(f&&db.alunos.length>1){
+    const outros=db.alunos.filter(a=>a.id!==alunoAtivo.id);
+    document.getElementById('mFichaCopiarDest').innerHTML=
+      `<option value="">— Selecione o aluno destino —</option>`+
+      outros.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join('');
+    copiarWrap.style.display='block';
+  } else {
+    copiarWrap.style.display='none';
+  }
   document.getElementById('mFichaModal').style.display='flex';
   setTimeout(()=>document.getElementById('mFichaNome').select(),50);
 }
@@ -2872,12 +2962,22 @@ function _fecharMF(){document.getElementById('mFichaModal').style.display='none'
 
 function _selFS(st){
   _mfStatus=st;
+  const cfg=_FST[st]||_FST.inativa;
   document.querySelectorAll('.fso').forEach(el=>{
-    const s=el.dataset.s;const cfg=_FST[s]||_FST.inativa;
+    const s=el.dataset.s;const c=_FST[s]||_FST.inativa;
     const on=s===st;
-    el.style.borderColor=on?cfg.cor:'';
-    el.style.background=on?cfg.cor+'22':'';
+    el.style.borderColor=on?c.dot:'var(--border2)';
+    el.style.background=on?c.dot+'22':'var(--bg3)';
+    el.style.transform=on?'translateY(-2px) scale(1.02)':'';
+    el.style.boxShadow=on?`0 4px 12px ${c.dot}33`:'';
   });
+  // Atualiza ícone e cor do cabeçalho do modal
+  const icEl=document.getElementById('mFichaIcone');
+  if(icEl){
+    icEl.textContent=cfg.ic;
+    icEl.style.background=cfg.dot+'22';
+    icEl.style.borderColor=cfg.dot+'44';
+  }
   document.getElementById('mFichaDataWrap').style.display=st==='agendada'?'block':'none';
 }
 
@@ -2935,6 +3035,43 @@ function _delFicha(fid,e){
   const sid=(_FA?.series||[])[0]?.id;
   if(sid)renderSerieEditor(sid);else renderEmpty();
   setTimeout(_renderBanner,80);
+}
+
+function _copiarFichaParaAluno(){
+  const fid=document.getElementById('mFichaEditId').value;
+  const destId=document.getElementById('mFichaCopiarDest').value;
+  if(!fid||!destId){alert('Selecione o aluno destino.');return;}
+  const orig=alunoAtivo?.fichas?.find(x=>x.id===fid);
+  const dest=db.alunos.find(x=>x.id===destId);
+  if(!orig||!dest)return;
+  // Inicializa fichas no destino se necessário
+  _initFichas(dest);
+  // Clona a ficha com novos IDs e status pendente
+  const clone=JSON.parse(JSON.stringify(orig));
+  clone.id='f'+Date.now()+Math.random().toString(36).slice(2);
+  clone.nome=orig.nome+' (cópia)';
+  clone.status='pendente';
+  clone.dataInicio=null;
+  clone.dataAgendada=null;
+  // Novos IDs para séries e exercícios
+  clone.series=clone.series.map(s=>({
+    ...s,
+    id:'s'+Date.now()+Math.random().toString(36).slice(2),
+    exercicios:(s.exercicios||[]).map(ex=>({
+      ...ex,
+      id:'ex'+Date.now()+Math.random().toString(36).slice(2),
+      medias:(ex.medias||[]).map(m=>({...m,id:'m'+Date.now()+Math.random().toString(36).slice(2)}))
+    }))
+  }));
+  clone.series.forEach((s,i)=>s.letra=LETRAS[i]||('S'+(i+1)));
+  dest.fichas.push(clone);
+  dest.updatedAt=new Date().toISOString();
+  saveDB();
+  _fecharMF();
+  // Feedback visual
+  const btn=document.querySelector('.fi-copiar-btn');
+  if(btn){const orig_txt=btn.textContent;btn.textContent='✅ Copiada para '+dest.nome+'!';btn.style.color='var(--green)';btn.style.borderColor='var(--green)';setTimeout(()=>{btn.textContent=orig_txt;btn.style.color='';btn.style.borderColor='';},2500);}
+  alert('✅ Ficha "'+clone.nome+'" copiada para '+dest.nome+' como Pendente!');
 }
 </script>
 
