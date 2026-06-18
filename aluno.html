@@ -2,557 +2,940 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>PH Performance — Treino</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Meu Treino</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--acc:#c9a84c;--bg:#0e0e0e;--bg2:#131313;--bg3:#1a1a1a;--border:#1e1e1e;--border2:#2a2a2a;--text:#f5f3ee;--muted:#555;--green:#6ee7b7;--yellow:#fbbf24;--red:#f87171}
-body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;padding-bottom:80px;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --acc:#c9f500;--acc2:#a8cc00;--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;
+  --border:#1e1e1e;--border2:#2a2a2a;--text:#fff;--muted:#888;
+  --green:#4ade80;--red:#f87171;--yellow:#fbbf24;--blue:#60a5fa;
+  --radius:16px;--radius-sm:10px;--safe-bottom:env(safe-area-inset-bottom,0px)
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;flex-direction:column}
 
 /* ── LOADING ── */
-#loadingScreen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100}
-.load-logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:var(--acc)}
-.load-spinner{width:28px;height:28px;border:3px solid #1a1a1a;border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+#loadScreen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:999}
+.load-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:var(--acc)}
+.load-spinner{width:32px;height:32px;border:3px solid #1a1a1a;border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-msg{font-size:12px;color:var(--muted)}
-#errorScreen{display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;padding:24px;z-index:100}
+.load-msg{font-size:12px;color:var(--muted);letter-spacing:.04em}
+#errorScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
+#errorScreen.show{display:flex}
 
-/* ── HEADER ── */
-.header{background:#0a0a0a;border-bottom:1px solid var(--border);padding:20px 18px 18px}
-.header-brand{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#2a2a2a;border:1px solid #1e1e1e;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:10px}
-.header-name{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--text);line-height:1;margin-bottom:4px}
-.header-name span{color:var(--acc)}
-.header-meta{font-size:10px;color:#3a3a3a;letter-spacing:.04em}
-.header-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.htag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:20px;background:#1a1a1a;color:#3a3a3a;border:1px solid #1e1e1e}
-.htag.hl{background:var(--acc)15;color:var(--acc);border-color:var(--acc)33}
+/* ── MAIN LAYOUT ── */
+#app{display:flex;flex-direction:column;height:100%;display:none}
+.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.header-back{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);font-size:18px;flex-shrink:0}
+.header-info{flex:1;min-width:0}
+.header-title{font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.header-avatar{width:36px;height:36px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#111;flex-shrink:0}
 
-/* ── STATUS TOAST ── */
-.toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid #2a2a2a;border-radius:20px;padding:7px 16px;font-size:11px;font-weight:600;color:var(--green);z-index:200;display:none;white-space:nowrap;transition:all .2s}
-.toast.show{display:block}
+/* ── SCROLL CONTENT ── */
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scroll-area::-webkit-scrollbar{display:none}
+.page{padding:0 0 16px;display:none}
+.page.active{display:block}
 
-/* ── BODY ── */
-.body{padding:16px}
+/* ── BOTTOM TABS ── */
+.bottom-nav{background:var(--bg2);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);flex-shrink:0}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border:none;background:none;cursor:pointer;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:color .15s}
+.bnav-btn.active{color:var(--acc)}
+.bnav-icon{font-size:20px;transition:transform .15s}
+.bnav-btn.active .bnav-icon{transform:scale(1.15)}
+
+/* ── ANAMNESE BANNER ── */
+.anamnese-banner{display:flex;align-items:center;gap:10px;margin:12px 16px 0;padding:12px 14px;background:#c9f50010;border:1.5px solid var(--acc)33;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s}
+.anamnese-banner:hover{border-color:var(--acc)66}
+.an-banner-icon{font-size:22px;flex-shrink:0}
+.an-banner-info{flex:1}
+.an-banner-title{font-size:13px;font-weight:800;color:var(--acc)}
+.an-banner-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.an-banner-arrow{color:var(--muted);font-size:18px;flex-shrink:0}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--bg3);border:1px solid var(--border2);border-radius:30px;padding:9px 18px;font-size:12px;font-weight:600;color:var(--text);z-index:500;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ══ HOME PAGE ══ */
+.home-hero{background:linear-gradient(160deg,#0f1a00 0%,var(--bg) 60%);padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.home-greeting{font-size:12px;color:var(--muted);margin-bottom:2px}
+.home-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;line-height:1;color:var(--text)}
+.home-name span{color:var(--acc)}
+.home-date{font-size:11px;color:var(--muted);margin-top:4px}
+.home-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px;border-bottom:1px solid var(--border)}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--acc)}
+.stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:2px}
 
 /* ── CHECKIN ── */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:16px}
-.card-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
-.checkin-bar{display:flex;gap:5px}
-.ci-day{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;cursor:pointer;flex:1;transition:all .15s;user-select:none}
-.ci-day.done{background:var(--green)15;border-color:var(--green)44}
-.ci-lbl{font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.ci-icon{font-size:15px}
-.ci-day.done .ci-lbl{color:var(--green)}
-.freq-label{font-size:11px;color:var(--muted);margin-top:8px}
+.section{padding:16px}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.checkin-grid{display:flex;gap:6px}
+.ci-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;min-width:0}
+.ci-btn.done{background:#4ade8015;border-color:#4ade8055}
+.ci-day{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.ci-check{font-size:18px;line-height:1}
+.ci-btn.done .ci-day{color:var(--green)}
 
-/* ── PERIODIZAÇÃO ── */
-.period-row{display:flex;align-items:baseline;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)}
-.period-row:last-child{border-bottom:none}
-.period-sem{font-size:9px;font-weight:700;color:var(--muted);min-width:46px;text-transform:uppercase;letter-spacing:.06em}
-.period-nome{font-size:12px;font-weight:700;color:var(--text);flex:1}
-.period-reps{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--acc)}
+/* ── SERIES LIST (HOME) ── */
+.series-list{display:flex;flex-direction:column;gap:8px;padding:0 16px 16px}
+.serie-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.serie-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.serie-card:active{transform:scale(.98)}
+.serie-letter{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;flex-shrink:0}
+.serie-info{flex:1;min-width:0}
+.serie-name{font-size:14px;font-weight:800;color:var(--text)}
+.serie-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.serie-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.serie-tag{font-size:8px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:20px;letter-spacing:.04em}
+.serie-arrow{color:var(--muted);font-size:18px;flex-shrink:0}
+.serie-progress{display:flex;align-items:center;gap:4px}
+.serie-prog-ring{width:32px;height:32px;flex-shrink:0}
+
+/* ── PERIODIZATION ── */
+.period-list{display:flex;flex-direction:column;gap:6px}
+.period-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.period-item.current{border-color:var(--acc)44;background:#c9f50010}
+.period-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.period-item.current .period-dot{background:var(--acc)}
+.period-num{font-size:9px;font-weight:700;color:var(--muted);min-width:42px;text-transform:uppercase}
+.period-name{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+.period-reps{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--acc)}
 .period-rest{font-size:10px;color:var(--muted)}
 
-/* ── SERIES TABS ── */
-.series-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:16px;scrollbar-width:none}
-.series-tabs::-webkit-scrollbar{display:none}
-.s-tab{flex-shrink:0;padding:8px 18px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;transition:all .15s;letter-spacing:.5px}
-.s-tab.active{border-color:var(--acc);background:var(--acc)18;color:var(--acc)}
-
-/* ── SERIE HEADER ── */
-.serie-header{display:flex;align-items:flex-end;gap:10px;margin-bottom:14px;padding-bottom:10px}
-.serie-letter{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:.85}
-.serie-info{}
-.serie-name{font-size:18px;font-weight:900;color:var(--text);line-height:1.1}
-.serie-grupos{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
-.grupo-tag{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:20px;border:1px solid}
+/* ══ TREINO PAGE ══ */
+.treino-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.treino-letter{font-family:'Bebas Neue',sans-serif;font-size:48px;line-height:1;flex-shrink:0}
+.treino-info{flex:1}
+.treino-name{font-size:18px;font-weight:900;color:var(--text)}
+.treino-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.treino-progress-bar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+.treino-progress-fill{height:100%;border-radius:2px;transition:width .4s ease}
 
 /* ── EXERCISE CARD ── */
-.ex-card{background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:14px;margin-bottom:10px;transition:border-color .2s}
-.ex-card.done{border-color:var(--green)44;background:var(--green)05}
-.ex-top{display:flex;align-items:center;gap:9px;margin-bottom:11px}
-.ex-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;transition:all .2s}
-.ex-done-num{background:var(--green)22;color:var(--green)}
-.ex-name{font-size:15px;font-weight:800;color:var(--text);flex:1;line-height:1.2}
-.check-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;transition:all .2s;flex-shrink:0}
-.check-btn:hover{border-color:var(--green);color:var(--green)}
-.ex-card.done .check-btn{background:var(--green);border-color:var(--green);color:#111}
-.ex-params{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
-.ex-param{}
-.ex-plabel{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:2px}
-.ex-pval{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1}
-.ex-obs{font-size:11px;color:var(--muted);background:#111;border-radius:7px;padding:7px 10px;margin-bottom:10px;line-height:1.5}
-.ex-media{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
-.media-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--acc);color:#111;border-radius:7px;font-weight:800;font-size:11px;text-decoration:none;border:none;cursor:pointer}
+.ex-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.ex-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s}
+.ex-card.done{border-color:#4ade8044}
+.ex-card-header{display:flex;align-items:center;gap:10px;padding:14px 14px 0}
+.ex-num-badge{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;transition:all .2s}
+.ex-done-badge{background:var(--green)!important;color:#111!important}
+.ex-name{flex:1;font-size:15px;font-weight:800;color:var(--text);line-height:1.2}
+.ex-check{width:36px;height:36px;border-radius:50%;border:2px solid var(--border2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;transition:all .2s;flex-shrink:0}
+.ex-check.checked{background:var(--green);border-color:var(--green);color:#111}
+.ex-params-row{display:flex;gap:0;padding:12px 14px 0}
+.ex-param-box{flex:1;text-align:center;padding:8px 4px;background:var(--bg3);border-radius:8px;margin-right:6px}
+.ex-param-box:last-child{margin-right:0}
+.ex-param-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.ex-param-val{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;margin-top:2px}
+.ex-obs{margin:10px 14px 0;padding:8px 10px;background:var(--bg3);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.5}
+.ex-tecnica{display:inline-flex;align-items:center;gap:4px;margin:8px 14px 0;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.ex-media-row{display:flex;gap:6px;padding:8px 14px 0;flex-wrap:wrap}
+.ex-media-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;background:var(--acc);color:#111;border-radius:8px;font-weight:800;font-size:11px;text-decoration:none;border:none;cursor:pointer}
 
-/* timer */
-.timer-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.timer-btn{padding:6px 14px;background:none;border:1px solid var(--border2);border-radius:8px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
-.timer-btn:hover{border-color:var(--acc);color:var(--acc)}
-.timer-btn.running{background:var(--acc)18;border-color:var(--acc);color:var(--acc)}
-.timer-display{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--acc);letter-spacing:1px;min-width:52px}
-.timer-done{color:var(--green);font-size:12px;font-weight:700}
+/* ── TIMER ── */
+.ex-timer{display:flex;align-items:center;gap:8px;padding:10px 14px 0}
+.timer-pill{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:30px;cursor:pointer;transition:all .2s;border:none;font-family:'Inter',sans-serif}
+.timer-pill.running{background:#4ade8015;border:1.5px solid #4ade8055}
+.timer-pill.done-pulse{background:#c9f50015;border:1.5px solid var(--acc)55}
+.timer-icon{font-size:16px}
+.timer-lbl{font-size:11px;font-weight:700;color:var(--muted)}
+.timer-pill.running .timer-lbl{color:var(--green)}
+.timer-count{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--acc);min-width:36px}
 
-/* carga */
-.carga-section{background:#111;border-radius:9px;padding:10px 12px}
-.carga-section-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px}
-.series-carga-grid{display:grid;gap:6px;margin-bottom:8px}
-.serie-carga-row{display:flex;align-items:center;gap:8px}
-.serie-carga-lbl{font-size:11px;font-weight:700;color:var(--muted);min-width:22px;text-align:center}
-.carga-inp{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--text);font-size:14px;font-family:'Space Grotesk',sans-serif;outline:none;transition:border-color .15s;font-weight:600}
+/* ── CARGA SECTION ── */
+.carga-section{margin:10px 14px 14px;background:var(--bg3);border-radius:10px;overflow:hidden}
+.carga-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer}
+.carga-header-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:flex;align-items:center;gap:6px}
+.carga-toggle-icon{font-size:14px;color:var(--muted);transition:transform .2s}
+.carga-toggle-icon.open{transform:rotate(180deg)}
+.carga-body{padding:0 12px 12px;display:none}
+.carga-body.open{display:block}
+.carga-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.carga-row{display:flex;align-items:center;gap:8px}
+.carga-serie-num{font-size:11px;font-weight:700;color:var(--muted);width:20px;text-align:center;flex-shrink:0}
+.carga-inp{flex:1;background:var(--bg2);border:1.5px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;font-weight:600;outline:none;transition:border-color .15s}
 .carga-inp:focus{border-color:var(--acc)}
 .carga-inp::placeholder{color:#2a2a2a}
-.tecnica-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px;flex-wrap:wrap}
-.aluno-bloco{border:2px solid;border-radius:16px;padding:12px 10px 6px;margin-bottom:12px;position:relative}
-.aluno-bloco-label{position:absolute;top:-11px;left:14px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:2px 10px;border-radius:10px;color:#111}
-.sem-banner-rows{display:flex;flex-direction:column;gap:4px}
-.sem-banner-row{display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 6px;border-radius:6px}
-.sem-banner-row.current{background:var(--acc)15}
-.sem-banner-num{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--acc);min-width:52px}
-.sem-banner-name{font-weight:600;color:var(--text);flex:1}
-.sem-banner-reps{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--acc)}
-.sem-banner-dates{font-size:10px;color:#3a3a3a;text-align:right}
-.feed-label{font-size:8px;color:#3a3a3a;margin-bottom:3px;margin-top:8px}
-.feed-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px;font-family:'Space Grotesk',sans-serif;outline:none;resize:none;min-height:38px;transition:border-color .15s}
+.carga-status{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .2s}
+.carga-status.done{background:var(--green);border-color:var(--green);color:#111}
+.feed-inp{width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:'Inter',sans-serif;outline:none;resize:none;min-height:36px;transition:border-color .15s}
 .feed-inp:focus{border-color:var(--acc)}
 .feed-inp::placeholder{color:#2a2a2a}
+.feed-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;margin-top:8px}
 
-/* RPE */
-.rpe-wrap{margin-bottom:14px}
-.rpe-title{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
-.rpe-row{display:flex;gap:4px;flex-wrap:wrap}
-.rpe-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:none;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
-.rpe-label-txt{font-size:11px;color:var(--muted);margin-top:6px;min-height:16px}
+/* ── CONCLUIR BTN ── */
+.concluir-wrap{padding:0 16px 16px}
+.concluir-btn{width:100%;padding:16px;border:none;border-radius:var(--radius);font-size:15px;font-weight:900;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.concluir-btn.ready{background:var(--acc);color:#111}
+.concluir-btn.ready:active{transform:scale(.97)}
+.concluir-btn.locked{background:var(--bg3);color:var(--muted);cursor:not-allowed}
+.concluir-hint{text-align:center;font-size:11px;color:var(--muted);margin-top:6px}
 
-/* FEEDBACK GERAL */
-.feed-geral{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;outline:none;resize:none;min-height:70px;margin-top:12px;transition:border-color .15s}
-.feed-geral:focus{border-color:var(--acc)}
-.feed-geral::placeholder{color:#2a2a2a}
+/* ══ PROGRESSO PAGE ══ */
+.rpe-section{padding:16px}
+.rpe-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px}
+.rpe-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px}
+.rpe-btn{padding:12px 4px;border:1.5px solid var(--border2);border-radius:10px;background:none;color:var(--muted);font-size:16px;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;text-align:center}
+.rpe-btn.selected{color:#111;border-color:transparent;transform:scale(1.05)}
+.rpe-desc{font-size:12px;color:var(--muted);text-align:center;min-height:16px;margin-top:4px}
+.feedback-ta{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;resize:none;min-height:80px;transition:border-color .15s;margin-top:12px}
+.feedback-ta:focus{border-color:var(--acc)}
+.feedback-ta::placeholder{color:#2a2a2a}
+.save-big-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;background:var(--acc);border:none;border-radius:var(--radius);color:#111;font-size:15px;font-weight:900;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;margin-top:12px}
+.save-big-btn:active{transform:scale(.98)}
+.save-big-btn.loading{background:var(--bg3);color:var(--muted)}
 
-/* SALVAR */
-.save-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:14px;background:var(--acc);border:none;border-radius:12px;color:#111;font-size:14px;font-weight:900;cursor:pointer;margin-top:14px;font-family:'Space Grotesk',sans-serif;transition:all .15s}
-.save-btn:hover{background:#d4b05c;transform:translateY(-1px)}
-.save-btn:active{transform:none}
+/* ── SÉRIE TABS STRIP ── */
+.serie-strip{display:flex;gap:6px;padding:12px 16px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none;flex-shrink:0}
+.serie-strip::-webkit-scrollbar{display:none}
+.serie-tab{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid var(--border2);background:var(--bg3);font-family:'Bebas Neue',sans-serif;font-size:15px;cursor:pointer;transition:all .15s;color:var(--muted)}
+.serie-tab.active{border-color:currentColor}
 
-.footer-brand{text-align:center;font-size:9px;color:#1a1a1a;padding-top:24px;letter-spacing:.1em;font-weight:700}
+/* ── EMPTY STATES ── */
+.empty-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 24px;text-align:center}
+.empty-icon{font-size:40px;opacity:.3}
+.empty-title{font-size:16px;font-weight:800;color:var(--text)}
+.empty-sub{font-size:12px;color:var(--muted);line-height:1.5;max-width:260px}
 
-/* SEMANAS ATIVAS highlight */
-.period-row.current{background:var(--acc)08;border-radius:8px;padding-left:8px;margin:0 -4px;border-bottom:none}
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page.active{animation:fadeIn .2s ease}
+.ex-card{animation:fadeIn .2s ease}
 </style>
 </head>
 <body>
 
-<div id="loadingScreen">
-  <div class="load-logo">PH PERFORMANCE</div>
+<div id="loadScreen">
+  <div class="load-logo">MEU TREINO</div>
   <div class="load-spinner"></div>
-  <div class="load-msg" id="loadMsg">Carregando seu treino...</div>
+  <div class="load-msg" id="loadMsg">Carregando...</div>
 </div>
 
 <div id="errorScreen">
-  <div style="font-size:36px">😕</div>
-  <div style="font-size:18px;font-weight:800;color:var(--text)">Treino não encontrado</div>
-  <div style="font-size:13px;color:var(--muted);max-width:280px;line-height:1.6" id="errorMsg">Verifique o link com seu professor.</div>
+  <div style="font-size:48px">😕</div>
+  <div style="font-size:20px;font-weight:800">Treino não encontrado</div>
+  <div style="font-size:13px;color:var(--muted);line-height:1.6" id="errorMsg">Verifique o link com seu professor.</div>
 </div>
 
 <div class="toast" id="toast"></div>
-<div id="app" style="display:none"></div>
+
+<div id="app">
+  <!-- HEADER -->
+  <div class="app-header" id="appHeader">
+    <div class="header-info">
+      <div class="header-title" id="headerTitle">Meu Treino</div>
+      <div class="header-sub" id="headerSub">Carregando...</div>
+    </div>
+    <div class="header-avatar" id="headerAvatar">?</div>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div class="scroll-area" id="scrollArea">
+    <!-- ══ HOME PAGE ══ -->
+    <div class="page active" id="pageHome">
+      <div class="home-hero">
+        <div class="home-greeting">Boa treino,</div>
+        <div class="home-name" id="heroName">CARREGANDO <span>...</span></div>
+        <div class="home-date" id="heroDate"></div>
+      </div>
+
+      <div class="home-stats">
+        <div class="stat-card">
+          <div class="stat-val" id="statDias">0</div>
+          <div class="stat-lbl">Dias/sem</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statSeries">0</div>
+          <div class="stat-lbl">Séries</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statExs">0</div>
+          <div class="stat-lbl">Exercícios</div>
+        </div>
+      </div>
+
+      <!-- CHECK-IN -->
+      <div class="section">
+        <div class="section-title">✅ Check-in semanal</div>
+        <div class="checkin-grid" id="checkinGrid"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center" id="checkinLabel">0 de 7 dias esta semana</div>
+      </div>
+
+      <!-- ANAMNESE BANNER -->
+      <div id="anameseBannerHome" style="display:none"></div>
+
+      <!-- SERIES -->
+      <div style="padding:0 16px 8px">
+        <div class="section-title" style="margin-bottom:12px">🏋️ Séries de treino</div>
+      </div>
+      <div class="series-list" id="homeSeriesList"></div>
+
+      <!-- PERIODIZAÇÃO -->
+      <div class="section" id="periodSection" style="display:none">
+        <div class="section-title">📅 Periodização</div>
+        <div class="period-list" id="periodList"></div>
+      </div>
+    </div>
+
+    <!-- ══ TREINO PAGE ══ -->
+    <div class="page" id="pageTreino">
+      <div class="treino-header" id="treinoHeader">
+        <div class="treino-letter" id="treinoLetter">A</div>
+        <div class="treino-info">
+          <div class="treino-name" id="treinoName">Série A</div>
+          <div class="treino-meta" id="treinoMeta">0/0 exercícios</div>
+          <div class="treino-progress-bar">
+            <div class="treino-progress-fill" id="treinoProgressFill" style="width:0%;background:var(--acc)"></div>
+          </div>
+        </div>
+      </div>
+      <div class="serie-strip" id="serieStrip"></div>
+      <div class="ex-list" id="exList"></div>
+      <div class="concluir-wrap">
+        <button class="concluir-btn locked" id="concluirBtn">Marque todos os exercícios</button>
+        <div class="concluir-hint" id="concluirHint"></div>
+      </div>
+    </div>
+
+    <!-- ══ PROGRESSO PAGE ══ -->
+    <div class="page" id="pageProgresso">
+      <div class="rpe-section">
+        <div class="rpe-title">📊 Intensidade do treino (RPE)</div>
+        <div class="rpe-grid" id="rpeGrid"></div>
+        <div class="rpe-desc" id="rpeDesc"></div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:16px;margin-bottom:6px">💬 Como foi o treino?</div>
+        <textarea class="feedback-ta" id="feedbackGeral" placeholder="Alguma dificuldade, dores, observações gerais..."></textarea>
+        <button class="save-big-btn" id="saveBigBtn" onclick="salvarTudo()">
+          ☁️ Salvar progresso
+        </button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px" id="savedMsgBig"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="bnav-btn active" id="navHome" onclick="irPara('home')">
+      <span class="bnav-icon">🏠</span>
+      <span>Início</span>
+    </button>
+    <button class="bnav-btn" id="navTreino" onclick="irPara('treino')">
+      <span class="bnav-icon">🏋️</span>
+      <span>Treino</span>
+    </button>
+    <button class="bnav-btn" id="navProgresso" onclick="irPara('progresso')">
+      <span class="bnav-icon">📊</span>
+      <span>Progresso</span>
+    </button>
+  </div>
+</div>
 
 <script>
 const SB='https://fdojstrsiojbcoiumobv.supabase.co';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkb2pzdHJzaW9qYmNvaXVtb2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDk3NjYsImV4cCI6MjA5NjU4NTc2Nn0.uDymw4Dsj40RH46dXxVLn6CjutJaruADrUFriQmqVbM';
 const HDR={'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY};
 const HOJE=new Date().toISOString().split('T')[0];
+const DIAS_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DIAS_FULL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const CORES=['#c9f500','#63b3ed','#f6ad55','#f472b6','#a78bfa','#34d399','#fb7185','#fbbf24'];
+const RPE_LABELS=['','Muito leve','Leve','Moderado','Moderado+','Forte','Forte+','Muito forte','Muito forte+','Exaustivo','Máximo'];
+const RPE_CORES=['','#34d399','#34d399','#a3e635','#a3e635','#fbbf24','#fbbf24','#f97316','#f97316','#f87171','#f87171'];
 
-// ── pega id da URL ────────────────────────────────────────
 const params=new URLSearchParams(location.search);
 const ALUNO_ID=params.get('id');
-const SK='ph_aluno_'+ALUNO_ID;
+const SK='ph_v3_'+ALUNO_ID;
 
 let aluno=null;
-let state=JSON.parse(localStorage.getItem(SK)||'{}');
-let serieAtiva=0;
+let state={};
 let doneExs={};
-let timerInterval=null;
-let timerSeg=0;
-let timerRunning=false;
-let timerExId=null;
+let serieAtiva=0;
+let timerInterval=null,timerSeg=0,timerRunning=false,timerExId=null;
+let currentPage='home';
 let saveTimer=null;
 
-async function sbGet(table,q){
-  const r=await fetch(SB+'/rest/v1/'+table+(q?'?'+q:''),{headers:HDR});
+async function sbGet(t,q){
+  const r=await fetch(SB+'/rest/v1/'+t+(q?'?'+q:''),{headers:HDR});
   if(!r.ok)throw new Error(await r.text());
   return r.json();
 }
-async function sbUpsert(table,body){
+async function sbUpsert(t,body){
   const h={...HDR,'Prefer':'resolution=merge-duplicates'};
-  const r=await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:h,body:JSON.stringify(body)});
+  const r=await fetch(SB+'/rest/v1/'+t,{method:'POST',headers:h,body:JSON.stringify(body)});
   return r.ok;
 }
 
-// ── INIT ─────────────────────────────────────────────────
+// ── INIT ─────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',async()=>{
   if(!ALUNO_ID){showError('Link inválido — falta o ID do aluno.');return}
+
+  // Data header
+  const hoje=new Date();
+  const diaSem=DIAS_FULL[hoje.getDay()];
+  const diaMes=hoje.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'});
+  document.getElementById('heroDate').textContent=diaSem+', '+diaMes;
+
   try{
-    setLoadMsg('Buscando dados...');
-    // 1. Aluno
-    const alunosArr=await sbGet('alunos','id=eq.'+ALUNO_ID+'&limit=1');
-    if(!alunosArr.length){showError('Aluno não encontrado. Verifique o link com seu professor.');return}
+    setMsg('Buscando dados...');
+    const[alunosArr,semsArr,seriesArr,exsArr]=await Promise.all([
+      sbGet('alunos','id=eq.'+ALUNO_ID+'&limit=1'),
+      sbGet('semanas','aluno_id=eq.'+ALUNO_ID+'&order=ordem'),
+      sbGet('series','aluno_id=eq.'+ALUNO_ID+'&order=ordem'),
+      sbGet('exercicios','aluno_id=eq.'+ALUNO_ID+'&order=ordem')
+    ]);
+
+    if(!alunosArr.length){showError('Aluno não encontrado.');return}
     const a=alunosArr[0];
-    // 2. Semanas
-    const semsArr=await sbGet('semanas','aluno_id=eq.'+ALUNO_ID+'&order=ordem');
-    // 3. Séries
-    const seriesArr=await sbGet('series','aluno_id=eq.'+ALUNO_ID+'&order=ordem');
-    // 4. Exercícios
-    const exsArr=await sbGet('exercicios','aluno_id=eq.'+ALUNO_ID+'&order=ordem');
-    // Monta objeto
+
     aluno={
-      id:a.id, nome:a.nome, objetivo:a.objetivo, nivel:a.nivel,
-      dias:a.dias, periodo:a.periodo,
-      semanas:semsArr.length?semsArr:[{nome:'Semana 1',reps:'10–12',descanso:'60s'}],
+      id:a.id,nome:a.nome,objetivo:a.objetivo,nivel:a.nivel,
+      dias:a.dias,periodo:a.periodo,
+      semanas:semsArr.length?semsArr:[],
       series:seriesArr.map(s=>({
-        id:s.id, letra:s.letra, nome:s.nome, grupos:s.grupos||[],
-        exercicios:exsArr.filter(e=>e.serie_id===s.id).sort((a,b)=>a.ordem-b.ordem)
-          .map(e=>({id:e.id,nome:e.nome,series:e.series_num,reps:e.reps,descanso:e.descanso,obs:e.obs,medias:e.medias||[]}))
+        id:s.id,letra:s.letra,nome:s.nome,grupos:s.grupos||[],
+        exercicios:exsArr.filter(e=>e.serie_id===s.id)
+          .sort((a,b)=>a.ordem-b.ordem)
+          .map(e=>({id:e.id,nome:e.nome,series:e.series_num,reps:e.reps,descanso:e.descanso,obs:e.obs,medias:e.medias||[],tecnica:e.tecnica||''}))
       }))
     };
-    // 5. Carrega progresso de hoje do Supabase
-    setLoadMsg('Carregando progresso...');
+
+    // Carrega progresso do dia
+    setMsg('Carregando progresso...');
     try{
-      const progArr=await sbGet('progresso_aluno','aluno_id=eq.'+ALUNO_ID+'&data=eq.'+HOJE+'&limit=1');
-      if(progArr.length){
-        const p=progArr[0];
-        if(p.cargas)Object.assign(state.cargas||(state.cargas={}),p.cargas);
-        if(p.checkin)state.checkin=p.checkin;
-        if(p.rpe)state.rpe=p.rpe;
-        if(p.feedback)state.feedbackGeral=p.feedback;
-        if(p.feedbacks_ex)Object.assign(state.feedbacks||(state.feedbacks={}),p.feedbacks_ex);
-        localStorage.setItem(SK,JSON.stringify(state));
+      const prog=await sbGet('progresso_aluno','aluno_id=eq.'+ALUNO_ID+'&data=eq.'+HOJE+'&limit=1');
+      if(prog.length){
+        const p=prog[0];
+        state={
+          checkin:p.checkin||[],
+          rpe:p.rpe,
+          feedbackGeral:p.feedback||'',
+          cargas:p.cargas||{},
+          feedbacks:p.feedbacks_ex||{}
+        };
       }
     }catch(e){}
-    // Renderiza
+
+    // Merge com localStorage
+    const local=JSON.parse(localStorage.getItem(SK)||'{}');
+    if(local.date===HOJE){
+      if(!state.cargas)state.cargas={};
+      if(!state.feedbacks)state.feedbacks={};
+      Object.assign(state.cargas,local.cargas||{});
+      Object.assign(state.feedbacks,local.feedbacks||{});
+      if(!state.rpe&&local.rpe)state.rpe=local.rpe;
+      if(!state.checkin?.length&&local.checkin?.length)state.checkin=local.checkin;
+      if(!state.feedbackGeral&&local.feedbackGeral)state.feedbackGeral=local.feedbackGeral;
+    }
+    if(!state.checkin)state.checkin=[];
+    if(!state.cargas)state.cargas={};
+    if(!state.feedbacks)state.feedbacks={};
+
+    // Verifica anamnese
+    let temAnamnese=false;
+    try{const ans=await sbGet('anamnese_aluno','aluno_id=eq.'+ALUNO_ID+'&limit=1');temAnamnese=ans.length>0}catch(e){}
+    const jaMostrou=localStorage.getItem('ph_an_shown_'+ALUNO_ID);
+    if(!temAnamnese&&!jaMostrou&&!params.get('skip_an')){
+      localStorage.setItem('ph_an_shown_'+ALUNO_ID,'1');
+      location.href='anamnese.html?id='+ALUNO_ID;
+      return;
+    }
+    aluno._temAnamnese=temAnamnese;
+
     renderApp();
-    document.getElementById('loadingScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    toast('☁️ Treino carregado');
-  }catch(e){
-    showError('Erro ao carregar: '+e.message);
-  }
+    document.getElementById('loadScreen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    showToast('Treino carregado ✓');
+
+  }catch(e){showError('Erro: '+e.message)}
 });
 
-function setLoadMsg(m){document.getElementById('loadMsg').textContent=m}
+function setMsg(m){document.getElementById('loadMsg').textContent=m}
 function showError(msg){
-  document.getElementById('loadingScreen').style.display='none';
+  document.getElementById('loadScreen').style.display='none';
   const el=document.getElementById('errorScreen');
-  el.style.display='flex';
+  el.classList.add('show');
   document.getElementById('errorMsg').textContent=msg;
 }
 
-// ── RENDER ────────────────────────────────────────────────
-function buildCargaGrid(exId,series,state){
-  const n=parseInt(series)||3;
-  const saved=(state.cargas||{})[exId]||[];
-  let h='';
-  for(let i=0;i<n;i++){
-    h+='<div class="serie-carga-row"><div class="serie-carga-lbl">'+(i+1)+'</div><input class="carga-inp" type="text" id="carga_'+exId+'_'+i+'" placeholder="kg / reps" value="'+(saved[i]||'')+'" oninput="salvarCarga(\''+exId+'\','+i+',this.value)"/></div>';
-  }
-  return h;
-}
-
+// ── RENDER ──────────────────────────────────────────
 function renderApp(){
-  const app=document.getElementById('app');
   const nome=aluno.nome.split(' ')[0].toUpperCase();
-  const sobrenome=aluno.nome.split(' ').slice(1).join(' ').toUpperCase();
-  const CORES=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7'];
-  const DIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  const ini=aluno.nome.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+  const totalEx=aluno.series.reduce((s,sr)=>s+sr.exercicios.length,0);
 
-  // HEADER
-  let html=`<div class="header">
-    <div class="header-brand">PH PERFORMANCE</div>
-    <div class="header-name">TREINO <span>${nome}</span></div>
-    <div class="header-meta">${aluno.dias||''}${aluno.dias&&aluno.periodo?' · ':''}${aluno.periodo||''}</div>
-    <div class="header-tags">
-      ${aluno.objetivo?`<div class="htag hl">${aluno.objetivo}</div>`:''}
-      ${aluno.nivel?`<div class="htag">${aluno.nivel}</div>`:''}
-      <div class="htag">${aluno.series.length} séries</div>
-    </div>
-  </div>
-  <div class="body">`;
+  // Header
+  document.getElementById('headerTitle').textContent=aluno.nome.split(' ')[0];
+  document.getElementById('headerSub').textContent=aluno.objetivo||aluno.periodo||'Meu treino';
+  document.getElementById('headerAvatar').textContent=ini;
 
-  // CHECK-IN
-  html+=`<div class="card">
-    <div class="card-label">✅ Check-in da semana</div>
-    <div class="checkin-bar" id="checkinBar">
-      ${DIAS.map((d,i)=>`<div class="ci-day${(state.checkin||[]).includes(i)?' done':''}" id="ci_${i}" onclick="toggleCheckin(${i})">
-        <div class="ci-icon">${(state.checkin||[]).includes(i)?'✅':'⬜'}</div>
-        <div class="ci-lbl">${d}</div>
-      </div>`).join('')}
-    </div>
-    <div class="freq-label" id="freqLabel">${(state.checkin||[]).length} de 7 dias esta semana</div>
-  </div>`;
+  // Hero
+  document.getElementById('heroName').innerHTML='TREINO <span>'+nome+'</span>';
 
-  // PERIODIZAÇÃO com datas calculadas
-  if(aluno.semanas.length){
-    const startDate=aluno.dataInicio?new Date(aluno.dataInicio):null;
-    const hoje=new Date();
-    const semsH=aluno.semanas.map((s,i)=>{
-      let dateStr='',isCurrent=false;
-      if(startDate){
-        const d0=new Date(startDate);d0.setDate(d0.getDate()+i*7);
-        const d1=new Date(d0);d1.setDate(d1.getDate()+6);d1.setHours(23,59,59);
-        const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-        dateStr=fmt(d0)+'–'+fmt(d1);
-        isCurrent=hoje>=d0&&hoje<=d1;
-      }
-      return '<div class="sem-banner-row'+(isCurrent?' current':'')+'"><div class="sem-banner-num">SEM '+(i+1)+'</div><div class="sem-banner-name">'+(s.nome||'—')+(isCurrent?' 📍':'')+'</div><div class="sem-banner-reps">'+(s.reps||'—')+'</div><div class="sem-banner-dates">'+dateStr+'</div></div>';
-    }).join('');
-    html+=`<div class="card"><div class="card-label">📅 Periodização</div><div class="sem-banner-rows">${semsH}</div></div>`;
+  // Stats
+  document.getElementById('statDias').textContent=(aluno.dias||'?')+'x';
+  document.getElementById('statSeries').textContent=aluno.series.length;
+  document.getElementById('statExs').textContent=totalEx;
+
+  // Anamnese banner
+  const anBanner=document.getElementById('anameseBannerHome');
+  if(anBanner){
+    const temAn=aluno._temAnamnese;
+    anBanner.style.display='block';
+    anBanner.innerHTML=temAn
+      ? `<div class="anamnese-banner" onclick="location.href='anamnese.html?id=${aluno.id}'"><div class="an-banner-icon">✅</div><div class="an-banner-info"><div class="an-banner-title">Anamnese preenchida</div><div class="an-banner-sub">Toque para revisar ou atualizar.</div></div><div class="an-banner-arrow">›</div></div>`
+      : `<div class="anamnese-banner" onclick="location.href='anamnese.html?id=${aluno.id}'"><div class="an-banner-icon">📋</div><div class="an-banner-info"><div class="an-banner-title">Preencha sua anamnese</div><div class="an-banner-sub">Seu personal precisa dessas informações para personalizar seu treino.</div></div><div class="an-banner-arrow">›</div></div>`;
   }
 
-  // TABS DAS SÉRIES
-  html+=`<div class="series-tabs" id="seriesTabs">
-    ${aluno.series.map((s,i)=>`<div class="s-tab${i===serieAtiva?' active':''}" id="stab_${i}" onclick="trocarSerie(${i})" style="${i===serieAtiva?'color:'+CORES[i%CORES.length]+';border-color:'+CORES[i%CORES.length]+'44;background:'+CORES[i%CORES.length]+'15':''}">${s.letra}${s.nome?' · '+s.nome.substring(0,8):''}</div>`).join('')}
-  </div>`;
+  // Checkin
+  renderCheckin();
 
-  // SÉRIES
-  aluno.series.forEach((s,si)=>{
-    const cor=CORES[si%CORES.length];
-    const exTotal=s.exercicios.length;
-    const exDone=s.exercicios.filter(e=>doneExs[e.id]).length;
-    const todosFeitos=exTotal>0&&exDone===exTotal;
+  // Series (home)
+  renderHomeSeries();
 
-    html+=`<div id="serie_${si}" style="display:${si===serieAtiva?'block':'none'}">
-      <div class="serie-header" style="border-bottom:2px solid ${cor}">
-        <div class="serie-letter" style="color:${cor}">${s.letra}</div>
-        <div class="serie-info">
-          <div class="serie-name">${s.nome||'Série '+s.letra}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">${exDone}/${exTotal} exercícios</div>
-          ${s.grupos.length?`<div class="serie-grupos">${s.grupos.map(g=>`<span class="grupo-tag" style="color:${cor};border-color:${cor}44">${g}</span>`).join('')}</div>`:''}
-        </div>
-      </div>`;
+  // Periodização
+  renderPeriod();
 
-    s.exercicios.forEach((ex,ei)=>{
-      const done=!!doneExs[ex.id];
-      const cargasSalvas=(state.cargas||{})[ex.id]||[];
-      const descSeg=parseSeg(ex.descanso);
+  // Treino page
+  renderSerieTabs();
+  renderSerie(0);
 
-      // mídias
-      let mediaH='';
-      (ex.medias||[]).forEach(m=>{
-        if(m.type==='yt'||m.type==='link')mediaH+=`<a href="${m.url}" target="_blank" class="media-btn">▶ Ver exercício</a>`;
-        else if(m.type==='img')mediaH+=`<a href="${m.url}" target="_blank" class="media-btn">🖼 Ver imagem</a>`;
-      });
+  // RPE
+  renderRPE();
 
-      html+=`<div class="ex-card${done?' done':''}" id="exc_${ex.id}">
-        <div class="ex-top">
-          <div class="ex-num${done?' ex-done-num':''}" style="${!done?'background:'+cor+'20;color:'+cor:''}">${done?'✓':ei+1}</div>
-          <div class="ex-name">${ex.nome||'Exercício '+(ei+1)}</div>
-          <button class="check-btn" onclick="toggleDone('${ex.id}')" title="${done?'Desmarcar':'Marcar como feito'}">${done?'✓':'○'}</button>
-        </div>
-        ${(ex.tecnica&&ex.tecnica!=="Nenhuma")?'<div class="tecnica-badge" style="background:'+({"Progressivo":"#c9a84c","Pirâmide Crescente":"#63b3ed","Pirâmide Decrescente":"#f6ad55","Drop-set":"#f87171","Rest-pause":"#9a75ea"}[ex.tecnica]||"#c9a84c")+'22;color:'+({"Progressivo":"#c9a84c","Pirâmide Crescente":"#63b3ed","Pirâmide Decrescente":"#f6ad55","Drop-set":"#f87171","Rest-pause":"#9a75ea"}[ex.tecnica]||"#c9a84c")+'">'+({Progressivo:"📈","Pirâmide Crescente":"🔺","Pirâmide Decrescente":"🔻","Drop-set":"💧","Rest-pause":"⏸"}[ex.tecnica]||"🔧")+' '+ex.tecnica+'</div>':''}
-        <div class="ex-params">
-          ${ex.series?`<div class="ex-param"><div class="ex-plabel">Séries</div><div class="ex-pval" style="color:var(--text)">${ex.series}</div></div>`:''}
-          ${ex.reps?`<div class="ex-param"><div class="ex-plabel">Repetições</div><div class="ex-pval" style="color:${cor}">${ex.reps}</div></div>`:''}
-          ${ex.descanso?`<div class="ex-param"><div class="ex-plabel">Descanso</div><div class="ex-pval" style="color:var(--text)">${ex.descanso}</div></div>`:''}
-        </div>
-        ${ex.obs?`<div class="ex-obs">${ex.obs}</div>`:''}
-        ${mediaH?`<div class="ex-media">${mediaH}</div>`:''}
-        ${descSeg?`<div class="timer-row">
-          <button class="timer-btn" id="tbtn_${ex.id}" onclick="toggleTimer('${ex.id}',${descSeg})">⏱ Iniciar descanso</button>
-          <div class="timer-display" id="tdisp_${ex.id}"></div>
-        </div>`:''}
-        <div class="carga-section">
-          <div class="carga-section-label">⚖️ Carga por série</div>
-          <div class="series-carga-grid">${buildCargaGrid(ex.id,ex.series,state)}</div>
-          <div class="feed-label">📓 Como foi? (opcional)</div>
-          <textarea class="feed-inp" id="feed_${ex.id}" placeholder="Ex: difícil, boa execução, dor no ombro…" oninput="salvarFeedEx('${ex.id}',this.value)">${(state.feedbacks||{})[ex.id]||''}</textarea>
-        </div>
-      </div>`;
-    });
-
-    // Botão concluir
-    html+=`<button class="save-btn" id="concluirBtn_${si}" onclick="concluirSerie(${si})" ${!todosFeitos?'disabled style="background:#1a1a1a;color:#333;cursor:not-allowed;transform:none"':''}>
-      ${todosFeitos?'✅ Concluir série '+s.letra:'Marque todos os exercícios para concluir'}
-    </button>`;
-    if(!todosFeitos&&exTotal>0)html+=`<div style="text-align:center;font-size:11px;color:var(--muted);margin-top:6px">${exDone} de ${exTotal} marcados</div>`;
-
-    html+=`</div>`; // fecha serie_si
-  });
-
-  // RPE + FEEDBACK GERAL
-  html+=`<div class="card" style="margin-top:8px">
-    <div class="rpe-wrap">
-      <div class="rpe-title">📊 Como foi o treino hoje? (RPE)</div>
-      <div class="rpe-row">
-        ${[1,2,3,4,5,6,7,8,9,10].map(v=>`<button class="rpe-btn" id="rpe_${v}" onclick="setRPE(${v})">${v}</button>`).join('')}
-      </div>
-      <div class="rpe-label-txt" id="rpeLabel"></div>
-    </div>
-    <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px">💬 Observação geral</div>
-    <textarea class="feed-geral" id="feedbackGeral" placeholder="Como foi o treino hoje? Alguma dificuldade…" oninput="agendarSave()">${state.feedbackGeral||''}</textarea>
-    <button class="save-btn" onclick="salvarTudo()">☁️ Confirmar e salvar na nuvem</button>
-    <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;display:none" id="savedMsg"></div>
-  </div>
-  <div class="footer-brand">PH PERFORMANCE</div>
-  </div>`; // fecha .body
-
-  app.innerHTML=html;
-  // Aplica RPE se já tinha
-  if(state.rpe)setRPE(state.rpe,true);
+  // Feedback
+  if(state.feedbackGeral)document.getElementById('feedbackGeral').value=state.feedbackGeral;
 }
 
-// ── SÉRIE ATIVA ───────────────────────────────────────────
-function trocarSerie(i){
-  serieAtiva=i;
-  aluno.series.forEach((_,j)=>{
-    const el=document.getElementById('serie_'+j);if(el)el.style.display=j===i?'block':'none';
-    const tab=document.getElementById('stab_'+j);
-    if(tab){
-      const cor=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7'][j%6];
-      tab.className='s-tab'+(j===i?' active':'');
-      tab.style.cssText=j===i?'color:'+cor+';border-color:'+cor+'44;background:'+cor+'15':'';
-    }
-  });
-  window.scrollTo({top:0,behavior:'smooth'});
+function renderCheckin(){
+  const grid=document.getElementById('checkinGrid');
+  const dias=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  grid.innerHTML=dias.map((d,i)=>`
+    <button class="ci-btn${(state.checkin||[]).includes(i)?' done':''}" id="ci_${i}" onclick="toggleCI(${i})">
+      <div class="ci-check">${(state.checkin||[]).includes(i)?'✅':'○'}</div>
+      <div class="ci-day">${d}</div>
+    </button>`).join('');
+  document.getElementById('checkinLabel').textContent=(state.checkin||[]).length+' de 7 dias esta semana';
 }
 
-// ── CHECK-IN ──────────────────────────────────────────────
-function toggleCheckin(i){
+function toggleCI(i){
   if(!state.checkin)state.checkin=[];
   const idx=state.checkin.indexOf(i);
-  const el=document.getElementById('ci_'+i);
-  const ic=el.querySelector('.ci-icon');
-  if(idx===-1){state.checkin.push(i);el.classList.add('done');ic.textContent='✅'}
-  else{state.checkin.splice(idx,1);el.classList.remove('done');ic.textContent='⬜'}
-  document.getElementById('freqLabel').textContent=(state.checkin.length)+' de 7 dias esta semana';
-  agendarSave();
+  if(idx===-1)state.checkin.push(i);
+  else state.checkin.splice(idx,1);
+  renderCheckin();
+  salvarLocal();agendarSave();
 }
 
-// ── MARCAR EXERCÍCIO ──────────────────────────────────────
-function toggleDone(eid){
+function renderHomeSeries(){
+  const list=document.getElementById('homeSeriesList');
+  list.innerHTML=aluno.series.map((s,si)=>{
+    const cor=CORES[si%CORES.length];
+    const total=s.exercicios.length;
+    const done=s.exercicios.filter(e=>doneExs[e.id]).length;
+    const pct=total>0?Math.round(done/total*100):0;
+    const tags=s.grupos.slice(0,3).map(g=>`<span class="serie-tag" style="background:${cor}15;color:${cor};border:1px solid ${cor}33">${g}</span>`).join('');
+    const circleR=13,circleC=16,circ=2*Math.PI*circleR;
+    const dash=circ-(pct/100)*circ;
+    return`<div class="serie-card" style="border-color:${cor}33" onclick="abrirSerie(${si})">
+      <style>.serie-card::before{background:${cor}}</style>
+      <div style="position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="32" height="32" style="transform:rotate(-90deg)">
+          <circle cx="16" cy="16" r="${circleR}" fill="none" stroke="${cor}22" stroke-width="2.5"/>
+          <circle cx="16" cy="16" r="${circleR}" fill="none" stroke="${cor}" stroke-width="2.5"
+            stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dash.toFixed(1)}"
+            stroke-linecap="round" style="transition:stroke-dashoffset .4s ease"/>
+        </svg>
+        <span style="position:absolute;font-family:'Bebas Neue',sans-serif;font-size:14px;color:${cor}">${s.letra}</span>
+      </div>
+      <div class="serie-info">
+        <div class="serie-name">${s.nome||'Série '+s.letra}</div>
+        <div class="serie-meta">${done}/${total} exercícios · ${pct}%</div>
+        ${tags?`<div class="serie-tags">${tags}</div>`:''}
+      </div>
+      <div class="serie-arrow">›</div>
+    </div>`;
+  }).join('');
+}
+
+function abrirSerie(si){
+  serieAtiva=si;
+  irPara('treino');
+  renderSerieTabs();
+  renderSerie(si);
+}
+
+function renderPeriod(){
+  const sec=document.getElementById('periodSection');
+  if(!aluno.semanas.length){sec.style.display='none';return}
+  sec.style.display='block';
+  const hoje=new Date();
+  const startDate=aluno.dataInicio?new Date(aluno.dataInicio):null;
+  document.getElementById('periodList').innerHTML=aluno.semanas.map((s,i)=>{
+    let isCurrent=false;
+    if(startDate){
+      const d0=new Date(startDate);d0.setDate(d0.getDate()+i*7);
+      const d1=new Date(d0);d1.setDate(d1.getDate()+6);d1.setHours(23,59,59);
+      isCurrent=hoje>=d0&&hoje<=d1;
+    }
+    return`<div class="period-item${isCurrent?' current':''}">
+      <div class="period-dot"></div>
+      <div class="period-num">Sem ${i+1}</div>
+      <div class="period-name">${s.nome||'—'}${isCurrent?' 📍':''}</div>
+      <div class="period-reps">${s.reps||'—'}</div>
+      <div class="period-rest" style="font-size:10px;color:var(--muted);margin-left:4px">${s.descanso||''}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSerieTabs(){
+  const strip=document.getElementById('serieStrip');
+  strip.innerHTML=aluno.series.map((s,i)=>{
+    const cor=CORES[i%CORES.length];
+    return`<button class="serie-tab${i===serieAtiva?' active':''}" 
+      style="${i===serieAtiva?'color:'+cor+';background:'+cor+'18;border-color:'+cor+'66':''}"
+      onclick="mudSerie(${i})">${s.letra}${s.nome?' · '+s.nome.substring(0,10):''}</button>`;
+  }).join('');
+}
+
+function mudSerie(i){
+  serieAtiva=i;
+  renderSerieTabs();
+  renderSerie(i);
+  document.getElementById('scrollArea').scrollTop=0;
+}
+
+function renderSerie(si){
+  const s=aluno.series[si];
+  if(!s)return;
+  const cor=CORES[si%CORES.length];
+  const total=s.exercicios.length;
+  const done=s.exercicios.filter(e=>doneExs[e.id]).length;
+
+  // Header
+  document.getElementById('treinoLetter').textContent=s.letra;
+  document.getElementById('treinoLetter').style.color=cor;
+  document.getElementById('treinoName').textContent=s.nome||'Série '+s.letra;
+  document.getElementById('treinoMeta').textContent=done+'/'+total+' exercícios';
+  document.getElementById('treinoProgressFill').style.cssText='width:'+(total?Math.round(done/total*100):0)+'%;background:'+cor;
+
+  // Exercícios
+  const list=document.getElementById('exList');
+  list.innerHTML=s.exercicios.map((ex,ei)=>buildExCard(ex,ei,si,cor)).join('');
+
+  // Botão concluir
+  updateConcluirBtn(si);
+}
+
+function buildExCard(ex,ei,si,cor){
+  const done=!!doneExs[ex.id];
+  const n=parseInt(ex.series)||3;
+  const cargasSalvas=(state.cargas||{})[ex.id]||[];
+  const descSeg=parseSeg(ex.descanso);
+
+  // Técnica badge
+  const tecMap={'Bi-set':'#f472b6','Tri-set':'#a78bfa','Drop-set':'#f87171','Super-set':'#60a5fa','Rest-pause':'#a78bfa','Drop set':'#f87171'};
+  const tecBadge=ex.tecnica&&ex.tecnica!=='Nenhuma'
+    ?`<div class="ex-tecnica" style="background:${(tecMap[ex.tecnica]||cor)+'22'};color:${tecMap[ex.tecnica]||cor}">⚡ ${ex.tecnica}</div>`
+    :'';
+
+  // Mídias
+  const mediaH=(ex.medias||[]).filter(m=>m.type==='yt'||m.type==='link')
+    .map(m=>`<a href="${m.url}" target="_blank" class="ex-media-btn">▶ Ver exercício</a>`).join('');
+
+  // Carga rows
+  const cargaRows=Array.from({length:n},(_, i)=>{
+    const val=cargasSalvas[i]||'';
+    const isDone=val.trim().length>0;
+    return`<div class="carga-row">
+      <div class="carga-serie-num">${i+1}</div>
+      <input class="carga-inp" type="text" placeholder="Carga / reps" value="${esc(val)}"
+        oninput="salvarCarga('${ex.id}',${i},this.value)"/>
+      <div class="carga-status${isDone?' done':''}" id="cst_${ex.id}_${i}" onclick="toggleCargaDone('${ex.id}',${i})">${isDone?'✓':''}</div>
+    </div>`;
+  }).join('');
+
+  const feedVal=(state.feedbacks||{})[ex.id]||'';
+
+  return`<div class="ex-card${done?' done':''}" id="exc_${ex.id}">
+    <div class="ex-card-header">
+      <div class="ex-num-badge${done?' ex-done-badge':''}" id="exnum_${ex.id}" 
+        style="${!done?'background:'+cor+'22;color:'+cor:''}">
+        ${done?'✓':ei+1}
+      </div>
+      <div class="ex-name">${ex.nome||'Exercício '+(ei+1)}</div>
+      <button class="ex-check${done?' checked':''}" id="excheck_${ex.id}" onclick="toggleDone('${ex.id}',${si})">
+        ${done?'✓':'○'}
+      </button>
+    </div>
+    ${tecBadge}
+    <div class="ex-params-row">
+      ${ex.series?`<div class="ex-param-box">
+        <div class="ex-param-lbl">Séries</div>
+        <div class="ex-param-val" style="color:var(--text)">${ex.series}</div>
+      </div>`:''}
+      ${ex.reps?`<div class="ex-param-box">
+        <div class="ex-param-lbl">Reps</div>
+        <div class="ex-param-val" style="color:${cor}">${ex.reps}</div>
+      </div>`:''}
+      ${ex.descanso?`<div class="ex-param-box">
+        <div class="ex-param-lbl">Descanso</div>
+        <div class="ex-param-val" style="color:var(--text)">${ex.descanso}</div>
+      </div>`:''}
+    </div>
+    ${ex.obs?`<div class="ex-obs">${ex.obs}</div>`:''}
+    ${mediaH?`<div class="ex-media-row">${mediaH}</div>`:''}
+    ${descSeg?`<div class="ex-timer">
+      <button class="timer-pill" id="tpill_${ex.id}" onclick="toggleTimer('${ex.id}',${descSeg})">
+        <span class="timer-icon">⏱</span>
+        <span class="timer-lbl" id="tlbl_${ex.id}">Descanso ${ex.descanso}</span>
+        <span class="timer-count" id="tcount_${ex.id}" style="display:none"></span>
+      </button>
+    </div>`:''}
+    <div class="carga-section">
+      <div class="carga-header" onclick="toggleCarga('${ex.id}')">
+        <div class="carga-header-lbl">⚖️ Registrar cargas</div>
+        <div class="carga-toggle-icon" id="ctoggle_${ex.id}">▾</div>
+      </div>
+      <div class="carga-body" id="cbody_${ex.id}">
+        <div class="carga-rows">${cargaRows}</div>
+        <div class="feed-label">📓 Feedback</div>
+        <textarea class="feed-inp" placeholder="Como foi? Dificuldade, dor, execução..." 
+          oninput="salvarFeedEx('${ex.id}',this.value)">${feedVal}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleCarga(eid){
+  const body=document.getElementById('cbody_'+eid);
+  const icon=document.getElementById('ctoggle_'+eid);
+  const open=body.classList.toggle('open');
+  icon.classList.toggle('open',open);
+}
+
+function toggleCargaDone(eid,i){
+  const inp=document.querySelector(`#exc_${eid} .carga-rows .carga-row:nth-child(${i+1}) .carga-inp`);
+  const status=document.getElementById('cst_'+eid+'_'+i);
+  if(!status)return;
+  const done=status.classList.toggle('done');
+  status.textContent=done?'✓':'';
+}
+
+function toggleDone(eid,si){
   doneExs[eid]=!doneExs[eid];
   const card=document.getElementById('exc_'+eid);
-  const btn=card?.querySelector('.check-btn');
-  const num=card?.querySelector('.ex-num');
-  if(card){
-    card.classList.toggle('done',!!doneExs[eid]);
-    if(btn)btn.textContent=doneExs[eid]?'✓':'○';
-    if(num){num.textContent=doneExs[eid]?'✓':num.dataset.num||num.textContent;num.className='ex-num'+(doneExs[eid]?' ex-done-num':'');if(!doneExs[eid]){const cor=['#c9a84c','#63b3ed','#f6ad55','#ef7a98','#9a75ea','#6ee7b7'][serieAtiva%6];num.style.cssText='background:'+cor+'20;color:'+cor}else num.style.cssText=''}
+  const btn=document.getElementById('excheck_'+eid);
+  const num=document.getElementById('exnum_'+eid);
+  const cor=CORES[si%CORES.length];
+  if(card)card.classList.toggle('done',!!doneExs[eid]);
+  if(btn){btn.classList.toggle('checked',!!doneExs[eid]);btn.textContent=doneExs[eid]?'✓':'○'}
+  if(num){
+    num.classList.toggle('ex-done-badge',!!doneExs[eid]);
+    num.style.cssText=doneExs[eid]?'':'background:'+cor+'22;color:'+cor;
+    num.textContent=doneExs[eid]?'✓':(parseInt(num.textContent)||'?');
+    if(!doneExs[eid]){
+      // re-find index
+      const s=aluno.series[si];
+      const idx=s?.exercicios.findIndex(e=>e.id===eid);
+      if(idx!==-1&&idx!==undefined)num.textContent=idx+1;
+    }
   }
-  // atualiza contador e botão concluir
-  const s=aluno.series[serieAtiva];
-  const exDone=s.exercicios.filter(e=>doneExs[e.id]).length;
-  const todosFeitos=s.exercicios.length>0&&exDone===s.exercicios.length;
-  const cBtn=document.getElementById('concluirBtn_'+serieAtiva);
-  if(cBtn){
-    cBtn.disabled=!todosFeitos;
-    cBtn.style.cssText=todosFeitos?'':'background:#1a1a1a;color:#333;cursor:not-allowed;transform:none';
-    cBtn.textContent=todosFeitos?'✅ Concluir série '+s.letra:'Marque todos os exercícios para concluir';
-  }
-  const hint=cBtn?.nextElementSibling;
-  if(hint&&hint.style!==undefined)hint.textContent=!todosFeitos&&s.exercicios.length>0?exDone+' de '+s.exercicios.length+' marcados':'';
+  updateConcluirBtn(si);
+  updateHomeSerie();
 }
 
-// ── TIMER ─────────────────────────────────────────────────
-function parseSeg(str){
-  if(!str)return 0;
-  const m=str.match(/(\d+)\s*(min|s|seg)?/i);if(!m)return 0;
-  const v=parseInt(m[1]);const u=(m[2]||'s').toLowerCase();
-  return u.startsWith('m')?v*60:v;
+function updateConcluirBtn(si){
+  const s=aluno.series[si];if(!s)return;
+  const total=s.exercicios.length,done=s.exercicios.filter(e=>doneExs[e.id]).length;
+  const btn=document.getElementById('concluirBtn');
+  const hint=document.getElementById('concluirHint');
+  const cor=CORES[si%CORES.length];
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('treinoMeta').textContent=done+'/'+total+' exercícios';
+  document.getElementById('treinoProgressFill').style.cssText='width:'+pct+'%;background:'+cor;
+  if(done===total&&total>0){
+    btn.className='concluir-btn ready';
+    btn.style.cssText='background:'+cor+';color:#111';
+    btn.textContent='✅ Concluir série '+s.letra;
+    btn.onclick=()=>concluirSerie(si);
+    if(hint)hint.textContent='';
+  }else{
+    btn.className='concluir-btn locked';
+    btn.style.cssText='';
+    btn.textContent='Marque todos os exercícios';
+    btn.onclick=null;
+    if(hint)hint.textContent=done+' de '+total+' marcados';
+  }
 }
+
+function updateHomeSerie(){
+  renderHomeSeries();
+}
+
+// ── TIMER ─────────────────────────────────────────────
+function parseSeg(s){
+  if(!s)return 0;
+  const m=String(s).match(/(\d+)\s*(min|m)/i);if(m)return parseInt(m[1])*60;
+  const sc=String(s).match(/(\d+)/);return sc?parseInt(sc[1]):0;
+}
+
 function toggleTimer(eid,seg){
-  if(timerRunning&&timerExId===eid){clearInterval(timerInterval);timerRunning=false;timerExId=null;
-    const btn=document.getElementById('tbtn_'+eid);const disp=document.getElementById('tdisp_'+eid);
-    if(btn){btn.textContent='⏱ Iniciar descanso';btn.classList.remove('running')}if(disp)disp.textContent='';return}
-  if(timerRunning&&timerExId!==eid){clearInterval(timerInterval);
-    const ob=document.getElementById('tbtn_'+timerExId);const od=document.getElementById('tdisp_'+timerExId);
-    if(ob){ob.textContent='⏱ Iniciar descanso';ob.classList.remove('running')}if(od)od.textContent='';}
+  // Stop previous
+  if(timerRunning){
+    clearInterval(timerInterval);timerRunning=false;
+    const op=document.getElementById('tpill_'+timerExId);
+    const ol=document.getElementById('tlbl_'+timerExId);
+    const oc=document.getElementById('tcount_'+timerExId);
+    if(op){op.className='timer-pill';op.style.borderWidth=''}
+    if(ol){ol.style.display='';ol.textContent='Descanso'}
+    if(oc){oc.style.display='none'}
+    if(timerExId===eid){timerExId=null;return}
+  }
+  // Start new
   timerSeg=seg;timerExId=eid;timerRunning=true;
-  const btn=document.getElementById('tbtn_'+eid);const disp=document.getElementById('tdisp_'+eid);
-  if(btn){btn.textContent='⏹ Parar';btn.classList.add('running')}
+  const pill=document.getElementById('tpill_'+eid);
+  const lbl=document.getElementById('tlbl_'+eid);
+  const cnt=document.getElementById('tcount_'+eid);
+  if(pill)pill.classList.add('running');
+  if(lbl){lbl.textContent='Parar';lbl.style.display=''}
+  if(cnt){cnt.style.display='block'}
+
   function tick(){
-    if(timerSeg<=0){clearInterval(timerInterval);timerRunning=false;
-      if(disp)disp.textContent='✅ Pronto!';if(btn){btn.textContent='⏱ Iniciar descanso';btn.classList.remove('running')}
-      try{const ctx=new AudioContext();const o=ctx.createOscillator();const g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(0.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5)}catch(e){}
-      try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}return}
-    const m=Math.floor(timerSeg/60);const s=timerSeg%60;
-    if(disp)disp.textContent=(m?m+':':'')+(s<10&&m?'0':'')+s+'s';
+    if(timerSeg<=0){
+      clearInterval(timerInterval);timerRunning=false;timerExId=null;
+      if(pill){pill.className='timer-pill done-pulse'}
+      if(lbl){lbl.textContent='✅ Pronto!'}
+      if(cnt){cnt.style.display='none'}
+      try{
+        const ac=new AudioContext();
+        const o=ac.createOscillator(),g=ac.createGain();
+        o.connect(g);g.connect(ac.destination);
+        o.frequency.value=880;g.gain.setValueAtTime(.3,ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.5);
+        o.start();o.stop(ac.currentTime+.5);
+      }catch(e){}
+      try{if(navigator.vibrate)navigator.vibrate([150,80,150])}catch(e){}
+      return;
+    }
+    const m=Math.floor(timerSeg/60),s=timerSeg%60;
+    if(cnt)cnt.textContent=(m?m+':':'')+(s<10&&m?'0':'')+s;
     timerSeg--;
   }
   tick();timerInterval=setInterval(tick,1000);
 }
 
-// ── CARGA / FEEDBACK ──────────────────────────────────────
-function salvarCarga(eid,semIdx,val){
-  if(!state.cargas)state.cargas={};if(!state.cargas[eid])state.cargas[eid]=[];
-  state.cargas[eid][semIdx]=val;localStorage.setItem(SK,JSON.stringify(state));agendarSave();
+// ── CARGA / FEEDBACK ─────────────────────────────────
+function salvarCarga(eid,i,val){
+  if(!state.cargas)state.cargas={};
+  if(!state.cargas[eid])state.cargas[eid]=[];
+  state.cargas[eid][i]=val;
+  salvarLocal();agendarSave();
+  // update status dot
+  const status=document.getElementById('cst_'+eid+'_'+i);
+  if(status){
+    const hasDone=val.trim().length>0;
+    if(hasDone&&!status.classList.contains('done')){status.classList.add('done');status.textContent='✓'}
+  }
 }
+
 function salvarFeedEx(eid,val){
-  if(!state.feedbacks)state.feedbacks={};state.feedbacks[eid]=val;
-  localStorage.setItem(SK,JSON.stringify(state));agendarSave();
+  if(!state.feedbacks)state.feedbacks={};
+  state.feedbacks[eid]=val;
+  salvarLocal();agendarSave();
 }
 
-// ── RPE ───────────────────────────────────────────────────
-const RPE_LABELS=['','Muito leve','Leve','Moderado','Um pouco forte','Forte','Forte','Muito forte','Muito forte','Exaustivo','Esforço máximo'];
-const RPE_CORES=['','#6ee7b7','#6ee7b7','#6ee7b7','#a3e635','#fbbf24','#fbbf24','#f97316','#f97316','#f87171','#f87171'];
-function setRPE(v,silent){
+// ── RPE ──────────────────────────────────────────────
+function renderRPE(){
+  const grid=document.getElementById('rpeGrid');
+  grid.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(v=>{
+    const sel=state.rpe===v;
+    return`<button class="rpe-btn${sel?' selected':''}" id="rpe_${v}"
+      style="${sel?'background:'+RPE_CORES[v]+';border-color:'+RPE_CORES[v]+';color:#111':''}"
+      onclick="setRPE(${v})">${v}</button>`;
+  }).join('');
+  if(state.rpe){
+    const d=document.getElementById('rpeDesc');
+    if(d){d.textContent=state.rpe+'/10 — '+RPE_LABELS[state.rpe];d.style.color=RPE_CORES[state.rpe]}
+  }
+}
+
+function setRPE(v){
   state.rpe=v;
-  document.querySelectorAll('.rpe-btn').forEach(b=>{b.style.background='';b.style.borderColor=''});
+  document.querySelectorAll('.rpe-btn').forEach(b=>{b.className='rpe-btn';b.style.cssText=''});
   const btn=document.getElementById('rpe_'+v);
-  if(btn){btn.style.background=RPE_CORES[v];btn.style.borderColor=RPE_CORES[v];btn.style.color='#111'}
-  const lbl=document.getElementById('rpeLabel');
-  if(lbl){lbl.textContent=v+'/10 — '+RPE_LABELS[v];lbl.style.color=RPE_CORES[v]}
-  if(!silent)agendarSave();
+  if(btn){btn.classList.add('selected');btn.style.cssText='background:'+RPE_CORES[v]+';border-color:'+RPE_CORES[v]+';color:#111'}
+  const d=document.getElementById('rpeDesc');
+  if(d){d.textContent=v+'/10 — '+RPE_LABELS[v];d.style.color=RPE_CORES[v]}
+  salvarLocal();agendarSave();
 }
 
-// ── CONCLUIR SÉRIE ────────────────────────────────────────
+// ── CONCLUIR SÉRIE ────────────────────────────────────
 async function concluirSerie(si){
-  const s=aluno.series[si];
-  // reseta exercícios dessa série
-  s.exercicios.forEach(ex=>{doneExs[ex.id]=false;
-    const card=document.getElementById('exc_'+ex.id);if(card)card.classList.remove('done');
-  });
-  // re-renderiza botão
-  const cBtn=document.getElementById('concluirBtn_'+si);
-  if(cBtn){cBtn.disabled=true;cBtn.style.cssText='background:#1a1a1a;color:#333;cursor:not-allowed;transform:none';cBtn.textContent='Marque todos os exercícios para concluir'}
-  // salva
+  const s=aluno.series[si];if(!s)return;
+  s.exercicios.forEach(ex=>{doneExs[ex.id]=false});
   await enviarSupabase();
-  toast('🎉 Série '+s.letra+' concluída! Continue assim 💪');
-  window.scrollTo({top:0,behavior:'smooth'});
+  showToast('🎉 Série '+s.letra+' concluída!');
+  renderSerie(si);renderHomeSeries();
+  document.getElementById('scrollArea').scrollTop=0;
 }
 
-// ── AUTO SAVE ─────────────────────────────────────────────
-function agendarSave(){clearTimeout(saveTimer);saveTimer=setTimeout(enviarSupabase,1500)}
+// ── SAVE ─────────────────────────────────────────────
+function salvarLocal(){
+  const local={date:HOJE,checkin:state.checkin,rpe:state.rpe,feedbackGeral:state.feedbackGeral,cargas:state.cargas,feedbacks:state.feedbacks};
+  localStorage.setItem(SK,JSON.stringify(local));
+}
+
+function agendarSave(){clearTimeout(saveTimer);saveTimer=setTimeout(enviarSupabase,2000)}
 
 async function enviarSupabase(){
-  state.feedbackGeral=(document.getElementById('feedbackGeral')?.value)||state.feedbackGeral||'';
-  state.savedAt=new Date().toISOString();
-  localStorage.setItem(SK,JSON.stringify(state));
+  state.feedbackGeral=document.getElementById('feedbackGeral')?.value||state.feedbackGeral||'';
+  salvarLocal();
   try{
-    const ok=await sbUpsert('progresso_aluno',{
+    await sbUpsert('progresso_aluno',{
       id:'pg_'+ALUNO_ID+'_'+HOJE,
       aluno_id:ALUNO_ID,data:HOJE,
       checkin:state.checkin||[],rpe:state.rpe||null,
       feedback:state.feedbackGeral||'',
       cargas:state.cargas||{},feedbacks_ex:state.feedbacks||{}
     });
-    if(ok)toast('✅ Salvo na nuvem');
-  }catch(e){toast('📱 Salvo no dispositivo')}
+    showToast('✅ Salvo');
+  }catch(e){showToast('📱 Salvo no dispositivo')}
 }
 
 async function salvarTudo(){
-  clearTimeout(saveTimer);
+  const btn=document.getElementById('saveBigBtn');
+  btn.classList.add('loading');btn.textContent='Salvando...';
   await enviarSupabase();
+  btn.classList.remove('loading');btn.textContent='☁️ Salvar progresso';
+  const msg=document.getElementById('savedMsgBig');
+  if(msg){msg.textContent='✅ Progresso salvo com sucesso!';msg.style.color='var(--green)';setTimeout(()=>msg.textContent='',3000)}
 }
 
-// ── TOAST ─────────────────────────────────────────────────
+// ── NAVIGATION ───────────────────────────────────────
+function irPara(page){
+  currentPage=page;
+  ['home','treino','progresso'].forEach(p=>{
+    const pg=document.getElementById('page'+p.charAt(0).toUpperCase()+p.slice(1));
+    const btn=document.getElementById('nav'+p.charAt(0).toUpperCase()+p.slice(1));
+    if(pg){pg.classList.toggle('active',p===page)}
+    if(btn){btn.classList.toggle('active',p===page)}
+  });
+  document.getElementById('scrollArea').scrollTop=0;
+}
+
+// ── TOAST ────────────────────────────────────────────
 let toastTimer=null;
-function toast(msg){
-  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
 }
 
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>
 </body>
 </html>
