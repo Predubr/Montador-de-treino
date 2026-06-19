@@ -303,6 +303,22 @@ input,textarea,select{font-family:'Inter',sans-serif;color:var(--text)}
 #globalToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;border:1px solid #c9f50055;border-radius:14px;padding:12px 20px;z-index:9999;font-size:12px;font-weight:700;color:var(--text);transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none}
 #globalToast.show{transform:translateX(-50%) translateY(0)}
 
+/* Error banner - persistente, não some sozinho */
+#errorBanner{display:none;position:fixed;top:0;left:0;right:0;background:#3a0a0a;border-bottom:2px solid var(--red);padding:12px 16px;z-index:9998;align-items:center;gap:12px}
+#errorBanner.show{display:flex}
+.err-banner-icon{font-size:20px;flex-shrink:0}
+.err-banner-text{flex:1;font-size:12px;color:#fecaca;line-height:1.5}
+.err-banner-text strong{color:#fff}
+.err-banner-close{background:none;border:1px solid #f8717166;border-radius:8px;color:#fecaca;cursor:pointer;padding:6px 12px;font-size:11px;font-weight:700;font-family:'Inter',sans-serif;flex-shrink:0}
+.err-banner-close:hover{background:#f8717122}
+
+/* Save status per item */
+.save-status{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;transition:all .2s;opacity:0}
+.save-status.show{opacity:1}
+.save-status.saving{background:#fbbf2422;color:var(--yellow)}
+.save-status.saved{background:#4ade8022;color:var(--green)}
+.save-status.error{background:#f8717122;color:var(--red)}
+
 /* Empty */
 .empty-main{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;gap:12px;text-align:center}
 .empty-logo{font-family:'Bebas Neue',sans-serif;font-size:48px;color:#1a1a1a;letter-spacing:4px}
@@ -313,6 +329,12 @@ input,textarea,select{font-family:'Inter',sans-serif;color:var(--text)}
 
 <!-- Toast global -->
 <div id="globalToast"></div>
+<!-- Error banner persistente -->
+<div id="errorBanner">
+  <div class="err-banner-icon">⚠️</div>
+  <div class="err-banner-text" id="errorBannerText"></div>
+  <button class="err-banner-close" onclick="document.getElementById('errorBanner').classList.remove('show')">Fechar</button>
+</div>
 <!-- Mobile overlay -->
 <div class="mobile-overlay" id="mobileOverlay" onclick="closeSidebar()"></div>
 
@@ -450,39 +472,86 @@ const SB_URL='https://fdojstrsiojbcoiumobv.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkb2pzdHJzaW9qYmNvaXVtb2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDk3NjYsImV4cCI6MjA5NjU4NTc2Nn0.uDymw4Dsj40RH46dXxVLn6CjutJaruADrUFriQmqVbM';
 const SB_HDR={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=representation'};
 
-async function sbGet(t,q=''){
-  try{
-    const r=await fetch(SB_URL+'/rest/v1/'+t+(q?'?'+q:''),{headers:SB_HDR});
-    if(!r.ok){console.error('sbGet',t,await r.text());return[]}
-    return await r.json();
-  }catch(e){console.error(e);return[]}
+// Mostra erro PERSISTENTE na tela (não some sozinho) — essencial pra debugar
+function showErrorBanner(msg){
+  const b=document.getElementById('errorBanner');
+  const t=document.getElementById('errorBannerText');
+  t.innerHTML=msg;
+  b.classList.add('show');
+  console.error('[ERRO SUPABASE]',msg);
 }
-async function sbUpsert(t,data){
+function clearErrorBanner(){
+  document.getElementById('errorBanner').classList.remove('show');
+}
+
+// sbFetch genérico que SEMPRE retorna {ok, data, error}
+async function sbFetch(method,t,q,body){
   try{
-    const h={...SB_HDR,'Prefer':'resolution=merge-duplicates,return=representation'};
-    const b=Array.isArray(data)?data:[data];
+    const url=SB_URL+'/rest/v1/'+t+(q?'?'+q:'');
+    const opts={method,headers:SB_HDR};
+    if(body!==undefined)opts.body=JSON.stringify(body);
+    const r=await fetch(url,opts);
+    const txt=await r.text();
+    let data=null;
+    try{data=txt?JSON.parse(txt):null}catch(e){data=txt}
+    if(!r.ok){
+      return{ok:false,data:null,error:`[${r.status}] ${t}: ${typeof data==='string'?data:(data?.message||JSON.stringify(data))}`};
+    }
+    return{ok:true,data,error:null};
+  }catch(e){
+    return{ok:false,data:null,error:`Falha de rede em ${t}: ${e.message}`};
+  }
+}
+async function sbGet(t,q=''){
+  const r=await sbFetch('GET',t,q);
+  if(!r.ok){showErrorBanner('Erro ao <strong>carregar</strong> dados de <strong>'+t+'</strong>: '+r.error);return[];}
+  return r.data||[];
+}
+// UPSERT de UM registro (ou array pequeno) — usa merge-duplicates, não apaga nada antes
+async function sbUpsert(t,data){
+  const h={...SB_HDR,'Prefer':'resolution=merge-duplicates,return=representation'};
+  const b=Array.isArray(data)?data:[data];
+  try{
     const r=await fetch(SB_URL+'/rest/v1/'+t,{method:'POST',headers:h,body:JSON.stringify(b)});
-    if(!r.ok){console.error('sbUpsert',t,await r.text());return null}
-    return await r.json();
-  }catch(e){console.error(e);return null}
+    const txt=await r.text();
+    let parsed=null;try{parsed=txt?JSON.parse(txt):null}catch(e){parsed=txt}
+    if(!r.ok){
+      const msg=`Erro ao SALVAR em "${t}": [${r.status}] ${typeof parsed==='string'?parsed:(parsed?.message||JSON.stringify(parsed))}`;
+      showErrorBanner(msg+'<br><span style="color:#999;font-size:10px">Dica: verifique se a tabela e as colunas existem no Supabase exatamente como o app espera.</span>');
+      return null;
+    }
+    return parsed;
+  }catch(e){
+    showErrorBanner('Falha de rede ao salvar em <strong>'+t+'</strong>: '+e.message);
+    return null;
+  }
 }
 async function sbDelete(t,id){
-  try{await fetch(SB_URL+'/rest/v1/'+t+'?id=eq.'+id,{method:'DELETE',headers:SB_HDR})}catch(e){}
+  const r=await sbFetch('DELETE',t,'id=eq.'+encodeURIComponent(id));
+  if(!r.ok)showErrorBanner('Erro ao remover de <strong>'+t+'</strong>: '+r.error);
+  return r.ok;
 }
 async function sbDeleteWhere(t,col,val){
-  try{await fetch(SB_URL+'/rest/v1/'+t+'?'+col+'=eq.'+val,{method:'DELETE',headers:SB_HDR})}catch(e){}
+  const r=await sbFetch('DELETE',t,col+'=eq.'+encodeURIComponent(val));
+  if(!r.ok)showErrorBanner('Erro ao remover de <strong>'+t+'</strong>: '+r.error);
+  return r.ok;
 }
 function setSync(s){
   const dot=document.getElementById('syncDot');const lbl=document.getElementById('syncLabel');
-  const map={ok:['ok','✓ Sincronizado'],syncing:['syncing','Salvando...'],error:['error','Offline (local)']};
+  const map={ok:['ok','✓ Sincronizado'],syncing:['syncing','Salvando...'],error:['error','⚠ Erro ao salvar']};
   const[cls,txt]=map[s]||map.ok;
   dot.className='sync-dot-circle '+cls;lbl.textContent=txt;
 }
 
 // ═══════════════════════════════════════════════════
 //  DATABASE LOCAL + SUPABASE SYNC
-//  LÓGICA: Supabase é a fonte da verdade.
-//  Local é apenas cache. Ao salvar, sempre vai pro Supabase.
+//  LÓGICA NOVA:
+//  - Cada exercício/série/aluno é salvo IMEDIATAMENTE e
+//    INDIVIDUALMENTE no Supabase via UPSERT (sem apagar nada antes).
+//  - Exclusão remove só o item específico (DELETE by id).
+//  - localStorage é só um cache para abrir mais rápido;
+//    o Supabase é sempre a fonte da verdade ao carregar.
+//  - Erros aparecem num banner fixo no topo da tela.
 // ═══════════════════════════════════════════════════
 const DBKEY='ph_db5';
 const CORES=['#c9f500','#63b3ed','#f6ad55','#f472b6','#a78bfa','#34d399','#fb7185','#fbbf24'];
@@ -492,114 +561,156 @@ const GCOR={'Peito':'#f472b6','Costas':'#60a5fa','Pernas':'#f6ad55','Glúteos':'
 
 let db={consultoria:'PH PERFORMANCE',alunos:[]};
 let alunoAtivo=null,serieAtiva=null,dragSrc=null,mwFiltro={};
-let syncTimer=null;
 
 function saveDB(){
   localStorage.setItem(DBKEY,JSON.stringify(db));
 }
 function loadDB(){
-  try{const s=localStorage.getItem(DBKEY);if(s){const d=JSON.parse(s);db.consultoria=d.consultoria||db.consultoria;}}catch(e){}
+  try{const s=localStorage.getItem(DBKEY);if(s){const d=JSON.parse(s);db=d;}}catch(e){}
 }
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-// Sync do aluno inteiro pro Supabase
-async function syncAluno(a){
-  if(!a)return;
+// ── Salva o registro do ALUNO (dados gerais, sem mexer em séries/exercícios) ──
+async function syncAlunoMeta(a){
+  if(!a)return false;
   setSync('syncing');
-  try{
-    await sbUpsert('alunos',{
-      id:a.id,nome:a.nome,objetivo:a.objetivo||null,nivel:a.nivel||null,
-      dias:a.dias||null,periodo:a.periodo||null,obs:a.obs||null,foto:a.foto||null,
-      financeiro:a.financeiro||null,anamnese:a.anamnese||null,
-      proxima_avaliacao:a.proximaAvaliacao||null,proxima_troca:a.proximaTroca||null,
-      updated_at:new Date().toISOString()
-    });
-    // Apaga e recria semanas
-    await sbDeleteWhere('semanas','aluno_id',a.id);
-    if(a.semanas?.length){
-      await sbUpsert('semanas',a.semanas.map((s,i)=>({
-        id:a.id+'_sem_'+i,aluno_id:a.id,ordem:i,
-        nome:s.nome||'',reps:s.reps||'',descanso:s.descanso||''
-      })));
-    }
-    // Apaga e recria series + exercicios
-    for(const serie of (a.series||[])){
-      await sbUpsert('series',{
-        id:serie.id,aluno_id:a.id,letra:serie.letra,
-        nome:serie.nome||'',grupos:serie.grupos||[],
-        ordem:a.series.indexOf(serie)
-      });
-      await sbDeleteWhere('exercicios','serie_id',serie.id);
-      if(serie.exercicios?.length){
-        await sbUpsert('exercicios',serie.exercicios.map((ex,ei)=>({
-          id:ex.id,serie_id:serie.id,aluno_id:a.id,
-          nome:ex.nome||'',series_num:ex.series||'',reps:ex.reps||'',
-          descanso:ex.descanso||'',obs:ex.obs||'',
-          medias:ex.medias||[],tecnica:ex.tecnica||'',ordem:ei
-        })));
-      }
-    }
-    setSync('ok');
-  }catch(e){
-    console.error('syncAluno erro',e);
-    setSync('error');
+  const res=await sbUpsert('alunos',{
+    id:a.id,nome:a.nome,objetivo:a.objetivo||null,nivel:a.nivel||null,
+    dias:a.dias||null,periodo:a.periodo||null,obs:a.obs||null,foto:a.foto||null,
+    financeiro:a.financeiro||null,anamnese:a.anamnese||null,
+    proxima_avaliacao:a.proximaAvaliacao||null,proxima_troca:a.proximaTroca||null,
+    updated_at:new Date().toISOString()
+  });
+  if(res){clearErrorBanner();setSync('ok');return true;}
+  setSync('error');return false;
+}
+
+// ── Salva UMA semana (upsert pontual) ──
+async function syncSemanas(a){
+  if(!a)return false;
+  setSync('syncing');
+  // apaga só as que não existem mais é arriscado; em vez disso, regravamos
+  // as semanas atuais (lista pequena, poucas linhas, risco baixo) e
+  // removemos sobras por índice se a lista encolheu.
+  const ok=await sbUpsert('semanas',(a.semanas||[]).map((s,i)=>({
+    id:a.id+'_sem_'+i,aluno_id:a.id,ordem:i,
+    nome:s.nome||'',reps:s.reps||'',descanso:s.descanso||''
+  })));
+  if(ok){clearErrorBanner();setSync('ok');return true;}
+  setSync('error');return false;
+}
+// Remove semanas extras do Supabase quando o personal apaga uma semana
+async function limparSemanasExtras(aId,totalAtual){
+  // tenta remover índices acima do total atual (até 30 pra segurança)
+  for(let i=totalAtual;i<totalAtual+10;i++){
+    await sbDelete('semanas',aId+'_sem_'+i);
   }
 }
 
-// Debounce pra não salvar a cada tecla
-function agendarSync(a){
-  clearTimeout(syncTimer);
-  syncTimer=setTimeout(()=>syncAluno(a),2000);
+// ── Salva UMA série (upsert pontual, não mexe em outras séries) ──
+async function syncSerie(aId,serie,ordem){
+  setSync('syncing');
+  const res=await sbUpsert('series',{
+    id:serie.id,aluno_id:aId,letra:serie.letra,
+    nome:serie.nome||'',grupos:serie.grupos||[],ordem
+  });
+  if(res){clearErrorBanner();setSync('ok');return true;}
+  setSync('error');return false;
+}
+async function deletarSerieSupabase(serieId){
+  // apaga exercícios da série primeiro, depois a série
+  await sbDeleteWhere('exercicios','serie_id',serieId);
+  await sbDelete('series',serieId);
 }
 
-// Carrega TUDO do Supabase → sobrescreve db.alunos
+// ── Salva UM exercício (upsert pontual, não mexe em outros exercícios) ──
+async function syncExercicio(aId,serieId,ex,ordem){
+  setSync('syncing');
+  const res=await sbUpsert('exercicios',{
+    id:ex.id,serie_id:serieId,aluno_id:aId,
+    nome:ex.nome||'',series_num:ex.series||'',reps:ex.reps||'',
+    descanso:ex.descanso||'',obs:ex.obs||'',
+    medias:ex.medias||[],tecnica:ex.tecnica||'',ordem
+  });
+  if(res){clearErrorBanner();setSync('ok');return true;}
+  setSync('error');return false;
+}
+async function deletarExercicioSupabase(exId){
+  await sbDelete('exercicios',exId);
+}
+
+// ── Sync completo (usado em criar aluno, duplicar ficha, etc) ──
+// Faz upsert de tudo SEM apagar nada antes — seguro mesmo se algo falhar no meio.
+async function syncAluno(a){
+  if(!a)return false;
+  setSync('syncing');
+  let okGeral=true;
+  const metaOk=await syncAlunoMeta(a);
+  if(!metaOk)okGeral=false;
+  if(a.semanas?.length){
+    const semOk=await syncSemanas(a);
+    if(!semOk)okGeral=false;
+  }
+  for(let i=0;i<(a.series||[]).length;i++){
+    const serie=a.series[i];
+    const sOk=await syncSerie(a.id,serie,i);
+    if(!sOk)okGeral=false;
+    for(let j=0;j<(serie.exercicios||[]).length;j++){
+      const exOk=await syncExercicio(a.id,serie.id,serie.exercicios[j],j);
+      if(!exOk)okGeral=false;
+    }
+  }
+  setSync(okGeral?'ok':'error');
+  return okGeral;
+}
+
+// ── Carrega TUDO do Supabase → db.alunos (fonte da verdade) ──
 async function carregarSupabase(){
   setSync('syncing');
-  try{
-    const alunos=await sbGet('alunos','order=created_at.asc');
-    if(!alunos.length){setSync('ok');return false;}
-
-    const[sems,series,exs]=await Promise.all([
-      sbGet('semanas','order=aluno_id,ordem'),
-      sbGet('series','order=aluno_id,ordem'),
-      sbGet('exercicios','order=serie_id,ordem')
-    ]);
-
-    db.alunos=alunos.map(a=>{
-      const aId=a.id;
-      return{
-        id:aId,nome:a.nome,objetivo:a.objetivo,nivel:a.nivel,
-        dias:a.dias,periodo:a.periodo,obs:a.obs,foto:a.foto,
-        financeiro:a.financeiro||{},anamnese:a.anamnese||{},
-        proximaAvaliacao:a.proxima_avaliacao,proximaTroca:a.proxima_troca,
-        updatedAt:a.updated_at,
-        semanas:sems.filter(s=>s.aluno_id===aId)
-          .sort((x,y)=>x.ordem-y.ordem)
-          .map(s=>({nome:s.nome,reps:s.reps,descanso:s.descanso})),
-        series:series.filter(s=>s.aluno_id===aId)
-          .sort((x,y)=>x.ordem-y.ordem)
-          .map(se=>({
-            id:se.id,letra:se.letra,nome:se.nome,grupos:se.grupos||[],
-            exercicios:exs.filter(ex=>ex.serie_id===se.id)
-              .sort((x,y)=>x.ordem-y.ordem)
-              .map(ex=>({
-                id:ex.id,nome:ex.nome,series:ex.series_num,
-                reps:ex.reps,descanso:ex.descanso,obs:ex.obs,
-                medias:ex.medias||[],tecnica:ex.tecnica||''
-              }))
-          }))
-      };
-    });
-    saveDB();
+  const alunos=await sbGet('alunos','order=created_at.asc');
+  if(!alunos.length){
     setSync('ok');
-    return true;
-  }catch(e){
-    console.error('carregarSupabase',e);
-    setSync('error');
-    return false;
+    return db.alunos.length>0; // mantém cache local se Supabase vier vazio mas já tínhamos dados
   }
+  const[sems,series,exs]=await Promise.all([
+    sbGet('semanas','order=aluno_id,ordem'),
+    sbGet('series','order=aluno_id,ordem'),
+    sbGet('exercicios','order=serie_id,ordem')
+  ]);
+
+  db.alunos=alunos.map(a=>{
+    const aId=a.id;
+    return{
+      id:aId,nome:a.nome,objetivo:a.objetivo,nivel:a.nivel,
+      dias:a.dias,periodo:a.periodo,obs:a.obs,foto:a.foto,
+      financeiro:a.financeiro||{},anamnese:a.anamnese||{},
+      proximaAvaliacao:a.proxima_avaliacao,proximaTroca:a.proxima_troca,
+      updatedAt:a.updated_at,
+      semanas:sems.filter(s=>s.aluno_id===aId)
+        .sort((x,y)=>x.ordem-y.ordem)
+        .map(s=>({nome:s.nome,reps:s.reps,descanso:s.descanso})),
+      series:series.filter(s=>s.aluno_id===aId)
+        .sort((x,y)=>x.ordem-y.ordem)
+        .map(se=>({
+          id:se.id,letra:se.letra,nome:se.nome,grupos:se.grupos||[],
+          exercicios:exs.filter(ex=>ex.serie_id===se.id)
+            .sort((x,y)=>x.ordem-y.ordem)
+            .map(ex=>({
+              id:ex.id,nome:ex.nome,series:ex.series_num,
+              reps:ex.reps,descanso:ex.descanso,obs:ex.obs,
+              medias:ex.medias||[],tecnica:ex.tecnica||''
+            }))
+        }))
+    };
+  });
+  saveDB();
+  clearErrorBanner();
+  setSync('ok');
+  return true;
 }
 
+</script>
+<script>
 // ═══════════════════════════════════════════════════
 //  MOBILE
 // ═══════════════════════════════════════════════════
@@ -739,12 +850,23 @@ function renderEmpty(){
 function addSemana(){
   if(!alunoAtivo)return;
   alunoAtivo.semanas.push({nome:'',reps:'',descanso:''});
-  saveDB();agendarSync(alunoAtivo);renderSemanas();
+  saveDB();renderSemanas();
+  syncSemanas(alunoAtivo);
 }
 function delSemana(i){
   if(!alunoAtivo)return;
   alunoAtivo.semanas.splice(i,1);
-  saveDB();agendarSync(alunoAtivo);renderSemanas();
+  saveDB();renderSemanas();
+  const total=alunoAtivo.semanas.length;
+  syncSemanas(alunoAtivo).then(()=>limparSemanasExtras(alunoAtivo.id,total));
+}
+let semanaSaveTimer=null;
+function semanaInputChange(i,campo,val){
+  if(!alunoAtivo)return;
+  alunoAtivo.semanas[i][campo]=val;
+  saveDB();
+  clearTimeout(semanaSaveTimer);
+  semanaSaveTimer=setTimeout(()=>syncSemanas(alunoAtivo),700);
 }
 function renderSemanas(){
   if(!alunoAtivo)return;
@@ -753,14 +875,14 @@ function renderSemanas(){
       <div class="sem-card-top">
         <div class="sem-badge">${i+1}</div>
         <input class="sem-name-inp" type="text" placeholder="Nome" value="${esc(s.nome)}"
-          oninput="alunoAtivo.semanas[${i}].nome=this.value;saveDB();agendarSync(alunoAtivo)"/>
+          oninput="semanaInputChange(${i},'nome',this.value)"/>
         <button class="sem-del" onclick="delSemana(${i})">✕</button>
       </div>
       <div class="sem-fields">
         <div class="sem-field"><label>Reps</label><input type="text" placeholder="10–12" value="${esc(s.reps)}"
-          oninput="alunoAtivo.semanas[${i}].reps=this.value;saveDB();agendarSync(alunoAtivo)"/></div>
+          oninput="semanaInputChange(${i},'reps',this.value)"/></div>
         <div class="sem-field"><label>Descanso</label><input type="text" placeholder="60s" value="${esc(s.descanso)}"
-          oninput="alunoAtivo.semanas[${i}].descanso=this.value;saveDB();agendarSync(alunoAtivo)"/></div>
+          oninput="semanaInputChange(${i},'descanso',this.value)"/></div>
       </div>
     </div>`).join('');
 }
@@ -773,19 +895,25 @@ function addSerie(){
   const i=alunoAtivo.series.length;
   const s={id:'s'+Date.now()+Math.random().toString(36).slice(2),letra:LETRAS[i]||('S'+(i+1)),nome:'',grupos:[],exercicios:[]};
   alunoAtivo.series.push(s);
-  saveDB();agendarSync(alunoAtivo);
+  saveDB();
   serieAtiva=s.id;
   renderSeriesNav();renderSerieEditor(s.id);
+  syncSerie(alunoAtivo.id,s,i);
 }
-function delSerie(sid,e){
+async function delSerie(sid,e){
   e.stopPropagation();
   if(!alunoAtivo||alunoAtivo.series.length<=1){showToast('⚠️ Precisa ter ao menos 1 série');return;}
   if(!confirm('Remover esta série e todos os seus exercícios?'))return;
   alunoAtivo.series=alunoAtivo.series.filter(s=>s.id!==sid);
   alunoAtivo.series.forEach((s,i)=>s.letra=LETRAS[i]||('S'+(i+1)));
-  saveDB();agendarSync(alunoAtivo);
+  saveDB();
   serieAtiva=alunoAtivo.series[0].id;
   renderSeriesNav();renderSerieEditor(serieAtiva);
+  await deletarSerieSupabase(sid);
+  // re-sincroniza letras das séries restantes
+  for(let i=0;i<alunoAtivo.series.length;i++){
+    syncSerie(alunoAtivo.id,alunoAtivo.series[i],i);
+  }
 }
 function getSerie(sid){return alunoAtivo?.series.find(x=>x.id===sid)}
 function ativarSerie(sid){
@@ -822,11 +950,11 @@ function renderSerieEditor(sid){
 
   document.getElementById('mainContent').innerHTML=`<div class="content-area" style="max-width:860px">
     <div class="serie-head">
-      <div class="serie-eyebrow">${esc(alunoAtivo.nome)} · Série de treino</div>
+      <div class="serie-eyebrow">${esc(alunoAtivo.nome)} · Série de treino <span class="save-status" id="serieSaveStatus_${sid}"></span></div>
       <div class="serie-title-row">
         <div class="serie-letter-big" style="color:${cor}">${s.letra}</div>
         <input class="serie-name-inp" type="text" placeholder="NOME DA SÉRIE" value="${esc(s.nome)}"
-          oninput="getSerie('${sid}').nome=this.value;saveDB();agendarSync(alunoAtivo);renderSeriesNav()"/>
+          oninput="serieNomeChange('${sid}',this.value)"/>
       </div>
       <div class="grupos-row" id="gRow_${sid}">${gH}</div>
     </div>
@@ -838,7 +966,7 @@ function renderSerieEditor(sid){
         <div style="display:flex;gap:6px">
           <button onclick="verAnamnese()" style="padding:5px 10px;font-size:10px;font-weight:700;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif" onmouseover="this.style.color='var(--acc)'" onmouseout="this.style.color='var(--muted)'">📋 Anamnese</button>
           <button onclick="verProgresso()" style="padding:5px 10px;font-size:10px;font-weight:700;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'">📊 Progresso</button>
-          <button onclick="salvarAgora()" style="padding:5px 10px;font-size:10px;font-weight:700;border-radius:7px;border:1px solid var(--acc)44;background:var(--acc)15;color:var(--acc);cursor:pointer;font-family:'Inter',sans-serif">💾 Salvar já</button>
+          <button onclick="salvarAgora()" style="padding:5px 10px;font-size:10px;font-weight:700;border-radius:7px;border:1px solid var(--acc)44;background:var(--acc)15;color:var(--acc);cursor:pointer;font-family:'Inter',sans-serif">💾 Salvar tudo agora</button>
         </div>
       </div>
       <div class="mw-search-row">
@@ -863,11 +991,38 @@ function renderSerieEditor(sid){
   buscarMW(sid);
 }
 
+// Indicador visual: "salvando..." → "salvo ✓" / "erro ✕"
+function showSaveStatus(elId,state){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const map={saving:['saving','💾 salvando...'],saved:['saved','✓ salvo'],error:['error','✕ erro ao salvar']};
+  const[cls,txt]=map[state]||['',''];
+  el.className='save-status show '+cls;
+  el.textContent=txt;
+  if(state==='saved'){
+    setTimeout(()=>{if(el)el.classList.remove('show')},1500);
+  }
+}
+
+let serieNomeTimer=null;
+function serieNomeChange(sid,val){
+  const s=getSerie(sid);if(!s)return;
+  s.nome=val;saveDB();renderSeriesNav();
+  const statusId='serieSaveStatus_'+sid;
+  showSaveStatus(statusId,'saving');
+  clearTimeout(serieNomeTimer);
+  serieNomeTimer=setTimeout(async()=>{
+    const si=alunoAtivo.series.indexOf(s);
+    const ok=await syncSerie(alunoAtivo.id,s,si);
+    showSaveStatus(statusId,ok?'saved':'error');
+  },600);
+}
+
 async function salvarAgora(){
   if(!alunoAtivo)return;
-  showToast('💾 Salvando...');
-  await syncAluno(alunoAtivo);
-  showToast('✅ Treino salvo no Supabase!');
+  showToast('💾 Salvando tudo...');
+  const ok=await syncAluno(alunoAtivo);
+  showToast(ok?'✅ Treino salvo no Supabase!':'⚠️ Houve erro — veja o aviso no topo');
 }
 
 function buildExCard(sid,ex,num,cor){
@@ -886,6 +1041,7 @@ function buildExCard(sid,ex,num,cor){
       <div class="ex-num-ed" style="background:${cor}">${num}</div>
       <input class="ex-name-inp" type="text" placeholder="Nome do exercício" value="${esc(ex.nome)}"
         oninput="updEx('${sid}','${ex.id}','nome',this.value)"/>
+      <span class="save-status" id="exSaveStatus_${ex.id}"></span>
       <button class="ex-del" onclick="delEx('${sid}','${ex.id}')">✕</button>
     </div>
     <div class="ex-params">
@@ -916,13 +1072,17 @@ function toggleGrupo(sid,g,el){
   const s=getSerie(sid);if(!s)return;
   if(s.grupos.includes(g))s.grupos=s.grupos.filter(x=>x!==g);else s.grupos.push(g);
   el.classList.toggle('on');
-  saveDB();agendarSync(alunoAtivo);
+  saveDB();
+  const si=alunoAtivo.series.indexOf(s);
+  syncSerie(alunoAtivo.id,s,si);
 }
 function addGrupoCustom(sid,inp){
   const v=inp.value.trim();if(!v)return;
   const s=getSerie(sid);if(!s)return;
   if(!s.grupos.includes(v))s.grupos.push(v);
-  saveDB();agendarSync(alunoAtivo);
+  saveDB();
+  const si=alunoAtivo.series.indexOf(s);
+  syncSerie(alunoAtivo.id,s,si);
   const row=document.getElementById('gRow_'+sid);
   const sp=document.createElement('span');
   sp.className='g-tag on';sp.dataset.g=v;sp.textContent='✦ '+v;
@@ -933,7 +1093,7 @@ function addEx(sid){
   const s=getSerie(sid);if(!s)return;
   const ex={id:'ex'+Date.now()+Math.random().toString(36).slice(2),nome:'',series:'',reps:'',descanso:'',obs:'',medias:[],tecnica:'Nenhuma'};
   s.exercicios.push(ex);
-  saveDB();agendarSync(alunoAtivo);
+  saveDB();
   const si=alunoAtivo.series.indexOf(s);
   const cor=CORES[si%CORES.length];
   const lista=document.getElementById('exList_'+sid);
@@ -943,20 +1103,34 @@ function addEx(sid){
   initDrag(lista,sid);
   lista.querySelector('#excard_'+ex.id+' .ex-name-inp').focus();
   renderSeriesNav();
+  // Salva o exercício novo (vazio) imediatamente, garante que existe no Supabase
+  const ordem=s.exercicios.length-1;
+  showSaveStatus('exSaveStatus_'+ex.id,'saving');
+  syncExercicio(alunoAtivo.id,sid,ex,ordem).then(ok=>showSaveStatus('exSaveStatus_'+ex.id,ok?'saved':'error'));
 }
-function delEx(sid,eid){
+async function delEx(sid,eid){
   const s=getSerie(sid);if(!s)return;
   s.exercicios=s.exercicios.filter(e=>e.id!==eid);
-  saveDB();agendarSync(alunoAtivo);
+  saveDB();
   document.getElementById('excard_'+eid)?.remove();
   document.querySelectorAll('#exList_'+sid+' .ex-card .ex-num-ed').forEach((n,i)=>n.textContent=i+1);
   renderSeriesNav();
+  await deletarExercicioSupabase(eid);
 }
+const exSaveTimers={};
 function updEx(sid,eid,c,v){
   const s=getSerie(sid);if(!s)return;
   const ex=s.exercicios.find(x=>x.id===eid);
   if(ex)ex[c]=v;
-  saveDB();agendarSync(alunoAtivo);
+  saveDB();
+  const statusId='exSaveStatus_'+eid;
+  showSaveStatus(statusId,'saving');
+  clearTimeout(exSaveTimers[eid]);
+  exSaveTimers[eid]=setTimeout(async()=>{
+    const ordem=s.exercicios.findIndex(x=>x.id===eid);
+    const ok=await syncExercicio(alunoAtivo.id,sid,ex,ordem);
+    showSaveStatus(statusId,ok?'saved':'error');
+  },600);
 }
 function addMedia(sid,eid){
   const inp=document.getElementById('mi_'+eid);if(!inp)return;
@@ -968,7 +1142,7 @@ function addMedia(sid,eid){
   const type=yt?'yt':img?'img':'link';
   const mid='m'+Date.now();
   ex.medias.push({id:mid,type,url});
-  saveDB();agendarSync(alunoAtivo);inp.value='';
+  saveDB();inp.value='';
   const mt=document.getElementById('mt_'+eid);
   if(mt){
     const yi=`<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>`;
@@ -979,13 +1153,17 @@ function addMedia(sid,eid){
     const rm=document.createElement('button');rm.className='thumb-rm';rm.textContent='✕';
     rm.onclick=()=>delMedia(sid,eid,mid);w.appendChild(rm);mt.appendChild(w);
   }
+  const ordem=s.exercicios.findIndex(x=>x.id===eid);
+  syncExercicio(alunoAtivo.id,sid,ex,ordem);
 }
 function delMedia(sid,eid,mid){
   const s=getSerie(sid);if(!s)return;
   const ex=s.exercicios.find(x=>x.id===eid);if(!ex)return;
   ex.medias=ex.medias.filter(m=>m.id!==mid);
-  saveDB();agendarSync(alunoAtivo);
+  saveDB();
   document.getElementById('md_'+mid)?.remove();
+  const ordem=s.exercicios.findIndex(x=>x.id===eid);
+  syncExercicio(alunoAtivo.id,sid,ex,ordem);
 }
 
 function initDrag(lista,sid){
@@ -1010,10 +1188,12 @@ function initDrag(lista,sid){
     const ti=s.exercicios.findIndex(x=>x.id===tc.dataset.exid);
     if(fi===-1||ti===-1)return;
     const[m]=s.exercicios.splice(fi,1);s.exercicios.splice(ti,0,m);
-    saveDB();agendarSync(alunoAtivo);
+    saveDB();
     const si=alunoAtivo.series.indexOf(s);const cor=CORES[si%CORES.length];
     lista.innerHTML=s.exercicios.map((ex,ei)=>buildExCard(sid,ex,ei+1,cor)).join('');
     initDrag(lista,sid);
+    // Re-sincroniza a ordem de todos os exercícios da série
+    s.exercicios.forEach((ex,ei)=>syncExercicio(alunoAtivo.id,sid,ex,ei));
   });
 }
 
@@ -1051,7 +1231,7 @@ function buscarMW(sid){
 function mwAdd(sid,nome,url){
   const s=getSerie(sid);if(!s)return;
   const ex={id:'ex'+Date.now()+Math.random().toString(36).slice(2),nome,series:'',reps:'',descanso:'',obs:'',medias:[{id:'m'+Date.now(),type:'link',url}],tecnica:'Nenhuma'};
-  s.exercicios.push(ex);saveDB();agendarSync(alunoAtivo);
+  s.exercicios.push(ex);saveDB();
   const si=alunoAtivo.series.indexOf(s);const cor=CORES[si%CORES.length];
   const lista=document.getElementById('exList_'+sid);
   const d=document.createElement('div');d.innerHTML=buildExCard(sid,ex,s.exercicios.length,cor);
@@ -1059,6 +1239,9 @@ function mwAdd(sid,nome,url){
   renderSeriesNav();
   const inp=document.getElementById('mwInp_'+sid);if(inp)inp.value='';buscarMW(sid);
   showToast('✅ '+nome+' adicionado!');
+  const ordem=s.exercicios.length-1;
+  showSaveStatus('exSaveStatus_'+ex.id,'saving');
+  syncExercicio(alunoAtivo.id,sid,ex,ordem).then(ok=>showSaveStatus('exSaveStatus_'+ex.id,ok?'saved':'error'));
 }
 function delCustomEx(id,sid){
   const arr=JSON.parse(localStorage.getItem('ph_exdb')||'[]').filter(e=>e.id!==id);
@@ -1425,7 +1608,7 @@ function editarFin(aid){
   const venc=prompt('Dia de vencimento:',fin.vencimento||'');if(venc===null)return;
   const st=prompt('Status (pago/atrasado/vence/inativo):',fin.status||'pago');if(st===null)return;
   a.financeiro={mensalidade:mens,vencimento:venc,status:st};
-  saveDB();syncAluno(a);renderFinanceiro();renderAlunoList();
+  saveDB();syncAlunoMeta(a);renderFinanceiro();renderAlunoList();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1527,7 +1710,7 @@ function lerBackup(e){
 function lerFotoAluno(e){
   const file=e.target.files[0];if(!file||!alunoAtivo)return;
   const r=new FileReader();
-  r.onload=ev=>{alunoAtivo.foto=ev.target.result;saveDB();agendarSync(alunoAtivo);renderAlunoList();};
+  r.onload=ev=>{alunoAtivo.foto=ev.target.result;saveDB();renderAlunoList();syncAlunoMeta(alunoAtivo);};
   r.readAsDataURL(file);
 }
 function gerarPDF(){if(!alunoAtivo){showToast('⚠️ Selecione um aluno');return;}window.print();}
