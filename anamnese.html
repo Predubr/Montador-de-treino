@@ -17,18 +17,15 @@ html{height:100%}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
 input,textarea,select{font-family:'Inter',sans-serif}
 
-/* ── LOADING ── */
 #loadScreen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
 .spinner{width:32px;height:32px;border:3px solid #1a1a1a;border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── HEADER ── */
 .app-header{background:#080808;border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .header-logo{font-size:16px;font-weight:900;color:var(--text);letter-spacing:-.3px}
 .header-logo span{color:var(--acc)}
 .header-step{font-size:12px;color:var(--muted);font-weight:600}
 
-/* ── PROGRESS STEPS ── */
 .steps-bar{padding:16px 16px 12px;background:#080808;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none}
 .steps-bar::-webkit-scrollbar{display:none}
 .step-pill{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:30px;border:1.5px solid var(--border2);background:var(--bg3);font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;flex-shrink:0;transition:all .3s}
@@ -37,20 +34,17 @@ input,textarea,select{font-family:'Inter',sans-serif}
 .step-pill .step-icon{font-size:14px}
 .step-check{width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:9px;color:#111;font-weight:900;flex-shrink:0}
 
-/* ── CONTENT ── */
 .scroll-area{flex:1;overflow-y:auto;padding-bottom:calc(90px + var(--safe))}
 .scroll-area::-webkit-scrollbar{display:none}
 .form-page{display:none;padding:20px 16px 0;animation:fadeUp .3s ease}
 .form-page.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── SECTION CARD ── */
 .section-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;margin-bottom:16px}
 .section-title{display:flex;align-items:center;gap:10px;margin-bottom:18px}
 .section-icon{font-size:22px}
 .section-name{font-size:18px;font-weight:800;color:var(--text)}
 
-/* ── FORM FIELDS ── */
 .field{margin-bottom:18px}
 .field-label{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:5px}
 .required-star{color:var(--red);font-size:12px}
@@ -66,7 +60,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
 .ta-inp:focus{border-color:var(--acc)}
 .ta-inp::placeholder{color:#3a3a3a}
 
-/* ── OPTION BUTTONS ── */
 .options-grid{display:grid;gap:8px}
 .options-grid.cols-2{grid-template-columns:1fr 1fr}
 .options-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
@@ -76,17 +69,14 @@ input,textarea,select{font-family:'Inter',sans-serif}
 .opt-btn.selected{background:var(--acc)15;border-color:var(--acc)66;color:var(--acc)}
 .opt-btn.selected-green{background:#4ade8015;border-color:#4ade8044;color:var(--green)}
 
-/* Number row */
 .num-row{display:flex;gap:6px;flex-wrap:wrap}
 .num-btn{width:42px;height:42px;border:1.5px solid var(--border2);border-radius:10px;background:var(--bg3);color:var(--muted);font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;text-align:center;font-family:'Inter',sans-serif;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .num-btn.selected{background:var(--acc)15;border-color:var(--acc);color:var(--acc)}
 
-/* ── INLINE INFO ── */
 .info-row{display:flex;gap:10px}
 .info-row .text-inp{flex:1}
 .unit-lbl{padding:12px 10px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;white-space:nowrap;display:flex;align-items:center}
 
-/* ── PARQ ── */
 .parq-item{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;margin-bottom:8px}
 .parq-q{flex:1;font-size:12px;line-height:1.5;color:var(--text)}
 .parq-btns{display:flex;gap:5px;flex-shrink:0;margin-top:2px}
@@ -94,7 +84,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
 .parq-btn.sim{background:#f8717122;border-color:var(--red);color:var(--red)}
 .parq-btn.nao{background:#4ade8022;border-color:var(--green);color:var(--green)}
 
-/* ── BOTTOM BUTTONS ── */
 .bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:12px 16px;padding-bottom:calc(12px + var(--safe));background:var(--bg);border-top:1px solid var(--border);display:flex;gap:10px;z-index:100}
 .btn-prev{flex:0 0 auto;padding:14px 20px;border:1.5px solid var(--border2);border-radius:var(--radius);background:none;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px;transition:all .2s}
 .btn-prev:hover{border-color:var(--text);color:var(--text)}
@@ -103,7 +92,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
 .btn-next.loading{background:var(--bg3);color:var(--muted)}
 .btn-next.done-style{background:var(--green)}
 
-/* ── SUCCESS ── */
 #successScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center}
 #successScreen.show{display:flex}
 .success-icon{font-size:64px}
@@ -111,7 +99,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
 .success-sub{font-size:14px;color:var(--muted);line-height:1.6;max-width:280px}
 .success-btn{padding:14px 32px;background:var(--acc);border:none;border-radius:var(--radius);color:#111;font-size:15px;font-weight:900;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px}
 
-/* ── BANNER já respondida ── */
 #editBanner{display:none;background:#4ade8012;border:1.5px solid #4ade8033;border-radius:var(--radius);padding:14px 16px;margin:16px 16px 0;align-items:center;gap:10px}
 #editBanner.show{display:flex}
 .banner-icon{font-size:24px}
@@ -120,7 +107,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
 .banner-sub{font-size:11px;color:var(--muted);margin-top:2px}
 .banner-edit-btn{padding:8px 14px;background:var(--acc);border:none;border-radius:9px;color:#111;font-size:12px;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
 
-/* ── WELCOME SCREEN ── */
 #welcomeScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:400;flex-direction:column}
 #welcomeScreen.show{display:flex}
 .welcome-body{flex:1;padding:32px 24px;display:flex;flex-direction:column;justify-content:center;gap:20px}
@@ -139,19 +125,17 @@ input,textarea,select{font-family:'Inter',sans-serif}
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loadScreen">
   <div style="font-size:13px;font-weight:900;color:var(--acc);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">Anamnese</div>
   <div class="spinner"></div>
   <div style="font-size:12px;color:var(--muted)" id="loadMsg">Carregando...</div>
 </div>
 
-<!-- WELCOME -->
 <div id="welcomeScreen">
   <div class="welcome-body">
     <div class="welcome-logo">Anamnese inicial</div>
     <div class="welcome-title">Olá, <span id="welcomeName">aluno</span>! 👋</div>
-    <div class="welcome-sub">Antes de começar seu treino, seu personal precisa de algumas informações. Leva apenas <strong style="color:var(--text)">3 minutos</strong>.</div>
+    <div class="welcome-sub">Antes de começar seu treino, seu personal precisa de algumas informações. Leva apenas <strong style="color:var(--text)">3 minutos</strong>. Todas as perguntas são opcionais — você pode pular e responder depois.</div>
     <div class="welcome-steps">
       <div class="welcome-step"><div class="welcome-step-icon">👤</div><div><div class="welcome-step-name">Identificação</div><div class="welcome-step-desc">Dados pessoais e contato de emergência</div></div></div>
       <div class="welcome-step"><div class="welcome-step-icon">❤️</div><div><div class="welcome-step-name">Saúde</div><div class="welcome-step-desc">Histórico médico e medicamentos</div></div></div>
@@ -165,7 +149,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
   </div>
 </div>
 
-<!-- SUCCESS -->
 <div id="successScreen">
   <div class="success-icon">🎉</div>
   <div class="success-title">Anamnese enviada!</div>
@@ -174,14 +157,12 @@ input,textarea,select{font-family:'Inter',sans-serif}
   <div style="font-size:11px;color:var(--muted);margin-top:8px;cursor:pointer" onclick="location.reload()">Editar respostas</div>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none;flex-direction:column;min-height:100vh">
   <div class="app-header">
     <div class="header-logo">Boa<span>Forma</span></div>
     <div class="header-step" id="headerStep">1 de 5</div>
   </div>
 
-  <!-- STEPS BAR -->
   <div class="steps-bar" id="stepsBar">
     <div class="step-pill active" id="pill_0"><span class="step-icon">👤</span>Identificação</div>
     <div class="step-pill" id="pill_1"><span class="step-icon">❤️</span>Saúde</div>
@@ -190,7 +171,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
     <div class="step-pill" id="pill_4"><span class="step-icon">🎯</span>Objetivos</div>
   </div>
 
-  <!-- EDIT BANNER -->
   <div id="editBanner">
     <div class="banner-icon">✅</div>
     <div class="banner-info">
@@ -201,7 +181,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
 
   <div class="scroll-area" id="scrollArea">
 
-    <!-- ══ PÁGINA 1: IDENTIFICAÇÃO ══ -->
     <div class="form-page active" id="page0">
       <div class="section-card">
         <div class="section-title">
@@ -220,19 +199,17 @@ input,textarea,select{font-family:'Inter',sans-serif}
         </div>
 
         <div class="field" id="f_nasc">
-          <div class="field-label">Data de nascimento <span class="required-star">*</span></div>
+          <div class="field-label">Data de nascimento</div>
           <input class="text-inp" id="nasc" type="date"/>
-          <div class="field-error">Campo obrigatório</div>
         </div>
 
         <div class="field" id="f_sexo">
-          <div class="field-label">Sexo biológico <span class="required-star">*</span></div>
+          <div class="field-label">Sexo biológico</div>
           <div class="options-grid cols-3">
             <button class="opt-btn" onclick="sel('sexo','M',this)">Masculino</button>
             <button class="opt-btn" onclick="sel('sexo','F',this)">Feminino</button>
             <button class="opt-btn" onclick="sel('sexo','O',this)">Outro</button>
           </div>
-          <div class="field-error">Selecione uma opção</div>
         </div>
 
         <div class="field" id="f_peso">
@@ -257,20 +234,17 @@ input,textarea,select{font-family:'Inter',sans-serif}
         </div>
 
         <div class="field" id="f_emerg_nome">
-          <div class="field-label">Contato de emergência — Nome <span class="required-star">*</span></div>
+          <div class="field-label">Contato de emergência — Nome</div>
           <input class="text-inp" id="emerg_nome" type="text" placeholder="Nome completo"/>
-          <div class="field-error">Campo obrigatório</div>
         </div>
 
         <div class="field" id="f_emerg_tel">
-          <div class="field-label">Contato de emergência — Telefone <span class="required-star">*</span></div>
+          <div class="field-label">Celular de emergência</div>
           <input class="text-inp" id="emerg_tel" type="tel" placeholder="(00) 00000-0000"/>
-          <div class="field-error">Campo obrigatório</div>
         </div>
       </div>
     </div>
 
-    <!-- ══ PÁGINA 2: SAÚDE ══ -->
     <div class="form-page" id="page1">
       <div class="section-card">
         <div class="section-title">
@@ -316,7 +290,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
           </div>
         </div>
 
-        <!-- PAR-Q -->
         <div style="height:1px;background:var(--border);margin:16px 0"></div>
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px">📋 PAR-Q — Prontidão física</div>
 
@@ -324,7 +297,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
       </div>
     </div>
 
-    <!-- ══ PÁGINA 3: HÁBITOS ══ -->
     <div class="form-page" id="page2">
       <div class="section-card">
         <div class="section-title">
@@ -333,13 +305,12 @@ input,textarea,select{font-family:'Inter',sans-serif}
         </div>
 
         <div class="field" id="f_estresse">
-          <div class="field-label">Nível de estresse <span class="required-star">*</span></div>
+          <div class="field-label">Nível de estresse</div>
           <div class="options-grid cols-3">
             <button class="opt-btn" onclick="sel('estresse','baixo',this)">😌 Baixo</button>
             <button class="opt-btn" onclick="sel('estresse','moderado',this)">😐 Moderado</button>
             <button class="opt-btn" onclick="sel('estresse','alto',this)">😰 Alto</button>
           </div>
-          <div class="field-error">Selecione uma opção</div>
         </div>
 
         <div class="field">
@@ -387,13 +358,12 @@ input,textarea,select{font-family:'Inter',sans-serif}
         </div>
 
         <div class="field" id="f_alcool">
-          <div class="field-label">Consumo de álcool <span class="required-star">*</span></div>
+          <div class="field-label">Consumo de álcool</div>
           <div class="options-grid cols-3">
             <button class="opt-btn" onclick="sel('alcool','nenhum',this)">Nenhum</button>
             <button class="opt-btn" onclick="sel('alcool','ocasional',this)">Ocasional</button>
             <button class="opt-btn" onclick="sel('alcool','frequente',this)">Frequente</button>
           </div>
-          <div class="field-error">Selecione uma opção</div>
         </div>
 
         <div class="field">
@@ -413,7 +383,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
       </div>
     </div>
 
-    <!-- ══ PÁGINA 4: EXERCÍCIOS ══ -->
     <div class="form-page" id="page3">
       <div class="section-card">
         <div class="section-title">
@@ -437,14 +406,13 @@ input,textarea,select{font-family:'Inter',sans-serif}
         </div>
 
         <div class="field" id="f_nivel_cond">
-          <div class="field-label">Nível de condicionamento atual <span class="required-star">*</span></div>
+          <div class="field-label">Nível de condicionamento atual</div>
           <div class="options-grid cols-2">
             <button class="opt-btn" onclick="sel('nivel_cond','sedentario',this)">🛋️ Sedentário</button>
             <button class="opt-btn" onclick="sel('nivel_cond','iniciante',this)">🌱 Iniciante</button>
             <button class="opt-btn" onclick="sel('nivel_cond','intermediario',this)">⚡ Intermediário</button>
             <button class="opt-btn" onclick="sel('nivel_cond','avancado',this)">🔥 Avançado</button>
           </div>
-          <div class="field-error">Selecione uma opção</div>
         </div>
 
         <div class="field">
@@ -479,7 +447,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
       </div>
     </div>
 
-    <!-- ══ PÁGINA 5: OBJETIVOS ══ -->
     <div class="form-page" id="page4">
       <div class="section-card">
         <div class="section-title">
@@ -488,7 +455,7 @@ input,textarea,select{font-family:'Inter',sans-serif}
         </div>
 
         <div class="field" id="f_objetivo">
-          <div class="field-label">Foco principal <span class="required-star">*</span></div>
+          <div class="field-label">Foco principal</div>
           <div class="options-grid cols-2">
             <button class="opt-btn" onclick="sel('objetivo','forca',this)">💪 Força</button>
             <button class="opt-btn" onclick="sel('objetivo','emagrecimento',this)">⚖️ Emagrecimento</button>
@@ -498,7 +465,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
             <button class="opt-btn" onclick="sel('objetivo','saude',this)">❤️ Saúde geral</button>
             <button class="opt-btn" onclick="sel('objetivo','reabilitacao',this)" style="grid-column:1/-1">🩺 Reabilitação</button>
           </div>
-          <div class="field-error">Selecione uma opção</div>
         </div>
 
         <div class="field">
@@ -507,7 +473,7 @@ input,textarea,select{font-family:'Inter',sans-serif}
         </div>
 
         <div class="field" id="f_dias">
-          <div class="field-label">Quantos dias por semana pode treinar? <span class="required-star">*</span></div>
+          <div class="field-label">Quantos dias por semana pode treinar?</div>
           <div class="num-row" id="diasRow">
             <button class="num-btn" onclick="selNum('dias','1',this)">1</button>
             <button class="num-btn" onclick="selNum('dias','2',this)">2</button>
@@ -517,7 +483,6 @@ input,textarea,select{font-family:'Inter',sans-serif}
             <button class="num-btn" onclick="selNum('dias','6',this)">6</button>
             <button class="num-btn" onclick="selNum('dias','7',this)">7</button>
           </div>
-          <div class="field-error">Selecione quantos dias</div>
         </div>
 
         <div class="field">
@@ -531,13 +496,12 @@ input,textarea,select{font-family:'Inter',sans-serif}
         </div>
 
         <div class="field" id="f_horario">
-          <div class="field-label">Horário preferido para treinar <span class="required-star">*</span></div>
+          <div class="field-label">Horário preferido para treinar</div>
           <div class="options-grid cols-3">
             <button class="opt-btn" onclick="sel('horario','manha',this)">🌅 Manhã</button>
             <button class="opt-btn" onclick="sel('horario','tarde',this)">☀️ Tarde</button>
             <button class="opt-btn" onclick="sel('horario','noite',this)">🌙 Noite</button>
           </div>
-          <div class="field-error">Selecione um horário</div>
         </div>
 
         <div class="field">
@@ -568,9 +532,8 @@ input,textarea,select{font-family:'Inter',sans-serif}
       </div>
     </div>
 
-  </div><!-- /scroll-area -->
+  </div>
 
-  <!-- BOTTOM BAR -->
   <div class="bottom-bar">
     <button class="btn-prev" id="prevBtn" style="display:none" onclick="anterior()">‹ Anterior</button>
     <button class="btn-next" id="nextBtn" onclick="proximo()">Próximo ›</button>
@@ -594,7 +557,6 @@ let alunoNome='';
 let jaRespondeu=false;
 let editMode=false;
 
-// Multi-select state
 const multiState={};
 
 const PARQ_QUESTIONS=[
@@ -611,7 +573,6 @@ async function sbGet(t,q){const r=await fetch(SB+'/rest/v1/'+t+(q?'?'+q:''),{hea
 async function sbUpsert(t,body){const h={...HDR,'Prefer':'resolution=merge-duplicates'};const r=await fetch(SB+'/rest/v1/'+t,{method:'POST',headers:h,body:JSON.stringify(body)});return r.ok}
 
 window.addEventListener('DOMContentLoaded',async()=>{
-  // Build PAR-Q
   const parqC=document.getElementById('parqContainer');
   parqC.innerHTML=PARQ_QUESTIONS.map((q,i)=>`
     <div class="parq-item">
@@ -626,21 +587,18 @@ window.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('loadMsg').textContent='Carregando dados...';
 
   try{
-    // Busca aluno
     const a=await sbGet('alunos','id=eq.'+ALUNO_ID+'&limit=1');
     if(!a.length){showErr('Aluno não encontrado.');return}
     alunoNome=a[0].nome?.split(' ')[0]||'aluno';
     document.getElementById('welcomeName').textContent=alunoNome;
     document.getElementById('headerStep').textContent='1 de '+TOTAL_STEPS;
 
-    // Busca anamnese existente
     document.getElementById('loadMsg').textContent='Verificando anamnese...';
     try{
       const ans=await sbGet('anamnese_aluno','aluno_id=eq.'+ALUNO_ID+'&order=created_at.desc&limit=1');
       if(ans.length&&ans[0].dados){
         jaRespondeu=true;
         respostas=ans[0].dados||{};
-        // Verifica se veio forceEdit (professor reenviou formulário)
         const forceEdit=params.get('editar')==='1';
         const local=localStorage.getItem(SK+'_force');
         if(forceEdit||local){localStorage.removeItem(SK+'_force');editMode=true}
@@ -650,15 +608,12 @@ window.addEventListener('DOMContentLoaded',async()=>{
     document.getElementById('loadScreen').style.display='none';
 
     if(jaRespondeu&&!editMode){
-      // Mostra banner e permite reeditar
       preencherFormulario();
       mostrarBanner(a[0].anamnese_updated_at||'');
       mostrarApp();
     } else if(!jaRespondeu){
-      // Primeira vez: welcome screen
       document.getElementById('welcomeScreen').classList.add('show');
     } else {
-      // editMode
       preencherFormulario();
       mostrarApp();
     }
@@ -689,14 +644,11 @@ function irParaTreino(){
   location.href='aluno.html?id='+ALUNO_ID;
 }
 
-// ── SELEÇÃO ──────────────────────────────────────────
 function sel(key,val,btn){
-  // Deseleciona outros no mesmo grupo
   const container=btn.closest('.options-grid,.field');
   if(container){container.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'))}
   btn.classList.add('selected');
   dados[key]=val;
-  // Remove erro
   const field=btn.closest('.field');
   if(field)field.classList.remove('has-error');
 }
@@ -725,26 +677,19 @@ function setParq(i,val,btn){
   btn.classList.add(val);
 }
 
-// ── NAVEGAÇÃO ─────────────────────────────────────────
 function renderStep(){
-  // Pages
   document.querySelectorAll('.form-page').forEach((p,i)=>p.classList.toggle('active',i===step));
-  // Pills
   document.querySelectorAll('.step-pill').forEach((p,i)=>{
     p.classList.remove('active','done');
     if(i<step)p.classList.add('done');
     else if(i===step)p.classList.add('active');
   });
-  // Header
   document.getElementById('headerStep').textContent=(step+1)+' de '+TOTAL_STEPS;
-  // Buttons
   document.getElementById('prevBtn').style.display=step>0?'flex':'none';
   const nextBtn=document.getElementById('nextBtn');
   if(step===TOTAL_STEPS-1){nextBtn.textContent='✓ Enviar Anamnese';nextBtn.classList.add('done-style')}
   else{nextBtn.textContent='Próximo ›';nextBtn.classList.remove('done-style')}
-  // Scroll top
   document.getElementById('scrollArea').scrollTop=0;
-  // Scroll pill into view
   const pill=document.getElementById('pill_'+step);
   if(pill)pill.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
 }
@@ -752,65 +697,29 @@ function renderStep(){
 function anterior(){if(step>0){step--;renderStep()}}
 
 function proximo(){
-  if(!validarStep(step))return;
   coletarTextos();
   if(step<TOTAL_STEPS-1){step++;renderStep()}
   else{enviar()}
 }
 
-function validarStep(s){
-  let ok=true;
-  const required={
-    0:[{key:'nasc',type:'inp'},{key:'sexo',type:'dados'},{key:'emerg_nome',type:'inp'},{key:'emerg_tel',type:'inp'}],
-    1:[],
-    2:[{key:'estresse',type:'dados'},{key:'alcool',type:'dados'}],
-    3:[{key:'nivel_cond',type:'dados'}],
-    4:[{key:'objetivo',type:'dados'},{key:'dias',type:'dados'},{key:'horario',type:'dados'}]
-  };
-  const checks=required[s]||[];
-  checks.forEach(c=>{
-    if(c.type==='inp'){
-      const el=document.getElementById(c.key);
-      const field=document.getElementById('f_'+c.key)||el?.closest('.field');
-      if(!el||!el.value.trim()){if(field)field.classList.add('has-error');ok=false}
-      else{if(field)field.classList.remove('has-error')}
-    } else if(c.type==='dados'){
-      const field=document.getElementById('f_'+c.key);
-      if(!dados[c.key]){if(field)field.classList.add('has-error');ok=false}
-      else{if(field)field.classList.remove('has-error')}
-    }
-  });
-  if(!ok){
-    const firstErr=document.querySelector('.has-error');
-    if(firstErr)firstErr.scrollIntoView({behavior:'smooth',block:'center'});
-  }
-  return ok;
-}
-
 function coletarTextos(){
-  // Página 0
   ['profissao','endereco','nasc','peso','altura','telefone','emerg_nome','emerg_tel'].forEach(id=>{
     const el=document.getElementById(id);if(el)dados[id]=el.value.trim();
   });
-  // Página 1
   ['doencas','lesoes','medicamentos','alergias'].forEach(id=>{
     const el=document.getElementById(id);if(el)dados[id]=el.value.trim();
   });
-  // Página 2
   ['alimentacao','suplementos'].forEach(id=>{
     const el=document.getElementById(id);if(el)dados[id]=el.value.trim();
   });
-  // Página 3
   ['historico_ex','limitacoes','equipamentos','ex_favoritos','ex_nao_gosta'].forEach(id=>{
     const el=document.getElementById(id);if(el)dados[id]=el.value.trim();
   });
-  // Página 4
   ['meta_resultado','obs_finais'].forEach(id=>{
     const el=document.getElementById(id);if(el)dados[id]=el.value.trim();
   });
 }
 
-// ── ENVIAR ────────────────────────────────────────────
 async function enviar(){
   coletarTextos();
   const btn=document.getElementById('nextBtn');
@@ -825,7 +734,6 @@ async function enviar(){
 
   try{
     await sbUpsert('anamnese_aluno',payload);
-    // Salva também no anamnese do aluno
     try{
       await fetch(SB+'/rest/v1/alunos?id=eq.'+ALUNO_ID,{method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify({anamnese:dados})});
     }catch(e){}
@@ -837,17 +745,13 @@ async function enviar(){
   }
 }
 
-// ── PREENCHER FORMULÁRIO COM DADOS EXISTENTES ─────────
 function preencherFormulario(){
   const d=respostas;
-  // Textos
   const textFields=['profissao','endereco','nasc','peso','altura','telefone','emerg_nome','emerg_tel','doencas','lesoes','medicamentos','alergias','alimentacao','suplementos','historico_ex','limitacoes','equipamentos','ex_favoritos','ex_nao_gosta','meta_resultado','obs_finais'];
   textFields.forEach(id=>{const el=document.getElementById(id);if(el&&d[id])el.value=d[id]});
 
-  // Merge dados
   Object.assign(dados,d);
 
-  // Selects (opt-btn)
   const selects=['sexo','pressao','autorizacao_medica','estresse','hidratacao','tabagismo','alcool','trabalho','tempo_treino','nivel_cond','objetivo','tempo_sessao','horario','personal_antes','qualidade_sono'];
   selects.forEach(key=>{
     if(d[key]){
@@ -855,7 +759,6 @@ function preencherFormulario(){
     }
   });
 
-  // Multi-selects
   const multis=['local_treino','motivacao'];
   multis.forEach(key=>{
     if(d[key]&&Array.isArray(d[key])){
@@ -866,14 +769,12 @@ function preencherFormulario(){
     }
   });
 
-  // Num rows
   ['sono','dias'].forEach(key=>{
     if(d[key]){
       document.querySelectorAll(`[onclick*="selNum('${key}','${d[key]}'"]`).forEach(btn=>btn.classList.add('selected'));
     }
   });
 
-  // PAR-Q
   if(d.parq&&Array.isArray(d.parq)){
     d.parq.forEach((val,i)=>{
       if(val){
