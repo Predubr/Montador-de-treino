@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Meu Treino</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -33,6 +34,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
 .header-title{font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .header-sub{font-size:11px;color:var(--muted);margin-top:1px}
 .header-avatar{width:36px;height:36px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#111;flex-shrink:0}
+.header-icon-btn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;flex-shrink:0;color:var(--text)}
 
 /* ── SCROLL CONTENT ── */
 .scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
@@ -61,14 +63,16 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* ══ HOME PAGE ══ */
-.home-hero{background:linear-gradient(160deg,#0f1a00 0%,var(--bg) 60%);padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.home-hero{background:linear-gradient(160deg,#0f1a00 0%,var(--bg) 60%);padding:18px 16px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.home-hero-left{flex:1;min-width:0}
 .home-greeting{font-size:12px;color:var(--muted);margin-bottom:2px}
-.home-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;line-height:1;color:var(--text)}
-.home-name span{color:var(--acc)}
-.home-date{font-size:11px;color:var(--muted);margin-top:4px}
-.home-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px;border-bottom:1px solid var(--border)}
+.home-name{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;line-height:1.05;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-date{font-size:11px;color:var(--muted);margin-top:5px;text-transform:capitalize}
+.home-avatar-big{width:52px;height:52px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:#111;flex-shrink:0;border:2px solid #c9f50044}
+
+.home-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 16px;border-bottom:1px solid var(--border)}
 .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
-.stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--acc)}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;color:var(--acc)}
 .stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:2px}
 
 /* ── CHECKIN ── */
@@ -82,20 +86,15 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
 .ci-check{font-size:18px;line-height:1}
 .ci-btn.done .ci-day{color:var(--green)}
 
-/* ── SERIES LIST (HOME) ── */
-.series-list{display:flex;flex-direction:column;gap:8px;padding:0 16px 16px}
-.serie-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-.serie-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
-.serie-card:active{transform:scale(.98)}
-.serie-letter{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;flex-shrink:0}
-.serie-info{flex:1;min-width:0}
-.serie-name{font-size:14px;font-weight:800;color:var(--text)}
-.serie-meta{font-size:11px;color:var(--muted);margin-top:2px}
-.serie-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
-.serie-tag{font-size:8px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:20px;letter-spacing:.04em}
-.serie-arrow{color:var(--muted);font-size:18px;flex-shrink:0}
-.serie-progress{display:flex;align-items:center;gap:4px}
-.serie-prog-ring{width:32px;height:32px;flex-shrink:0}
+/* ── HOME GRID DE CARDS (estilo app) ── */
+.home-grid-wrap{padding:4px 16px 8px}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hg-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:all .15s;position:relative;min-height:96px}
+.hg-card:active{transform:scale(.96)}
+.hg-icon-wrap{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hg-label{font-size:13px;font-weight:800;color:var(--text);line-height:1.2}
+.hg-sub{font-size:10px;color:var(--muted);margin-top:-4px}
+.hg-badge{position:absolute;top:12px;right:12px;background:var(--acc);color:#111;font-size:9px;font-weight:900;padding:2px 7px;border-radius:20px;min-width:16px;text-align:center}
 
 /* ── PERIODIZATION ── */
 .period-list{display:flex;flex-direction:column;gap:6px}
@@ -196,6 +195,57 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
 .serie-tab{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid var(--border2);background:var(--bg3);font-family:'Bebas Neue',sans-serif;font-size:15px;cursor:pointer;transition:all .15s;color:var(--muted)}
 .serie-tab.active{border-color:currentColor}
 
+/* ══ AVALIAÇÕES PAGE ══ */
+.aval-page-head{padding:16px 16px 4px}
+.aval-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 24px;text-align:center}
+.chart-wrap-mobile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:0 16px 16px}
+.chart-title-mobile{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.chart-tabs-mobile{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.ct-mobile-btn{padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:none;color:var(--muted);font-size:9px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer}
+.aval-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin:0 16px 10px}
+.aval-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.aval-card-date{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--acc)}
+.aval-card-tags{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.aval-card-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px}
+.aval-metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.aval-metric-box{background:var(--bg3);border-radius:8px;padding:8px 6px;text-align:center}
+.aval-metric-box-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.aval-metric-box-val{font-family:'Bebas Neue',sans-serif;font-size:19px;color:var(--text);margin-top:2px}
+.aval-metric-box-unit{font-size:9px;color:var(--muted)}
+
+.fotos-grid-mobile{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.fotos-grid-mobile img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+.fotos-grid-mobile .fph{aspect-ratio:3/4;background:var(--bg3);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-size:10px}
+
+/* ══ DIÁRIO PAGE ══ */
+.diario-compose{margin:16px 16px 0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.diario-compose-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.diario-ta-mobile{width:100%;background:var(--bg3);border:1.5px solid var(--border2);border-radius:10px;padding:11px 13px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;resize:none;min-height:70px;transition:border-color .15s}
+.diario-ta-mobile:focus{border-color:var(--acc)}
+.diario-ta-mobile::placeholder{color:#2a2a2a}
+.diario-send-btn{width:100%;margin-top:10px;padding:12px;background:var(--acc);border:none;border-radius:10px;color:#111;font-size:13px;font-weight:900;cursor:pointer;font-family:'Inter',sans-serif}
+.diario-list-mobile{padding:16px;display:flex;flex-direction:column;gap:8px}
+.diario-entry-mobile{border-radius:var(--radius-sm);padding:12px 14px;border:1px solid var(--border)}
+.diario-entry-mobile.mine{background:#c9f50010;border-color:#c9f50033}
+.diario-entry-mobile.personal{background:var(--bg2)}
+.diario-entry-mobile-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.diario-entry-mobile-author{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.diario-entry-mobile-date{font-size:9px;color:var(--muted)}
+.diario-entry-mobile-text{font-size:13px;color:var(--text);line-height:1.5}
+
+/* ══ METAS PAGE ══ */
+.metas-list-mobile{padding:16px;display:flex;flex-direction:column;gap:10px}
+.meta-card-mobile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.meta-card-mobile.concluida{opacity:.55}
+.meta-card-mobile-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.meta-card-icon{font-size:22px}
+.meta-card-name{flex:1;font-size:14px;font-weight:800;color:var(--text)}
+.meta-card-check{font-size:16px}
+.meta-card-bar{width:100%;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:6px}
+.meta-card-fill{height:100%;border-radius:4px;transition:width .4s}
+.meta-card-foot{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.meta-card-foot strong{color:var(--text)}
+
 /* ── EMPTY STATES ── */
 .empty-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 24px;text-align:center}
 .empty-icon{font-size:40px;opacity:.3}
@@ -227,6 +277,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
 <div id="app">
   <!-- HEADER -->
   <div class="app-header" id="appHeader">
+    <button class="header-icon-btn" id="headerBackBtn" style="display:none" onclick="irPara('home')">‹</button>
     <div class="header-info">
       <div class="header-title" id="headerTitle">Meu Treino</div>
       <div class="header-sub" id="headerSub">Carregando...</div>
@@ -239,9 +290,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
     <!-- ══ HOME PAGE ══ -->
     <div class="page active" id="pageHome">
       <div class="home-hero">
-        <div class="home-greeting">Boa treino,</div>
-        <div class="home-name" id="heroName">CARREGANDO <span>...</span></div>
-        <div class="home-date" id="heroDate"></div>
+        <div class="home-hero-left">
+          <div class="home-greeting">Olá,</div>
+          <div class="home-name" id="heroName">...</div>
+          <div class="home-date" id="heroDate"></div>
+        </div>
+        <div class="home-avatar-big" id="heroAvatar">?</div>
       </div>
 
       <div class="home-stats">
@@ -269,11 +323,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
       <!-- ANAMNESE BANNER -->
       <div id="anameseBannerHome" style="display:none"></div>
 
-      <!-- SERIES -->
-      <div style="padding:0 16px 8px">
-        <div class="section-title" style="margin-bottom:12px">🏋️ Séries de treino</div>
+      <!-- GRID DE CARDS -->
+      <div style="padding:4px 16px 0">
+        <div class="section-title" style="margin-bottom:12px">Meu espaço</div>
       </div>
-      <div class="series-list" id="homeSeriesList"></div>
+      <div class="home-grid-wrap">
+        <div class="home-grid" id="homeGrid"></div>
+      </div>
 
       <!-- PERIODIZAÇÃO -->
       <div class="section" id="periodSection" style="display:none">
@@ -316,7 +372,28 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
         <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px" id="savedMsgBig"></div>
       </div>
     </div>
-  </div>
+
+    <!-- ══ AVALIAÇÕES PAGE (read-only: avaliações + fotos) ══ -->
+    <div class="page" id="pageAval">
+      <div id="avalContent"></div>
+    </div>
+
+    <!-- ══ DIÁRIO PAGE ══ -->
+    <div class="page" id="pageDiario">
+      <div class="diario-compose">
+        <div class="diario-compose-lbl">✍️ Nova anotação</div>
+        <textarea class="diario-ta-mobile" id="diarioInputMobile" placeholder="Como você está se sentindo? Alguma observação para o seu personal..."></textarea>
+        <button class="diario-send-btn" onclick="enviarDiarioAluno()">Salvar anotação</button>
+      </div>
+      <div class="diario-list-mobile" id="diarioListMobile"></div>
+    </div>
+
+    <!-- ══ METAS PAGE (read-only) ══ -->
+    <div class="page" id="pageMetas">
+      <div class="metas-list-mobile" id="metasListMobile"></div>
+    </div>
+
+  </div><!-- /scroll-area -->
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
@@ -331,6 +408,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
     <button class="bnav-btn" id="navProgresso" onclick="irPara('progresso')">
       <span class="bnav-icon">📊</span>
       <span>Progresso</span>
+    </button>
+    <button class="bnav-btn" id="navDiario" onclick="irPara('diario')">
+      <span class="bnav-icon">📓</span>
+      <span>Diário</span>
+    </button>
+    <button class="bnav-btn" id="navMais" onclick="irPara('home')">
+      <span class="bnav-icon">⋯</span>
+      <span>Mais</span>
     </button>
   </div>
 </div>
@@ -357,6 +442,8 @@ let serieAtiva=0;
 let timerInterval=null,timerSeg=0,timerRunning=false,timerExId=null;
 let currentPage='home';
 let saveTimer=null;
+let avaliacoes=[],fotosEvolucao=[],diarioGeral=[],metas=[];
+let _avalChartMobile=null;
 
 async function sbGet(t,q){
   const r=await fetch(SB+'/rest/v1/'+t+(q?'?'+q:''),{headers:HDR});
@@ -373,7 +460,6 @@ async function sbUpsert(t,body){
 window.addEventListener('DOMContentLoaded',async()=>{
   if(!ALUNO_ID){showError('Link inválido — falta o ID do aluno.');return}
 
-  // Data header
   const hoje=new Date();
   const diaSem=DIAS_FULL[hoje.getDay()];
   const diaMes=hoje.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'});
@@ -393,7 +479,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
     aluno={
       id:a.id,nome:a.nome,objetivo:a.objetivo,nivel:a.nivel,
-      dias:a.dias,periodo:a.periodo,
+      dias:a.dias,periodo:a.periodo,foto:a.foto,
       semanas:semsArr.length?semsArr:[],
       series:seriesArr.map(s=>({
         id:s.id,letra:s.letra,nome:s.nome,grupos:s.grupos||[],
@@ -434,6 +520,18 @@ window.addEventListener('DOMContentLoaded',async()=>{
     if(!state.cargas)state.cargas={};
     if(!state.feedbacks)state.feedbacks={};
 
+    // Carrega avaliações, fotos, diário, metas (não bloqueante para o app abrir)
+    setMsg('Carregando avaliações e metas...');
+    try{
+      const[avs,fts,dia,mts]=await Promise.all([
+        sbGet('avaliacoes','aluno_id=eq.'+ALUNO_ID+'&order=data.desc'),
+        sbGet('fotos_evolucao','aluno_id=eq.'+ALUNO_ID+'&order=data.desc'),
+        sbGet('diario','aluno_id=eq.'+ALUNO_ID+'&order=data.desc'),
+        sbGet('metas','aluno_id=eq.'+ALUNO_ID)
+      ]);
+      avaliacoes=avs||[];fotosEvolucao=fts||[];diarioGeral=dia||[];metas=mts||[];
+    }catch(e){avaliacoes=[];fotosEvolucao=[];diarioGeral=[];metas=[]}
+
     // Verifica anamnese
     let temAnamnese=false;
     try{const ans=await sbGet('anamnese_aluno','aluno_id=eq.'+ALUNO_ID+'&limit=1');temAnamnese=ans.length>0}catch(e){}
@@ -460,10 +558,11 @@ function showError(msg){
   el.classList.add('show');
   document.getElementById('errorMsg').textContent=msg;
 }
+function esc(s){return(s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 // ── RENDER ──────────────────────────────────────────
 function renderApp(){
-  const nome=aluno.nome.split(' ')[0].toUpperCase();
+  const nome=aluno.nome.split(' ')[0];
   const ini=aluno.nome.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
   const totalEx=aluno.series.reduce((s,sr)=>s+sr.exercicios.length,0);
 
@@ -471,9 +570,15 @@ function renderApp(){
   document.getElementById('headerTitle').textContent=aluno.nome.split(' ')[0];
   document.getElementById('headerSub').textContent=aluno.objetivo||aluno.periodo||'Meu treino';
   document.getElementById('headerAvatar').textContent=ini;
+  if(aluno.foto){
+    document.getElementById('headerAvatar').innerHTML=`<img src="${aluno.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+    document.getElementById('heroAvatar').innerHTML=`<img src="${aluno.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+  }else{
+    document.getElementById('heroAvatar').textContent=ini;
+  }
 
   // Hero
-  document.getElementById('heroName').innerHTML='TREINO <span>'+nome+'</span>';
+  document.getElementById('heroName').textContent=nome+'!';
 
   // Stats
   document.getElementById('statDias').textContent=(aluno.dias||'?')+'x';
@@ -493,8 +598,8 @@ function renderApp(){
   // Checkin
   renderCheckin();
 
-  // Series (home)
-  renderHomeSeries();
+  // Grid de cards (home)
+  renderHomeGrid();
 
   // Periodização
   renderPeriod();
@@ -505,6 +610,15 @@ function renderApp(){
 
   // RPE
   renderRPE();
+
+  // Avaliações / Fotos
+  renderAvalPage();
+
+  // Diário
+  renderDiarioPage();
+
+  // Metas
+  renderMetasPage();
 
   // Feedback
   if(state.feedbackGeral)document.getElementById('feedbackGeral').value=state.feedbackGeral;
@@ -530,35 +644,33 @@ function toggleCI(i){
   salvarLocal();agendarSave();
 }
 
-function renderHomeSeries(){
-  const list=document.getElementById('homeSeriesList');
-  list.innerHTML=aluno.series.map((s,si)=>{
-    const cor=CORES[si%CORES.length];
-    const total=s.exercicios.length;
-    const done=s.exercicios.filter(e=>doneExs[e.id]).length;
-    const pct=total>0?Math.round(done/total*100):0;
-    const tags=s.grupos.slice(0,3).map(g=>`<span class="serie-tag" style="background:${cor}15;color:${cor};border:1px solid ${cor}33">${g}</span>`).join('');
-    const circleR=13,circleC=16,circ=2*Math.PI*circleR;
-    const dash=circ-(pct/100)*circ;
-    return`<div class="serie-card" style="border-color:${cor}33" onclick="abrirSerie(${si})">
-      <style>.serie-card::before{background:${cor}}</style>
-      <div style="position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="32" height="32" style="transform:rotate(-90deg)">
-          <circle cx="16" cy="16" r="${circleR}" fill="none" stroke="${cor}22" stroke-width="2.5"/>
-          <circle cx="16" cy="16" r="${circleR}" fill="none" stroke="${cor}" stroke-width="2.5"
-            stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dash.toFixed(1)}"
-            stroke-linecap="round" style="transition:stroke-dashoffset .4s ease"/>
-        </svg>
-        <span style="position:absolute;font-family:'Bebas Neue',sans-serif;font-size:14px;color:${cor}">${s.letra}</span>
+// ── HOME GRID DE CARDS ───────────────────────────────
+function renderHomeGrid(){
+  const grid=document.getElementById('homeGrid');
+  const totalEx=aluno.series.reduce((s,sr)=>s+sr.exercicios.length,0);
+  const doneCount=aluno.series.reduce((s,sr)=>s+sr.exercicios.filter(e=>doneExs[e.id]).length,0);
+  const metasAtivas=metas.filter(m=>!m.concluida).length;
+  const cards=[
+    {id:'treino',icon:'🏋️',bg:'#c9f50022',fg:'#c9f500',label:'Treinos',sub:aluno.series.length+' séries',badge:totalEx?(doneCount+'/'+totalEx):null,go:()=>irPara('treino')},
+    {id:'progresso',icon:'📊',bg:'#60a5fa22',fg:'#60a5fa',label:'Progresso',sub:'RPE e feedback',badge:null,go:()=>irPara('progresso')},
+    {id:'aval',icon:'📏',bg:'#f6ad5522',fg:'#f6ad55',label:'Avaliações',sub:avaliacoes.length+' registradas',badge:null,go:()=>irPara('aval')},
+    {id:'diario',icon:'📓',bg:'#a78bfa22',fg:'#a78bfa',label:'Diário',sub:'Anotações',badge:diarioGeral.length||null,go:()=>irPara('diario')},
+    {id:'metas',icon:'🏆',bg:'#fbbf2422',fg:'#fbbf24',label:'Metas',sub:metas.length+' definidas',badge:metasAtivas||null,go:()=>irPara('metas')},
+    {id:'fotos',icon:'📸',bg:'#f4727222',fg:'#f87171',label:'Fotos',sub:fotosEvolucao.length+' sessões',badge:null,go:()=>irPara('aval')},
+  ];
+  grid.innerHTML=cards.map(c=>`
+    <div class="hg-card" onclick="homeGridGo('${c.id}')">
+      ${c.badge?`<div class="hg-badge">${c.badge}</div>`:''}
+      <div class="hg-icon-wrap" style="background:${c.bg};color:${c.fg}">${c.icon}</div>
+      <div>
+        <div class="hg-label">${c.label}</div>
+        <div class="hg-sub">${c.sub}</div>
       </div>
-      <div class="serie-info">
-        <div class="serie-name">${s.nome||'Série '+s.letra}</div>
-        <div class="serie-meta">${done}/${total} exercícios · ${pct}%</div>
-        ${tags?`<div class="serie-tags">${tags}</div>`:''}
-      </div>
-      <div class="serie-arrow">›</div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
+}
+function homeGridGo(id){
+  const map={treino:'treino',progresso:'progresso',aval:'aval',diario:'diario',metas:'metas',fotos:'aval'};
+  irPara(map[id]||'home');
 }
 
 function abrirSerie(si){
@@ -666,7 +778,7 @@ function buildExCard(ex,ei,si,cor){
         style="${!done?'background:'+cor+'22;color:'+cor:''}">
         ${done?'✓':ei+1}
       </div>
-      <div class="ex-name">${ex.nome||'Exercício '+(ei+1)}</div>
+      <div class="ex-name">${esc(ex.nome)||'Exercício '+(ei+1)}</div>
       <button class="ex-check${done?' checked':''}" id="excheck_${ex.id}" onclick="toggleDone('${ex.id}',${si})">
         ${done?'✓':'○'}
       </button>
@@ -675,23 +787,23 @@ function buildExCard(ex,ei,si,cor){
     <div class="ex-params-row">
       ${ex.series?`<div class="ex-param-box">
         <div class="ex-param-lbl">Séries</div>
-        <div class="ex-param-val" style="color:var(--text)">${ex.series}</div>
+        <div class="ex-param-val" style="color:var(--text)">${esc(ex.series)}</div>
       </div>`:''}
       ${ex.reps?`<div class="ex-param-box">
         <div class="ex-param-lbl">Reps</div>
-        <div class="ex-param-val" style="color:${cor}">${ex.reps}</div>
+        <div class="ex-param-val" style="color:${cor}">${esc(ex.reps)}</div>
       </div>`:''}
       ${ex.descanso?`<div class="ex-param-box">
         <div class="ex-param-lbl">Descanso</div>
-        <div class="ex-param-val" style="color:var(--text)">${ex.descanso}</div>
+        <div class="ex-param-val" style="color:var(--text)">${esc(ex.descanso)}</div>
       </div>`:''}
     </div>
-    ${ex.obs?`<div class="ex-obs">${ex.obs}</div>`:''}
+    ${ex.obs?`<div class="ex-obs">${esc(ex.obs)}</div>`:''}
     ${mediaH?`<div class="ex-media-row">${mediaH}</div>`:''}
     ${descSeg?`<div class="ex-timer">
       <button class="timer-pill" id="tpill_${ex.id}" onclick="toggleTimer('${ex.id}',${descSeg})">
         <span class="timer-icon">⏱</span>
-        <span class="timer-lbl" id="tlbl_${ex.id}">Descanso ${ex.descanso}</span>
+        <span class="timer-lbl" id="tlbl_${ex.id}">Descanso ${esc(ex.descanso)}</span>
         <span class="timer-count" id="tcount_${ex.id}" style="display:none"></span>
       </button>
     </div>`:''}
@@ -704,7 +816,7 @@ function buildExCard(ex,ei,si,cor){
         <div class="carga-rows">${cargaRows}</div>
         <div class="feed-label">📓 Feedback</div>
         <textarea class="feed-inp" placeholder="Como foi? Dificuldade, dor, execução..." 
-          oninput="salvarFeedEx('${ex.id}',this.value)">${feedVal}</textarea>
+          oninput="salvarFeedEx('${ex.id}',this.value)">${esc(feedVal)}</textarea>
       </div>
     </div>
   </div>`;
@@ -738,14 +850,13 @@ function toggleDone(eid,si){
     num.style.cssText=doneExs[eid]?'':'background:'+cor+'22;color:'+cor;
     num.textContent=doneExs[eid]?'✓':(parseInt(num.textContent)||'?');
     if(!doneExs[eid]){
-      // re-find index
       const s=aluno.series[si];
       const idx=s?.exercicios.findIndex(e=>e.id===eid);
       if(idx!==-1&&idx!==undefined)num.textContent=idx+1;
     }
   }
   updateConcluirBtn(si);
-  updateHomeSerie();
+  renderHomeGrid();
 }
 
 function updateConcluirBtn(si){
@@ -772,10 +883,6 @@ function updateConcluirBtn(si){
   }
 }
 
-function updateHomeSerie(){
-  renderHomeSeries();
-}
-
 // ── TIMER ─────────────────────────────────────────────
 function parseSeg(s){
   if(!s)return 0;
@@ -784,7 +891,6 @@ function parseSeg(s){
 }
 
 function toggleTimer(eid,seg){
-  // Stop previous
   if(timerRunning){
     clearInterval(timerInterval);timerRunning=false;
     const op=document.getElementById('tpill_'+timerExId);
@@ -795,7 +901,6 @@ function toggleTimer(eid,seg){
     if(oc){oc.style.display='none'}
     if(timerExId===eid){timerExId=null;return}
   }
-  // Start new
   timerSeg=seg;timerExId=eid;timerRunning=true;
   const pill=document.getElementById('tpill_'+eid);
   const lbl=document.getElementById('tlbl_'+eid);
@@ -834,7 +939,6 @@ function salvarCarga(eid,i,val){
   if(!state.cargas[eid])state.cargas[eid]=[];
   state.cargas[eid][i]=val;
   salvarLocal();agendarSave();
-  // update status dot
   const status=document.getElementById('cst_'+eid+'_'+i);
   if(status){
     const hasDone=val.trim().length>0;
@@ -879,7 +983,7 @@ async function concluirSerie(si){
   s.exercicios.forEach(ex=>{doneExs[ex.id]=false});
   await enviarSupabase();
   showToast('🎉 Série '+s.letra+' concluída!');
-  renderSerie(si);renderHomeSeries();
+  renderSerie(si);renderHomeGrid();
   document.getElementById('scrollArea').scrollTop=0;
 }
 
@@ -915,15 +1019,165 @@ async function salvarTudo(){
   if(msg){msg.textContent='✅ Progresso salvo com sucesso!';msg.style.color='var(--green)';setTimeout(()=>msg.textContent='',3000)}
 }
 
+// ══════════════════════════════════════════════════════
+//  AVALIAÇÕES + FOTOS (read-only)
+// ══════════════════════════════════════════════════════
+function faixaIMC(imc){const v=parseFloat(imc);if(!v)return{label:'—',cor:'#3a3a3a'};if(v<18.5)return{label:'Abaixo do peso',cor:'#63b3ed'};if(v<25)return{label:'Normal',cor:'#6ee7b7'};if(v<30)return{label:'Sobrepeso',cor:'#fbbf24'};if(v<35)return{label:'Obesidade I',cor:'#f97316'};return{label:'Obesidade II+',cor:'#f87171'}}
+
+function renderAvalPage(){
+  const el=document.getElementById('avalContent');
+  if(!avaliacoes.length&&!fotosEvolucao.length){
+    el.innerHTML=`<div class="empty-box"><div class="empty-icon">📏</div><div class="empty-title">Nenhuma avaliação ainda</div><div class="empty-sub">Quando seu personal lançar uma avaliação física ou fotos de evolução, elas aparecem aqui.</div></div>`;
+    return;
+  }
+  let html='';
+
+  // Gráfico (se 2+ avaliações)
+  if(avaliacoes.length>1){
+    html+=`<div class="aval-page-head"></div>
+    <div class="chart-wrap-mobile">
+      <div class="chart-title-mobile">Evolução</div>
+      <div class="chart-tabs-mobile">
+        <button class="ct-mobile-btn" id="cm_peso" onclick="renderAvalChartMobile('peso')">Peso</button>
+        <button class="ct-mobile-btn" id="cm_gord" onclick="renderAvalChartMobile('gord')">% Gordura</button>
+        <button class="ct-mobile-btn" id="cm_mm" onclick="renderAvalChartMobile('mm')">Massa Magra</button>
+        <button class="ct-mobile-btn" id="cm_imc" onclick="renderAvalChartMobile('imc')">IMC</button>
+      </div>
+      <canvas id="avalCanvasMobile" height="160"></canvas>
+    </div>`;
+  }
+
+  // Histórico
+  if(avaliacoes.length){
+    html+=`<div class="section-title" style="margin:0 16px 10px">📏 Histórico de avaliações</div>`;
+    html+=avaliacoes.map(av=>{
+      const imcF=faixaIMC(av.imc);
+      const campos=[['Peso',av.peso,'kg'],['% Gordura',av.gordura,'%'],['Massa Magra',av.massa_magra,'kg'],['IMC',av.imc,''],['Cintura',av.cintura,'cm'],['Quadril',av.quadril,'cm']].filter(f=>f[1]!=null&&f[1]!=='');
+      return`<div class="aval-card">
+        <div class="aval-card-head">
+          <div class="aval-card-date">${av.data?av.data.split('-').reverse().join('/'):'—'}</div>
+          ${av.imc?`<div class="aval-card-tags"><span class="aval-card-tag" style="background:${imcF.cor}22;color:${imcF.cor}">IMC ${imcF.label}</span></div>`:''}
+        </div>
+        <div class="aval-metrics-grid">${campos.map(f=>`<div class="aval-metric-box"><div class="aval-metric-box-lbl">${f[0]}</div><div class="aval-metric-box-val">${f[1]}<span class="aval-metric-box-unit">${f[2]}</span></div></div>`).join('')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Fotos
+  if(fotosEvolucao.length){
+    html+=`<div class="section-title" style="margin:16px 16px 10px">📸 Fotos de evolução</div>`;
+    html+=fotosEvolucao.map(f=>{
+      const slots=['frente','lado','costas'];
+      return`<div class="aval-card">
+        <div class="aval-card-date" style="margin-bottom:10px">${f.data?f.data.split('-').reverse().join('/'):'—'}</div>
+        <div class="fotos-grid-mobile">${slots.map(s=>f[s]?`<img src="${f[s]}" alt="${s}"/>`:'<div class="fph">—</div>').join('')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  el.innerHTML=html;
+  if(avaliacoes.length>1)setTimeout(()=>renderAvalChartMobile('peso'),50);
+}
+
+function renderAvalChartMobile(campo){
+  const avs=[...avaliacoes].reverse();
+  const canvas=document.getElementById('avalCanvasMobile');if(!canvas)return;
+  const labels={peso:'Peso (kg)',gord:'% Gordura',mm:'Massa Magra (kg)',imc:'IMC'};
+  const keys={peso:'peso',gord:'gordura',mm:'massa_magra',imc:'imc'};
+  const cors={peso:'#c9f500',gord:'#f87171',mm:'#34d399',imc:'#60a5fa'};
+  ['peso','gord','mm','imc'].forEach(k=>{
+    const b=document.getElementById('cm_'+k);
+    if(b){
+      const on=k===campo;
+      b.style.background=on?cors[k]+'33':'';
+      b.style.borderColor=on?cors[k]:'var(--border2)';
+      b.style.color=on?cors[k]:'var(--muted)';
+    }
+  });
+  if(_avalChartMobile)_avalChartMobile.destroy();
+  _avalChartMobile=new Chart(canvas,{type:'line',data:{labels:avs.map(a=>a.data?a.data.split('-').reverse().join('/'):''),datasets:[{label:labels[campo],data:avs.map(a=>parseFloat(a[keys[campo]])||null),borderColor:cors[campo],backgroundColor:cors[campo]+'22',tension:.3,fill:true,pointBackgroundColor:cors[campo],pointRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{size:9}}},y:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{size:9}}}}}});
+}
+
+// ══════════════════════════════════════════════════════
+//  DIÁRIO (leitura + escrita do aluno)
+// ══════════════════════════════════════════════════════
+function renderDiarioPage(){
+  const list=document.getElementById('diarioListMobile');
+  if(!diarioGeral.length){
+    list.innerHTML=`<div class="empty-box"><div class="empty-icon">📓</div><div class="empty-title">Nenhuma anotação ainda</div><div class="empty-sub">Escreva acima como você está se sentindo, ou aguarde anotações do seu personal.</div></div>`;
+    return;
+  }
+  list.innerHTML=diarioGeral.map(d=>{
+    const mine=d.autor==='aluno';
+    return`<div class="diario-entry-mobile ${mine?'mine':'personal'}">
+      <div class="diario-entry-mobile-head">
+        <span class="diario-entry-mobile-author" style="color:${mine?'var(--acc)':'var(--muted)'}">${mine?'Você':'Seu personal'}</span>
+        <span class="diario-entry-mobile-date">${d.data?d.data.split('-').reverse().join('/'):''}</span>
+      </div>
+      <div class="diario-entry-mobile-text">${esc(d.texto)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function enviarDiarioAluno(){
+  const ta=document.getElementById('diarioInputMobile');
+  const texto=(ta.value||'').trim();
+  if(!texto)return;
+  const d={id:'d'+Date.now(),aluno_id:ALUNO_ID,data:HOJE,texto,autor:'aluno'};
+  diarioGeral.unshift(d);
+  renderDiarioPage();
+  ta.value='';
+  // Tenta salvar com a coluna 'autor'; se a coluna ainda não existir no banco
+  // (precisa rodar a migração SQL), regrava sem ela para não perder a anotação.
+  const okComAutor=await sbUpsert('diario',{id:d.id,aluno_id:ALUNO_ID,data:d.data,texto:d.texto,autor:'aluno'});
+  if(okComAutor){showToast('✅ Anotação salva');return}
+  const okSemAutor=await sbUpsert('diario',{id:d.id,aluno_id:ALUNO_ID,data:d.data,texto:d.texto});
+  showToast(okSemAutor?'✅ Anotação salva':'📱 Salvo no dispositivo');
+}
+
+// ══════════════════════════════════════════════════════
+//  METAS (read-only)
+// ══════════════════════════════════════════════════════
+function renderMetasPage(){
+  const list=document.getElementById('metasListMobile');
+  if(!metas.length){
+    list.innerHTML=`<div class="empty-box"><div class="empty-icon">🏆</div><div class="empty-title">Nenhuma meta definida</div><div class="empty-sub">Seu personal ainda não cadastrou metas para você.</div></div>`;
+    return;
+  }
+  list.innerHTML=metas.map(m=>{
+    const pct=Math.min(100,Math.max(0,((m.atual||0)/(m.alvo||1))*100));
+    const cor=m.concluida?'#4ade80':'#c9f500';
+    return`<div class="meta-card-mobile${m.concluida?' concluida':''}">
+      <div class="meta-card-mobile-top">
+        <div class="meta-card-icon">${m.emoji||'🎯'}</div>
+        <div class="meta-card-name">${esc(m.nome)}</div>
+        ${m.concluida?'<div class="meta-card-check">✅</div>':''}
+      </div>
+      <div class="meta-card-bar"><div class="meta-card-fill" style="width:${pct}%;background:${cor}"></div></div>
+      <div class="meta-card-foot">
+        <span><strong>${m.atual||0}</strong> / ${m.alvo} ${esc(m.unidade||'')}</span>
+        <span>${pct.toFixed(0)}%${m.prazo?' · até '+m.prazo.split('-').reverse().join('/'):''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // ── NAVIGATION ───────────────────────────────────────
 function irPara(page){
   currentPage=page;
-  ['home','treino','progresso'].forEach(p=>{
-    const pg=document.getElementById('page'+p.charAt(0).toUpperCase()+p.slice(1));
-    const btn=document.getElementById('nav'+p.charAt(0).toUpperCase()+p.slice(1));
-    if(pg){pg.classList.toggle('active',p===page)}
-    if(btn){btn.classList.toggle('active',p===page)}
+  ['home','treino','progresso','aval','diario','metas'].forEach(p=>{
+    const id='page'+p.charAt(0).toUpperCase()+p.slice(1);
+    const pg=document.getElementById(id);
+    if(pg)pg.classList.toggle('active',p===page);
   });
+  // bottom nav highlight (Mais cobre aval/metas)
+  const navMap={home:'navHome',treino:'navTreino',progresso:'navProgresso',diario:'navDiario',aval:'navMais',metas:'navMais'};
+  ['navHome','navTreino','navProgresso','navDiario','navMais'].forEach(id=>{
+    document.getElementById(id)?.classList.toggle('active',id===navMap[page]);
+  });
+  // header back button shows on sub-pages
+  const backBtn=document.getElementById('headerBackBtn');
+  if(backBtn)backBtn.style.display=page==='home'?'none':'flex';
   document.getElementById('scrollArea').scrollTop=0;
 }
 
@@ -934,8 +1188,6 @@ function showToast(msg){
   el.textContent=msg;el.classList.add('show');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
 }
-
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>
 </body>
 </html>
