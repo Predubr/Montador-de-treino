@@ -732,16 +732,33 @@ async function enviar(){
     dados
   };
 
+  // Fonte da verdade: coluna 'anamnese' na tabela 'alunos' — é o que o
+  // painel do personal (index.html) lê. Isso TEM que funcionar.
+  let salvouPrincipal=false;
   try{
-    await sbUpsert('anamnese_aluno',payload);
-    try{
-      await fetch(SB+'/rest/v1/alunos?id=eq.'+ALUNO_ID,{method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify({anamnese:dados})});
-    }catch(e){}
+    const r=await fetch(SB+'/rest/v1/alunos?id=eq.'+ALUNO_ID,{
+      method:'PATCH',
+      headers:{...HDR,'Prefer':'return=minimal'},
+      body:JSON.stringify({anamnese:dados,anamnese_updated_at:new Date().toISOString()})
+    });
+    salvouPrincipal=r.ok;
+    if(!r.ok){
+      const errTxt=await r.text();
+      console.error('Erro ao salvar anamnese em alunos:',r.status,errTxt);
+    }
+  }catch(e){console.error('Falha de rede ao salvar anamnese:',e)}
+
+  // Histórico estruturado (opcional) — se a tabela não existir ainda,
+  // isso falha silenciosamente e não deve bloquear o fluxo do aluno,
+  // já que o registro principal já foi salvo acima.
+  try{await sbUpsert('anamnese_aluno',payload)}catch(e){}
+
+  if(salvouPrincipal){
     document.getElementById('app').style.display='none';
     document.getElementById('successScreen').classList.add('show');
-  }catch(e){
+  }else{
     btn.classList.remove('loading');btn.textContent='✓ Enviar Anamnese';
-    alert('Erro ao salvar: '+e.message);
+    alert('Não foi possível salvar sua anamnese agora. Verifique sua internet e tente novamente. Se o problema continuar, avise seu personal.');
   }
 }
 
