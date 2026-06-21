@@ -13,11 +13,9 @@ body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-ser
 input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px}
-/* LAYOUT */
 .shell{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
 .sidebar{background:#0a0a0a;border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
 .content{overflow-y:auto;min-height:100vh}
-/* BRAND */
 .brand{padding:18px 16px 12px;border-bottom:1px solid var(--border)}
 .brand-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--accent);cursor:pointer;line-height:1}
 .brand-logo:hover{opacity:.7}
@@ -26,13 +24,11 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .brand-edit-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:5px 9px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;outline:none}
 .brand-edit-inp:focus{border-color:var(--accent)}
 .brand-edit-save{margin-top:4px;width:100%;padding:5px;background:var(--accent);color:#111;border:none;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer}
-/* SIDEBAR NAV */
 .sb-nav{display:flex;flex-direction:column;gap:1px;padding:8px 6px;border-bottom:1px solid var(--border)}
 .sb-nav-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;border:none;background:none;color:#555;cursor:pointer;font-size:11px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.04em;text-transform:uppercase;transition:all .12s;width:100%;text-align:left}
 .sb-nav-btn:hover{background:var(--bg3);color:var(--text)}
 .sb-nav-btn.active{background:var(--bg2);color:var(--accent);border:1px solid var(--border)}
 .sb-nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0}
-/* ALUNOS SIDEBAR */
 .sb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px}
 .sb-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#3a3a3a}
 .sb-icon-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:#444;font-size:15px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1}
@@ -51,12 +47,10 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .aluno-act-btn{background:none;border:none;cursor:pointer;color:#3a3a3a;font-size:11px;padding:2px 3px;border-radius:4px;line-height:1}
 .aluno-act-btn:hover{color:var(--accent)}
 .aluno-act-btn.danger:hover{color:var(--red)}
-/* STATUS BADGES */
 .status-badge{display:inline-flex;align-items:center;gap:3px;font-size:8px;font-weight:700;padding:1px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.05em}
 .status-ativo{background:#6ee7b722;color:#6ee7b7}
 .status-inadimplente{background:#f8717122;color:#f87171}
 .status-reav{background:#fbbf2422;color:#fbbf24}
-/* SEMANAS SIDEBAR */
 .sem-list{display:flex;flex-direction:column;gap:3px;margin-bottom:5px}
 .sem-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 9px}
 .sem-top{display:flex;align-items:center;gap:6px;margin-bottom:5px}
@@ -72,7 +66,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .sem-field input::placeholder{color:#1e1e1e}
 .btn-add-sem{display:flex;align-items:center;gap:3px;width:100%;padding:5px 8px;border:1px dashed var(--border);border-radius:8px;background:none;color:#3a3a3a;cursor:pointer;font-size:9px;font-family:'Space Grotesk',sans-serif;transition:all .15s;margin-bottom:10px}
 .btn-add-sem:hover{border-color:var(--accent);color:var(--accent)}
-/* SÉRIES NAV */
 .series-nav{display:flex;flex-direction:column;gap:2px;padding:0 6px}
 .serie-nav-item{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:8px;cursor:pointer;transition:background .12s}
 .serie-nav-item:hover{background:var(--bg3)}
@@ -86,7 +79,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .serie-nav-del:hover{color:var(--red)}
 .btn-add-serie{display:flex;align-items:center;gap:4px;margin:3px 6px 0;padding:6px 10px;border:1px dashed var(--border);border-radius:8px;background:none;color:#3a3a3a;cursor:pointer;font-size:10px;font-family:'Space Grotesk',sans-serif;transition:all .15s}
 .btn-add-serie:hover{border-color:var(--accent);color:var(--accent)}
-/* ACTION BTNS */
 .action-wrap{display:flex;flex-direction:column;gap:5px;padding:10px;margin-top:auto}
 .btn-share{display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);cursor:pointer;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;transition:all .15s}
 .btn-share:hover{border-color:var(--accent);color:var(--accent)}
@@ -95,14 +87,11 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .btn-backup-row{display:flex;gap:4px}
 .btn-backup{flex:1;padding:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:#444;font-size:9px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s;text-align:center}
 .btn-backup:hover{border-color:var(--accent);color:var(--accent)}
-/* CONTENT */
 .content-inner{max-width:860px;padding:32px 38px 60px}
-/* TABS */
 .tabs-bar{display:flex;gap:2px;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:20px;flex-wrap:wrap}
 .tab-btn{flex:1;padding:6px 8px;border:none;border-radius:7px;background:transparent;color:#444;font-size:10px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;letter-spacing:.04em;text-transform:uppercase;transition:all .15s;white-space:nowrap;min-width:0}
 .tab-btn:hover{color:var(--text)}
 .tab-btn.active{background:var(--bg2);color:var(--accent);border:1px solid var(--border)}
-/* SÉRIE HEADER */
 .serie-header-block{margin-bottom:24px}
 .serie-eyebrow{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .serie-eyebrow::after{content:'';flex:1;height:1px;background:var(--border)}
@@ -126,7 +115,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .g-tag[data-g="Abdômen"].on{color:#f87171;border-color:#f87171}
 .g-custom-inp{padding:4px 11px;border:1.5px dashed var(--border);border-radius:30px;background:transparent;color:#444;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;outline:none;width:110px;transition:all .15s}
 .g-custom-inp:focus{border-color:var(--accent);color:var(--text)}
-/* EXERCISE CARDS */
 .ex-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:9px;transition:border-color .2s}
 .ex-card:hover{border-color:var(--border2)}
 .ex-card.drag-over{border-color:var(--accent)!important;border-style:dashed}
@@ -169,7 +157,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .thumb-ed{position:absolute;bottom:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:var(--accent);color:#111;font-size:7px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .btn-add-ex{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;padding:11px;border:1.5px dashed var(--border);border-radius:14px;background:transparent;color:#333;cursor:pointer;font-size:11px;font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:all .2s;margin-bottom:20px}
 .btn-add-ex:hover{border-color:var(--accent);color:var(--accent)}
-/* MUSCLEWIKI */
 .mw-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:24px}
 .mw-title{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .mw-title::after{content:'';flex:1;height:1px;background:var(--border)}
@@ -205,7 +192,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .mw-cad-field input:focus,.mw-cad-field select:focus{border-color:var(--accent)}
 .mw-cad-field input::placeholder{color:#1e1e1e}
 .mw-cad-save{padding:7px;background:var(--accent);border:none;border-radius:8px;color:#111;font-size:11px;font-weight:800;cursor:pointer;font-family:'Space Grotesk',sans-serif}
-/* DASHBOARD */
 .dash-page{padding:32px 38px 60px;max-width:1100px}
 .dash-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
 .kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
@@ -236,7 +222,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .ac-btn.danger:hover{border-color:var(--red);color:var(--red)}
 .dash-add-card{border:1.5px dashed var(--border);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:150px}
 .dash-add-card:hover{border-color:var(--accent)}
-/* ANIVERSARIANTES */
 .aniv-list{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
 .aniv-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
 .aniv-avatar{width:34px;height:34px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--accent);flex-shrink:0;overflow:hidden}
@@ -245,7 +230,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .aniv-nome{font-size:13px;font-weight:700}
 .aniv-data{font-size:10px;color:var(--muted)}
 .aniv-dias{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent)}
-/* AGENDA */
 .agenda-list{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
 .agenda-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
 .agenda-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -255,7 +239,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .agenda-data{font-size:11px;font-weight:700;color:var(--accent);text-align:right;font-family:'Bebas Neue',sans-serif;font-size:16px}
 .agenda-urgente{border-color:var(--red)!important}
 .agenda-urgente .agenda-dot{background:var(--red)!important}
-/* FINANCEIRO */
 .fin-table{width:100%;border-collapse:collapse;margin-bottom:16px}
 .fin-table th{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#3a3a3a;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border)}
 .fin-table td{padding:9px 10px;font-size:12px;color:var(--text);border-bottom:1px solid var(--border)}
@@ -268,7 +251,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .fin-resumo-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px}
 .fin-resumo-val{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;margin-bottom:3px}
 .fin-resumo-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#3a3a3a}
-/* ANAMNESE */
 .an-section-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#3a3a3a;margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .an-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
 .an-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:4px}
@@ -290,7 +272,18 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .an-foto-circle{width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid var(--border2);flex-shrink:0}
 .an-foto-placeholder{width:70px;height:70px;border-radius:50%;background:var(--bg2);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
 .an-save-btn{width:100%;padding:10px;background:var(--accent);border:none;border-radius:10px;color:#111;font-size:12px;font-weight:800;cursor:pointer;font-family:'Space Grotesk',sans-serif;margin-top:14px}
-/* AVALIAÇÃO FÍSICA */
+.an-read-section{margin-bottom:18px}
+.an-read-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#3a3a3a;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.an-read-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.an-read-box{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px}
+.an-read-box.full{grid-column:1/-1}
+.an-read-box-label{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#3a3a3a;margin-bottom:3px}
+.an-read-box-val{font-size:12px;color:var(--text);line-height:1.5;white-space:pre-wrap}
+.an-read-box-val.empty{color:#2a2a2a;font-style:italic}
+.an-read-tags{display:flex;flex-wrap:wrap;gap:5px}
+.an-read-tag{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--accent)18;color:var(--accent)}
+.an-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:30px 16px;text-align:center;background:var(--bg3);border:1px dashed var(--border2);border-radius:12px;margin-top:10px}
+.an-source-banner{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#6ee7b71a;border:1px solid #6ee7b733;border-radius:9px;margin-bottom:14px;font-size:11px;color:var(--green)}
 .aval-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}
 .aval-field{display:flex;flex-direction:column;gap:3px}
 .aval-field label{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#3a3a3a}
@@ -308,10 +301,8 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .aval-metric{display:flex;flex-direction:column;gap:1px}
 .aval-metric-label{font-size:8px;color:#3a3a3a;text-transform:uppercase;letter-spacing:.08em}
 .aval-metric-val{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text)}
-/* GRÁFICOS */
 .chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
 .chart-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#3a3a3a;margin-bottom:12px}
-/* METAS */
 .metas-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
 .meta-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 14px}
 .meta-top{display:flex;align-items:center;gap:10px;margin-bottom:7px}
@@ -328,7 +319,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .meta-inp:focus{border-color:var(--accent)}
 .meta-inp::placeholder{color:#1e1e1e}
 .meta-add-btn{padding:7px 12px;background:var(--accent);border:none;border-radius:8px;color:#111;font-size:11px;font-weight:800;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
-/* CHECKIN */
 .checkin-week{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
 .checkin-day{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;min-width:52px}
 .checkin-day:hover{border-color:var(--accent)}
@@ -344,7 +334,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .rpe-label{font-size:11px;color:var(--muted);margin-bottom:8px}
 .feedback-ta{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:12px;resize:none;outline:none;margin-bottom:10px}
 .feedback-ta:focus{border-color:var(--border2)}
-/* FOTOS EVOLUÇÃO */
 .fotos-upload-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .foto-slot{background:var(--bg3);border:1px dashed var(--border);border-radius:10px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;position:relative;overflow:hidden;transition:border-color .15s}
 .foto-slot:hover{border-color:var(--accent)}
@@ -357,7 +346,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .fotos-hist-date{font-size:10px;font-weight:700;color:var(--accent);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
 .fotos-hist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .fotos-hist-img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:7px;border:1px solid var(--border)}
-/* CARGA EVOLUTION */
 .carga-ex-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;outline:none;margin-bottom:12px}
 .carga-add-row{display:grid;grid-template-columns:120px 1fr 70px;gap:7px;margin-bottom:12px;align-items:end}
 .carga-inp{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;outline:none;width:100%}
@@ -370,7 +358,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .trend-up{color:var(--green);font-weight:700}
 .trend-down{color:var(--red);font-weight:700}
 .trend-eq{color:#3a3a3a}
-/* DIÁRIO */
 .diario-add-form{display:grid;grid-template-columns:120px 1fr 70px;gap:7px;margin-bottom:12px;align-items:start}
 .diario-ta{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;resize:none;outline:none;width:100%;min-height:60px}
 .diario-ta:focus{border-color:var(--border2)}
@@ -382,11 +369,12 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 .diario-entry-del{background:none;border:none;cursor:pointer;color:#2a2a2a;font-size:10px}
 .diario-entry-del:hover{color:var(--red)}
 .diario-entry-text{font-size:12px;color:var(--text);line-height:1.5}
-/* EMPTY */
+.diario-entry-author{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:10px;margin-left:6px}
+.diario-entry-author.aluno{background:#c9f50022;color:#c9f500}
+.diario-entry-author.personal{background:var(--accent)22;color:var(--accent)}
 .empty-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:75vh;text-align:center;gap:10px}
 .empty-logo{font-family:'Bebas Neue',sans-serif;font-size:50px;color:#1a1a1a;letter-spacing:4px}
 .empty-sub{font-size:12px;color:#2a2a2a;max-width:260px;line-height:1.6}
-/* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .modal-bg.open{display:flex}
 .modal-box{background:#131313;border:1px solid var(--border2);border-radius:18px;padding:26px;width:460px;max-width:94vw;max-height:90vh;overflow-y:auto}
@@ -411,8 +399,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
   .dash-kpi-row{grid-template-columns:1fr 1fr}
   .aval-grid{grid-template-columns:1fr 1fr}
 }
-
-/* ── Error banner persistente (sync seguro) ── */
 #errorBanner{display:none;position:fixed;top:0;left:0;right:0;background:#3a0a0a;border-bottom:2px solid var(--red);padding:12px 16px;z-index:9998;align-items:center;gap:12px}
 #errorBanner.show{display:flex}
 .err-banner-icon{font-size:20px;flex-shrink:0}
@@ -429,7 +415,6 @@ input,textarea,select{font-family:'Space Grotesk',sans-serif;color:var(--text)}
 </head>
 <body>
 
-<!-- Error banner persistente -->
 <div id="errorBanner">
   <div class="err-banner-icon">⚠️</div>
   <div class="err-banner-text" id="errorBannerText"></div>
@@ -709,7 +694,6 @@ async function _salvarFicha(){
   saveDB();_fecharMF();_renderFichas();renderSeriesNav();
   const sid=(_FA?.series||[])[0]?.id;if(sid)renderSerieEditor(sid);
   setTimeout(_renderBanner,80);
-  // Sync: a ficha ativa que vira series/semanas do aluno no Supabase
   if(_FA.status==='ativa'){alunoAtivo.series=_FA.series;alunoAtivo.semanas=_FA.semanas;await syncAlunoParaSupabase(alunoAtivo)}
 }
 async function _delFicha(fid,e){
@@ -749,7 +733,6 @@ const SB_HEADERS = {
   'Prefer': 'return=representation'
 };
 
-// ── Banner de erro PERSISTENTE (não some sozinho) ──────────
 function showErrorBanner(msg){
   const b=document.getElementById('errorBanner');
   const t=document.getElementById('errorBannerText');
@@ -762,7 +745,6 @@ function clearErrorBanner(){
   document.getElementById('errorBanner')?.classList.remove('show');
 }
 
-// ── API helpers (com erro visível, nunca silencioso) ────────
 async function sbFetch(method,table,q,body){
   try{
     const url=SB_URL+'/rest/v1/'+table+(q?'?'+q:'');
@@ -780,7 +762,6 @@ async function sbGet(table,params=''){
   if(!r.ok){showErrorBanner('Erro ao <strong>carregar</strong> dados de <strong>'+table+'</strong>: '+r.error);return[]}
   return r.data||[];
 }
-// Upsert pontual — nunca apaga nada antes, sempre merge-duplicates
 async function sbUpsert(table,data){
   const h={...SB_HEADERS,'Prefer':'resolution=merge-duplicates,return=representation'};
   const body=Array.isArray(data)?data:[data];
@@ -806,7 +787,6 @@ async function sbDeleteWhere(table,col,val){
   return r.ok;
 }
 
-// ── Status de sync ───────────────────────────────────────
 let syncStatus='ok';
 function setSyncStatus(s){
   syncStatus=s;
@@ -822,10 +802,6 @@ function showSaveStatus(elId,state){
   if(state==='saved')setTimeout(()=>{if(el)el.classList.remove('show')},1500);
 }
 
-// ════════════════════════════════════════════════════════
-//  SAVE PONTUAL — cada peça salva individualmente,
-//  sem nunca apagar tudo antes de regravar.
-// ════════════════════════════════════════════════════════
 async function syncAlunoMeta(a){
   if(!a)return false;
   setSyncStatus('syncing');
@@ -882,7 +858,6 @@ async function syncExercicio(aId,serieId,ex,ordem,fichaId){
 }
 async function deletarExercicioSupabase(exId){await sbDelete('exercicios',exId)}
 
-// ── Ficha (registro + apaga e recria séries/exercícios dela) ──
 async function syncFicha(a,ficha){
   setSyncStatus('syncing');
   const res=await sbUpsert('fichas',{
@@ -891,7 +866,6 @@ async function syncFicha(a,ficha){
     updated_at:new Date().toISOString()
   });
   if(!res){setSyncStatus('error');return false}
-  // Upsert pontual das séries/exercícios/semanas desta ficha específica
   let okGeral=true;
   if(ficha.semanas?.length&&!(await syncSemanas({id:a.id,semanas:ficha.semanas},ficha.id)))okGeral=false;
   for(let i=0;i<(ficha.series||[]).length;i++){
@@ -943,7 +917,7 @@ async function deletarAvaliacaoSupabase(id){await sbDelete('avaliacoes',id)}
 
 async function syncDiarioSupabase(alunoId,d){
   setSyncStatus('syncing');
-  const res=await sbUpsert('diario',{id:d.id,aluno_id:alunoId,data:d.data||null,texto:d.texto||''});
+  const res=await sbUpsert('diario',{id:d.id,aluno_id:alunoId,data:d.data||null,texto:d.texto||'',autor:d.autor||'personal'});
   if(res){clearErrorBanner();setSyncStatus('ok');return true}
   setSyncStatus('error');return false;
 }
@@ -972,13 +946,11 @@ async function syncFotoEvolucaoSupabase(alunoId,f){
 }
 async function deletarFotoEvolucaoSupabase(id){await sbDelete('fotos_evolucao',id)}
 
-// Sync completo (criar aluno, duplicar ficha) — só UPSERT, nunca apaga antes
 async function syncAlunoParaSupabase(a){
   if(!a)return false;
   setSyncStatus('syncing');
   let okGeral=true;
   if(!(await syncAlunoMeta(a)))okGeral=false;
-  // Sincroniza TODAS as fichas do aluno (não só a ativa)
   _initFichasSilent(a);
   for(const ficha of (a.fichas||[])){
     if(!(await syncFicha(a,ficha)))okGeral=false;
@@ -990,14 +962,12 @@ async function syncAlunoParaSupabase(a){
   setSyncStatus(okGeral?'ok':'error');
   return okGeral;
 }
-// Versão de _initFichas que não depende de _FA global (usada em sync de aluno não-ativo)
 function _initFichasSilent(a){
   if(!a.fichas||!a.fichas.length){
     a.fichas=[{id:'f_'+a.id,nome:'Ficha 1',status:'ativa',dataInicio:a.dataInicio||new Date().toISOString().split('T')[0],dataAgendada:null,obs:'',series:a.series||[],semanas:a.semanas||[]}];
   }
 }
 
-// Carrega TODOS os alunos do Supabase → reconstrói db.alunos com fichas múltiplas
 async function carregarDoSupabase(){
   setSyncStatus('syncing');
   const alunos=await sbGet('alunos','order=created_at.asc');
@@ -1018,7 +988,6 @@ async function carregarDoSupabase(){
     const aId = a.id;
     const fichasDoAluno = fichas.filter(f=>f.aluno_id===aId);
 
-    // Monta cada ficha com suas próprias séries/exercícios/semanas (por ficha_id)
     let fichasMontadas = fichasDoAluno.map(f=>{
       const semList = semanas.filter(s=>s.aluno_id===aId&&s.ficha_id===f.id).sort((x,y)=>x.ordem-y.ordem)
         .map(s=>({nome:s.nome,reps:s.reps,descanso:s.descanso}));
@@ -1036,7 +1005,6 @@ async function carregarDoSupabase(){
       };
     });
 
-    // Compatibilidade: séries antigas sem ficha_id (não deveria mais existir após a migração SQL, mas por segurança)
     const serieOrfas = series.filter(s=>s.aluno_id===aId&&!s.ficha_id);
     if(!fichasMontadas.length || serieOrfas.length){
       const semOrfas = semanas.filter(s=>s.aluno_id===aId&&!s.ficha_id).sort((x,y)=>x.ordem-y.ordem).map(s=>({nome:s.nome,reps:s.reps,descanso:s.descanso}));
@@ -1061,10 +1029,10 @@ async function carregarDoSupabase(){
       id:aId, nome:a.nome, objetivo:a.objetivo, nivel:a.nivel,
       dias:a.dias, periodo:a.periodo, obs:a.obs, foto:a.foto,
       financeiro:a.financeiro||{}, anamnese:a.anamnese||{},
+      anamneseUpdatedAt:a.anamnese_updated_at||null,
       proximaAvaliacao:a.proxima_avaliacao, proximaTroca:a.proxima_troca,
       updatedAt:a.updated_at,
       fichas: fichasMontadas,
-      // séries/semanas do aluno = sempre as da ficha ATIVA (compatibilidade com código legado)
       semanas: fichaAtiva?.semanas || [{nome:'Resistência',reps:'15–20',descanso:'30s'},{nome:'Hipertrofia',reps:'10–12',descanso:'60s'},{nome:'Força',reps:'4–6',descanso:'2min'},{nome:'Deload',reps:'12–15',descanso:'45s'}],
       series: fichaAtiva?.series || [],
       avaliacoes: avaliacoes.filter(v=>v.aluno_id===aId).map(v=>({
@@ -1079,7 +1047,7 @@ async function carregarDoSupabase(){
         wells:v.wells,forca:v.forca_palmar,dist_cooper:v.dist_cooper,bpm15:v.bpm15,
         fc_repouso:v.fc_repouso,fc_max:v.fc_max,vo2max:v.vo2max
       })),
-      diario: diario.filter(d=>d.aluno_id===aId).map(d=>({id:d.id,data:d.data,texto:d.texto})),
+      diario: diario.filter(d=>d.aluno_id===aId).map(d=>({id:d.id,data:d.data,texto:d.texto,autor:d.autor||'personal'})),
       metas: metas.filter(m=>m.aluno_id===aId).map(m=>({id:m.id,nome:m.nome,emoji:m.emoji,alvo:m.alvo,atual:m.atual,unidade:m.unidade,prazo:m.prazo,concluida:m.concluida})),
       fotosEvolucao: fotos.filter(f=>f.aluno_id===aId).map(f=>({id:f.id,data:f.data,Frente:f.frente,Lado:f.lado,Costas:f.costas})),
     };
@@ -1228,14 +1196,12 @@ function renderAlunoList(){
 function selecionarAluno(id){alunoAtivo=db.alunos.find(x=>x.id===id);if(!alunoAtivo)return;_initFichas(alunoAtivo);renderAlunoList();document.getElementById('sidebarForm').style.display='block';renderSemanas();_renderFichas();renderSeriesNav();const sid=serieAtivaMap[id]||(_FA?.series||alunoAtivo.series)[0]?.id;if(sid)renderSerieEditor(sid);else renderEmpty();setTimeout(_renderBanner,80)}
 function renderEmpty(){document.getElementById('sidebarForm').style.display='none';document.getElementById('serieContent').innerHTML=`<div class="empty-screen"><div class="empty-logo">${esc(db.consultoria)}</div><p class="empty-sub">Adicione um aluno clicando em <strong>＋</strong> para começar.</p></div>`}
 
-// ── SEMANAS (save imediato) ──────────────────────────────
 function addSemana(){if(!alunoAtivo)return;alunoAtivo.semanas.push({nome:'',reps:'',descanso:''});saveDB();renderSemanas();syncSemanas(alunoAtivo)}
 function delSemana(i){if(!alunoAtivo)return;alunoAtivo.semanas.splice(i,1);saveDB();renderSemanas();const total=alunoAtivo.semanas.length;syncSemanas(alunoAtivo).then(()=>limparSemanasExtras(alunoAtivo.id,total))}
 let _semanaSaveTimer=null;
 function semanaInputChange(i,campo,val){if(!alunoAtivo)return;alunoAtivo.semanas[i][campo]=val;saveDB();clearTimeout(_semanaSaveTimer);_semanaSaveTimer=setTimeout(()=>syncSemanas(alunoAtivo),700)}
 function renderSemanas(){if(!alunoAtivo)return;document.getElementById('semList').innerHTML=alunoAtivo.semanas.map((s,i)=>`<div class="sem-card"><div class="sem-top"><div class="sem-num">${i+1}</div><input class="sem-name-inp" type="text" placeholder="Nome" value="${esc(s.nome)}" oninput="semanaInputChange(${i},'nome',this.value)"/><button class="sem-del-btn" onclick="delSemana(${i})">✕</button></div><div class="sem-fields"><div class="sem-field"><label>Reps</label><input type="text" placeholder="10–12" value="${esc(s.reps)}" oninput="semanaInputChange(${i},'reps',this.value)"/></div><div class="sem-field"><label>Descanso</label><input type="text" placeholder="60s" value="${esc(s.descanso)}" oninput="semanaInputChange(${i},'descanso',this.value)"/></div></div></div>`).join('')}
 
-// ── SÉRIES (save imediato) ───────────────────────────────
 function addSerie(){if(!alunoAtivo)return;const _st=_FA?.series||alunoAtivo.series;const i=_st.length;const l=LETRAS[i]||('S'+(i+1));const s={id:'s'+Date.now()+Math.random().toString(36).slice(2),letra:l,nome:'',grupos:[],exercicios:[]};_st.push(s);if(_FA)_FA.series=_st;saveDB();serieAtivaMap[alunoAtivo.id]=s.id;saveDB();renderSeriesNav();renderSerieEditor(s.id);syncSerie(alunoAtivo.id,s,i)}
 async function delSerie(sid,e){e.stopPropagation();const _st=_FA?.series||alunoAtivo.series;if(!alunoAtivo||_st.length<=1)return;const _f=_st.filter(s=>s.id!==sid);_f.forEach((s,i)=>s.letra=LETRAS[i]||('S'+(i+1)));if(_FA)_FA.series=_f;else alunoAtivo.series=_f;saveDB();const n=_f[0].id;serieAtivaMap[alunoAtivo.id]=n;saveDB();renderSeriesNav();renderSerieEditor(n);await deletarSerieSupabase(sid);for(let i=0;i<_f.length;i++)syncSerie(alunoAtivo.id,_f[i],i)}
 function ativarSerie(sid){serieAtivaMap[alunoAtivo.id]=sid;saveDB();renderSeriesNav();renderSerieEditor(sid)}
@@ -1370,7 +1336,6 @@ function mwDel(id,sid){saveCustomEx(getCustomEx().filter(e=>e.id!==id));buscarMW
 function toggleCad(sid){const f=document.getElementById('mwCF_'+sid);const b=document.getElementById('mwCT_'+sid);const op=f.style.display==='flex';f.style.display=op?'none':'flex';b.textContent=op?'＋ Cadastrar exercício personalizado':'✕ Fechar cadastro'}
 function mwCadastrar(sid){const n=(document.getElementById('mwCN_'+sid)?.value||'').trim();const m=document.getElementById('mwCM_'+sid)?.value||'';const u=(document.getElementById('mwCU_'+sid)?.value||'').trim();if(!n)return alert('Digite o nome.');const arr=getCustomEx();arr.push({id:'cex'+Date.now(),nome:n,musculo:m,url:u||null,custom:true});saveCustomEx(arr);document.getElementById('mwCN_'+sid).value='';document.getElementById('mwCU_'+sid).value='';buscarMW(sid);toggleCad(sid)}
 
-// ── EXERCÍCIOS (save imediato item-por-item) ─────────────
 function addEx(sid){
   const s=getSerie(sid);if(!s)return;
   const ex={id:'ex'+Date.now()+Math.random().toString(36).slice(2),nome:'',series:'',reps:'',descanso:'',obs:'',medias:[],tecnica:'Nenhuma'};
@@ -1457,7 +1422,6 @@ function initDrag(lista,sid){
 }
 </script>
 <script>
-// ── COMPARTILHAR ──────────────────────────────────────────
 async function compartilhar(){
   if(!alunoAtivo)return;
   showToast('💾 Salvando treino antes de compartilhar...');
@@ -1563,7 +1527,6 @@ function salvarEditMedia(){
   }
 }
 
-// ── BACKUP ────────────────────────────────────────────────
 function exportarBackup(){
   const data=JSON.stringify({db,serieAtivaMap,exdb:JSON.parse(localStorage.getItem('fitficha_exdb')||'[]'),v:4},null,2);
   const blob=new Blob([data],{type:'application/json'});
@@ -1586,13 +1549,11 @@ function lerFotoAluno(e){
   const r=new FileReader();r.onload=ev=>{alunoAtivo.foto=ev.target.result;alunoAtivo.updatedAt=new Date().toISOString();saveDB();renderAlunoList();const sid=serieAtivaMap[alunoAtivo.id];if(sid)renderAnamnese(sid);syncAlunoMeta(alunoAtivo)};r.readAsDataURL(file);
 }
 
-// ── NAVIGATION ────────────────────────────────────────────
 function setNavActive(id){['navDash','navFin','navAgenda'].forEach(n=>{const el=document.getElementById(n);if(el)el.classList.toggle('active',n===id)})}
 function irParaDash(){setNavActive('navDash');mostrarDashboard()}
 function irParaFinanceiro(){setNavActive('navFin');mostrarFinanceiro()}
 function irParaAgenda(){setNavActive('navAgenda');mostrarAgendaGlobal()}
 
-// ── DASHBOARD ─────────────────────────────────────────────
 function mostrarDashboard(){
   alunoAtivo=null;renderAlunoList();
   document.getElementById('sidebarForm').style.display='none';
@@ -1617,10 +1578,12 @@ function mostrarDashboard(){
     const upd=a.updatedAt?new Date(a.updatedAt).toLocaleDateString('pt-BR'):'—';
     const fin=a.financeiro||{};const statusCol=fin.status==='atrasado'?'var(--red)':fin.status==='pago'?'var(--green)':'#3a3a3a';
     const fotoH=a.foto?`<img src="${a.foto}" style="width:40px;height:40px;object-fit:cover;border-radius:50%"/>`:`<div style="width:40px;height:40px;border-radius:50%;background:${cor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:#111">${a.nome.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?'}</div>`;
+    const an=a.anamnese||{};
+    const temAnamnese=an && Object.keys(an).length>0;
     return `<div class="aluno-card" onclick="selecionarAluno('${a.id}')">
       <div class="aluno-card-top-stripe" style="background:${cor}"></div>
       <div class="aluno-card-head"><div class="aluno-card-av">${fotoH}</div><div><div class="aluno-card-name">${esc(a.nome)}</div><div class="aluno-card-obj">${esc(a.objetivo||'—')}</div>${fin.status?`<div style="font-size:9px;font-weight:700;color:${statusCol};margin-top:2px;text-transform:uppercase">${fin.status==='pago'?'✓ Pago':fin.status==='atrasado'?'⚠ Atrasado':fin.status==='vence'?'⏰ Vence em breve':'—'}</div>`:''}</div></div>
-      <div class="aluno-card-stats"><div class="ac-stat"><div class="ac-stat-val">${a.series.length}</div><div class="ac-stat-label">Séries</div></div><div class="ac-stat"><div class="ac-stat-val">${tot}</div><div class="ac-stat-label">Exercícios</div></div><div class="ac-stat"><div class="ac-stat-val">${(a.avaliacoes||[]).length}</div><div class="ac-stat-label">Avals.</div></div></div>
+      <div class="aluno-card-stats"><div class="ac-stat"><div class="ac-stat-val">${a.series.length}</div><div class="ac-stat-label">Séries</div></div><div class="ac-stat"><div class="ac-stat-val">${tot}</div><div class="ac-stat-label">Exercícios</div></div><div class="ac-stat"><div class="ac-stat-val" style="color:${temAnamnese?'var(--green)':'#3a3a3a'}">${temAnamnese?'✓':'—'}</div><div class="ac-stat-label">Anamnese</div></div></div>
       <div class="aluno-card-footer"><span class="aluno-card-date">${upd}</span><div class="ac-btns"><button class="ac-btn" onclick="event.stopPropagation();abrirDupModal('${a.id}')">⎘</button><button class="ac-btn danger" onclick="event.stopPropagation();deletarAluno('${a.id}',event)">✕</button></div></div>
     </div>`;
   }).join('');
@@ -1639,7 +1602,6 @@ function mostrarDashboard(){
   sc.innerHTML=`<div class="dash-page">${kpis}<div class="dash-section-title">Todos os Alunos</div><div class="aluno-cards-grid">${cards}${addCard}</div>${anivH}</div>`;
 }
 
-// ── FINANCEIRO ────────────────────────────────────────────
 function mostrarFinanceiro(){
   alunoAtivo=null;renderAlunoList();document.getElementById('sidebarForm').style.display='none';
   const sc=document.getElementById('serieContent');const hoje=new Date();
@@ -1661,7 +1623,6 @@ function editarFinanceiro(aid){
   saveDB();mostrarFinanceiro();renderAlunoList();syncAlunoMeta(a);
 }
 
-// ── AGENDA GLOBAL ─────────────────────────────────────────
 function mostrarAgendaGlobal(){
   alunoAtivo=null;renderAlunoList();document.getElementById('sidebarForm').style.display='none';
   const sc=document.getElementById('serieContent');const hoje=new Date();hoje.setHours(0,0,0,0);let items=[];
@@ -1678,7 +1639,6 @@ function mostrarAgendaGlobal(){
   sc.innerHTML=`<div class="dash-page"><div class="dash-section-title" style="margin-bottom:16px">📅 Agenda — Próximos Eventos</div>${items.length?`<div class="agenda-list">${rows}</div>`:'<div style="color:#2a2a2a;font-size:13px;padding:20px 0">Nenhum evento agendado. Configure datas de avaliação e troca de treino na aba Anamnese de cada aluno.</div>'}</div>`;
 }
 
-// ── TABS ──────────────────────────────────────────────────
 function abrirTab(tab,sid){
   ['treino','anamnese','aval','carga','diario','metas','fotos'].forEach(t=>{
     const c=document.getElementById('tabContent_'+t+'_'+sid);const b=document.getElementById('tab_'+t+'_'+sid);
@@ -1693,46 +1653,152 @@ function abrirTab(tab,sid){
 }
 
 // ═══════════════════════════════════════════════════════
-//  ANAMNESE
+//  ANAMNESE — leitura completa do formulário novo (5 páginas)
+//  + edição dos campos básicos (peso/altura/nascimento/agenda)
 // ═══════════════════════════════════════════════════════
 const PARQ_QUESTIONS=[
-  'O seu médico alguma vez disse que você possui algum problema cardíaco?',
-  'Você sente dores no peito quando pratica atividade física?',
-  'No último mês, você sentiu dores no peito quando não estava realizando atividade física?',
-  'Você perde o equilíbrio por causa de tonturas ou alguma vez perdeu a consciência?',
-  'Você tem algum problema ósseo ou articular que poderia ser piorado pela atividade física?',
-  'Seu médico está prescrevendo medicamentos para pressão arterial ou problema cardíaco?',
-  'Você tem conhecimento de alguma outra razão pela qual não deveria fazer exercício físico?'
+  'Algum médico já disse que você tem problema cardíaco e recomendou apenas atividade supervisionada?',
+  'Você sente dor no peito ao fazer atividade física?',
+  'No último mês, sentiu dor no peito em repouso?',
+  'Você perde o equilíbrio por tontura ou já perdeu a consciência?',
+  'Você tem algum problema ósseo ou articular que piora com exercício?',
+  'Seu médico prescreve medicamentos para pressão ou coração?',
+  'Existe outra razão pela qual você não deveria fazer exercício?'
 ];
+const AN_LABELS={
+  M:'Masculino',F:'Feminino',O:'Outro',
+  normal:'Normal',alta:'Alta',baixa:'Baixa',
+  sim:'Sim',nao:'Não sei',
+  baixo:'Baixo',moderado:'Moderado',alto:'Alto',
+  ruim:'Ruim',regular:'Regular',boa:'Boa',
+  pouco:'Pouco',muito:'Bastante',
+  ex:'Ex-fumante',
+  nenhum:'Nenhum',ocasional:'Ocasional',frequente:'Frequente',
+  sentado:'Fico muito sentado',em_pe:'Fico em pé/andando',fisico:'Trabalho físico',variado:'Variado',
+  nunca:'Nunca pratiquei',menos6m:'Menos de 6 meses','6m_2a':'6 meses a 2 anos',mais2a:'Mais de 2 anos',
+  sedentario:'Sedentário',iniciante:'Iniciante',intermediario:'Intermediário',avancado:'Avançado',
+  academia:'Academia',casa:'Casa',ar_livre:'Ar livre',qualquer:'Qualquer um',
+  forca:'Força',emagrecimento:'Emagrecimento',hipertrofia:'Hipertrofia',condicionamento:'Condicionamento',
+  flexibilidade:'Flexibilidade',saude:'Saúde geral',reabilitacao:'Reabilitação',
+  '30min':'30 min','45min':'45 min','1h':'1 hora','1h30':'1h30+',
+  manha:'Manhã',tarde:'Tarde',noite:'Noite',
+  estetica:'Estética',qualidade_vida:'Qualidade de vida',bem_estar:'Bem-estar',autoestima:'Autoestima',esporte:'Esporte',
+  sim_pouco:'1 vez',sim_muito:'Várias vezes',
+};
+function anLbl(v){return AN_LABELS[v]||v}
+
 function renderAnamnese(sid){
   if(!alunoAtivo)return;const a=alunoAtivo;const an=a.anamnese||{};
   const el=document.getElementById('tabContent_anamnese_'+sid);if(!el)return;
+  const temDados=an&&Object.keys(an).length>0;
   const imc=calcIMC(an.peso,an.altura);
   const imcCor=!imc?'#3a3a3a':imc<18.5?'var(--blue)':imc<25?'var(--green)':imc<30?'var(--yellow)':'var(--red)';
   const imcLabel=!imc?'':imc<18.5?'Abaixo do peso':imc<25?'Peso normal':imc<30?'Sobrepeso':'Obesidade';
-  const parqH=PARQ_QUESTIONS.map((q,i)=>{const resp=(an.parq||[])[i];
-    return`<div class="an-parq-item"><div class="an-parq-question">${i+1}. ${q}</div><div class="an-parq-opts"><button class="an-parq-btn${resp==='sim'?' sim':''}" onclick="setParq('${sid}',${i},'sim',this)">Sim</button><button class="an-parq-btn${resp==='nao'?' nao':''}" onclick="setParq('${sid}',${i},'nao',this)">Não</button></div></div>`;
-  }).join('');
   const fotoH=a.foto?`<img src="${a.foto}" class="an-foto-circle" alt=""/>`:`<div class="an-foto-placeholder">📷</div>`;
-  el.innerHTML=`
+
+  // ── Bloco editável (campos que o personal ainda controla diretamente) ──
+  const editH=`
   <div class="an-foto-wrap">${fotoH}<div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px">${esc(a.nome)}</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="ac-btn" onclick="document.getElementById('fotoFileInput').click()">📷 Foto</button>${a.foto?`<button class="ac-btn danger" onclick="alunoAtivo.foto='';saveDB();renderAnamnese('${sid}');renderAlunoList();syncAlunoMeta(alunoAtivo)">Remover</button>`:''}</div></div></div>
-  <div class="an-section-title">Dados Pessoais</div>
+  <div class="an-section-title">Dados Pessoais (editável)</div>
   <div class="an-grid">
     <div class="an-field"><label>Peso (kg)</label><input id="an_peso_${sid}" type="number" step="0.1" placeholder="70.0" value="${an.peso||''}" oninput="atualizarIMC('${sid}')"/></div>
     <div class="an-field"><label>Altura (m)</label><input id="an_alt_${sid}" type="number" step="0.01" placeholder="1.75" value="${an.altura||''}" oninput="atualizarIMC('${sid}')"/></div>
     <div class="an-field"><label>Data de Nascimento</label><input id="an_nasc_${sid}" type="date" value="${an.nasc||''}"/></div>
-    <div class="an-field"><label>Sexo</label><select id="an_sexo_${sid}"><option value="">—</option><option${an.sexo==='M'?' selected':''} value="M">Masculino</option><option${an.sexo==='F'?' selected':''} value="F">Feminino</option></select></div>
-    <div class="an-field"><label>Dias/semana disponíveis</label><input id="an_dias_${sid}" type="number" placeholder="5" value="${an.dias||''}"/></div>
-    <div class="an-field"><label>Nível</label><select id="an_nivel_${sid}"><option value="">—</option><option${an.nivel==='Iniciante'?' selected':''}>Iniciante</option><option${an.nivel==='Intermediário'?' selected':''}>Intermediário</option><option${an.nivel==='Avançado'?' selected':''}>Avançado</option></select></div>
+    <div class="an-field"><label>Sexo</label><select id="an_sexo_${sid}"><option value="">—</option><option${an.sexo==='M'?' selected':''} value="M">Masculino</option><option${an.sexo==='F'?' selected':''} value="F">Feminino</option><option${an.sexo==='O'?' selected':''} value="O">Outro</option></select></div>
   </div>
   <div id="imcBadge_${sid}" class="imc-badge" style="background:${imcCor}22;color:${imcCor}"><span style="font-family:'Bebas Neue',sans-serif;font-size:28px" id="imcVal_${sid}">${imc?imc.toFixed(1):'—'}</span><div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em">IMC</div><div style="font-size:11px">${imcLabel}</div></div></div>
   <div class="an-section-title">Agenda</div>
   <div class="an-grid"><div class="an-field"><label>Próxima Avaliação Física</label><input id="an_proxAval_${sid}" type="date" value="${a.proximaAvaliacao||''}"/></div><div class="an-field"><label>Próxima Troca de Treino</label><input id="an_proxTroca_${sid}" type="date" value="${a.proximaTroca||''}"/></div></div>
-  <div class="an-section-title">Histórico de Saúde</div>
-  <div class="an-grid"><div class="an-field full"><label>Lesões / Cirurgias / Restrições Médicas</label><textarea id="an_lesoes_${sid}" placeholder="Ex: Lesão no joelho direito 2022, evitar agachamento profundo…">${an.lesoes||''}</textarea></div><div class="an-field full"><label>Medicamentos / Condições de Saúde</label><textarea id="an_saude_${sid}" placeholder="Ex: Hipertenso, usa losartana…">${an.saude||''}</textarea></div><div class="an-field full"><label>Objetivo detalhado</label><textarea id="an_objdet_${sid}" placeholder="Motivação, histórico de treino, rotina de vida…">${an.objdet||''}</textarea></div></div>
-  <div class="an-section-title">PAR-Q — Prontidão para Atividade Física</div>
-  ${parqH}
-  <button class="an-save-btn" onclick="salvarAnamnese('${sid}')">SALVAR ANAMNESE</button>`;
+  <button class="an-save-btn" onclick="salvarAnamnese('${sid}')">SALVAR ALTERAÇÕES</button>`;
+
+  if(!temDados){
+    el.innerHTML=editH+`<div class="an-empty-state" style="margin-top:18px"><div style="font-size:28px">📋</div><div style="font-size:12px;color:#666;font-weight:700">O aluno ainda não respondeu a anamnese</div><div style="font-size:11px;color:#3a3a3a;max-width:320px">Envie o link da anamnese pelo botão "📋 Anamnese" no menu lateral. Assim que o aluno responder, as informações completas aparecem aqui automaticamente.</div></div>`;
+    return;
+  }
+
+  // ── Bloco somente-leitura: tudo que o aluno respondeu no formulário novo ──
+  const updTxt=a.anamneseUpdatedAt?new Date(a.anamneseUpdatedAt).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}):null;
+  const box=(label,val,full)=>`<div class="an-read-box${full?' full':''}"><div class="an-read-box-label">${label}</div><div class="an-read-box-val${val?'':' empty'}">${val?esc(val):'Não informado'}</div></div>`;
+  const tags=(label,arr)=>`<div class="an-read-box full"><div class="an-read-box-label">${label}</div>${arr&&arr.length?`<div class="an-read-tags">${arr.map(v=>`<span class="an-read-tag">${anLbl(v)}</span>`).join('')}</div>`:'<div class="an-read-box-val empty">Não informado</div>'}</div>`;
+
+  const parqH=(an.parq||[]).some(Boolean)?PARQ_QUESTIONS.map((q,i)=>{
+    const r=an.parq?.[i];if(!r)return'';
+    return`<div class="an-parq-item"><div class="an-parq-question">${i+1}. ${q}</div><div class="an-parq-opts"><span class="an-parq-btn ${r}" style="cursor:default">${r==='sim'?'Sim':'Não'}</span></div></div>`;
+  }).join(''):`<div class="an-read-box-val empty">Não respondido</div>`;
+  const parqSimCount=(an.parq||[]).filter(r=>r==='sim').length;
+
+  el.innerHTML=editH+
+  (updTxt?`<div class="an-source-banner">✅ Respondido pelo aluno em ${updTxt}</div>`:'')+
+
+  `<div class="an-read-section">
+    <div class="an-read-title">👤 Identificação e Contato</div>
+    <div class="an-read-grid">
+      ${box('Profissão',an.profissao)}
+      ${box('Endereço / Cidade',an.endereco)}
+      ${box('Telefone',an.telefone)}
+      ${box('Contato de emergência',an.emerg_nome)}
+      ${box('Celular de emergência',an.emerg_tel,true)}
+    </div>
+  </div>
+
+  <div class="an-read-section">
+    <div class="an-read-title">❤️ Saúde</div>
+    <div class="an-read-grid">
+      ${box('Doenças crônicas',an.doencas,true)}
+      ${box('Lesões ou cirurgias',an.lesoes,true)}
+      ${box('Medicamentos em uso',an.medicamentos,true)}
+      ${box('Alergias',an.alergias,true)}
+      ${box('Pressão arterial',anLbl(an.pressao))}
+      ${box('Autorização médica',anLbl(an.autorizacao_medica))}
+    </div>
+    <div style="margin-top:10px">
+      <div class="an-read-box-label" style="margin-bottom:6px">📋 PAR-Q ${parqSimCount>0?`<span style="color:var(--red)">— ${parqSimCount} resposta(s) "Sim", atenção</span>`:''}</div>
+      ${parqH}
+    </div>
+  </div>
+
+  <div class="an-read-section">
+    <div class="an-read-title">☕ Estilo de Vida e Hábitos</div>
+    <div class="an-read-grid">
+      ${box('Nível de estresse',anLbl(an.estresse))}
+      ${box('Horas de sono',an.sono)}
+      ${box('Qualidade do sono',anLbl(an.qualidade_sono))}
+      ${box('Hidratação',anLbl(an.hidratacao))}
+      ${box('Tabagismo',anLbl(an.tabagismo))}
+      ${box('Consumo de álcool',anLbl(an.alcool))}
+      ${box('Rotina de trabalho',anLbl(an.trabalho))}
+      ${box('Alimentação',an.alimentacao,true)}
+      ${box('Suplementos',an.suplementos,true)}
+    </div>
+  </div>
+
+  <div class="an-read-section">
+    <div class="an-read-title">🏋️ Histórico de Exercícios</div>
+    <div class="an-read-grid">
+      ${box('Práticas anteriores',an.historico_ex,true)}
+      ${box('Tempo de prática',anLbl(an.tempo_treino))}
+      ${box('Nível de condicionamento',anLbl(an.nivel_cond))}
+      ${box('Limitações físicas',an.limitacoes,true)}
+      ${tags('Onde costuma treinar',an.local_treino)}
+      ${box('Equipamentos em casa',an.equipamentos,true)}
+      ${box('Exercícios favoritos',an.ex_favoritos,true)}
+      ${box('Exercícios que evita',an.ex_nao_gosta,true)}
+    </div>
+  </div>
+
+  <div class="an-read-section">
+    <div class="an-read-title">🎯 Objetivos e Metas</div>
+    <div class="an-read-grid">
+      ${box('Foco principal',anLbl(an.objetivo))}
+      ${box('Meta / resultado esperado',an.meta_resultado,true)}
+      ${box('Dias por semana',an.dias?an.dias+'x':'')}
+      ${box('Tempo por sessão',anLbl(an.tempo_sessao))}
+      ${box('Horário preferido',anLbl(an.horario))}
+      ${tags('Motivação',an.motivacao)}
+      ${box('Já fez acompanhamento antes',anLbl(an.personal_antes))}
+      ${box('Observações adicionais',an.obs_finais,true)}
+    </div>
+  </div>`;
 }
 function calcIMC(p,a){const pe=parseFloat(p),al=parseFloat(a);if(!pe||!al||al===0)return null;return pe/(al*al)}
 function atualizarIMC(sid){
@@ -1742,24 +1808,16 @@ function atualizarIMC(sid){
   const cor=imc<18.5?'var(--blue)':imc<25?'var(--green)':imc<30?'var(--yellow)':'var(--red)';
   val.textContent=imc.toFixed(1);badge.style.background=cor.replace('var(','').replace(')','')+'22';badge.style.color=cor;
 }
-function setParq(sid,idx,val,btn){
-  if(!alunoAtivo.anamnese)alunoAtivo.anamnese={};if(!alunoAtivo.anamnese.parq)alunoAtivo.anamnese.parq=[];
-  alunoAtivo.anamnese.parq[idx]=val;saveDB();
-  const wrap=btn.closest('.an-parq-opts');wrap.querySelectorAll('.an-parq-btn').forEach(b=>b.classList.remove('sim','nao'));btn.classList.add(val);
-}
 function salvarAnamnese(sid){
   if(!alunoAtivo)return;if(!alunoAtivo.anamnese)alunoAtivo.anamnese={};const an=alunoAtivo.anamnese;
-  an.peso=document.getElementById('an_peso_'+sid)?.value||'';an.altura=document.getElementById('an_alt_'+sid)?.value||'';
-  an.nasc=document.getElementById('an_nasc_'+sid)?.value||'';an.sexo=document.getElementById('an_sexo_'+sid)?.value||'';
-  an.dias=document.getElementById('an_dias_'+sid)?.value||'';an.nivel=document.getElementById('an_nivel_'+sid)?.value||'';
-  an.lesoes=document.getElementById('an_lesoes_'+sid)?.value||'';an.saude=document.getElementById('an_saude_'+sid)?.value||'';
-  an.objdet=document.getElementById('an_objdet_'+sid)?.value||'';
+  an.peso=document.getElementById('an_peso_'+sid)?.value||an.peso||'';an.altura=document.getElementById('an_alt_'+sid)?.value||an.altura||'';
+  an.nasc=document.getElementById('an_nasc_'+sid)?.value||an.nasc||'';an.sexo=document.getElementById('an_sexo_'+sid)?.value||an.sexo||'';
   alunoAtivo.proximaAvaliacao=document.getElementById('an_proxAval_'+sid)?.value||'';
   alunoAtivo.proximaTroca=document.getElementById('an_proxTroca_'+sid)?.value||'';
   alunoAtivo.updatedAt=new Date().toISOString();saveDB();renderAlunoList();
   const btn=document.querySelector('.an-save-btn');
   if(btn){btn.textContent='💾 Salvando...';btn.disabled=true}
-  syncAlunoMeta(alunoAtivo).then(ok=>{if(btn){btn.textContent=ok?'✅ Salvo!':'❌ Erro ao salvar';btn.disabled=false;setTimeout(()=>btn.textContent='SALVAR ANAMNESE',1800)}});
+  syncAlunoMeta(alunoAtivo).then(ok=>{if(btn){btn.textContent=ok?'✅ Salvo!':'❌ Erro ao salvar';btn.disabled=false;setTimeout(()=>btn.textContent='SALVAR ALTERAÇÕES',1800)}});
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1974,12 +2032,15 @@ function renderCargaTabela(sid){
 function renderDiario(sid){
   if(!alunoAtivo)return;const el=document.getElementById('tabContent_diario_'+sid);if(!el)return;
   const hoje=new Date().toISOString().split('T')[0];const ents=(alunoAtivo.diario||[]).sort((a,b)=>b.data.localeCompare(a.data));
-  el.innerHTML=`<div class="diario-add-form"><input class="carga-inp" type="date" id="diarioData_${sid}" value="${hoje}"/><textarea class="diario-ta" id="diarioTxt_${sid}" placeholder="Ex: Aluno relatou dor no joelho. Ajustamos o agachamento. Aumentou 5kg no supino."></textarea><button class="diario-save-btn" onclick="addDiario('${sid}')">Salvar</button></div><div class="diario-list">${ents.length?ents.map(e=>`<div class="diario-entry"><div class="diario-entry-header"><span class="diario-entry-date">${e.data.split('-').reverse().join('/')}</span><button class="diario-entry-del" onclick="delDiario('${sid}','${e.id}')">✕</button></div><div class="diario-entry-text">${esc(e.texto)}</div></div>`).join(''):'<div style="font-size:12px;color:#2a2a2a;padding:16px 0;text-align:center">Nenhuma anotação ainda.</div>'}</div>`;
+  el.innerHTML=`<div class="diario-add-form"><input class="carga-inp" type="date" id="diarioData_${sid}" value="${hoje}"/><textarea class="diario-ta" id="diarioTxt_${sid}" placeholder="Ex: Aluno relatou dor no joelho. Ajustamos o agachamento. Aumentou 5kg no supino."></textarea><button class="diario-save-btn" onclick="addDiario('${sid}')">Salvar</button></div><div class="diario-list">${ents.length?ents.map(e=>{
+    const autor=e.autor||'personal';
+    return`<div class="diario-entry"><div class="diario-entry-header"><span class="diario-entry-date">${e.data.split('-').reverse().join('/')}<span class="diario-entry-author ${autor}">${autor==='aluno'?'Aluno':'Você'}</span></span><button class="diario-entry-del" onclick="delDiario('${sid}','${e.id}')">✕</button></div><div class="diario-entry-text">${esc(e.texto)}</div></div>`;
+  }).join(''):'<div style="font-size:12px;color:#2a2a2a;padding:16px 0;text-align:center">Nenhuma anotação ainda.</div>'}</div>`;
 }
 function addDiario(sid){
   const data=document.getElementById('diarioData_'+sid)?.value;const texto=(document.getElementById('diarioTxt_'+sid)?.value||'').trim();
   if(!texto)return;if(!alunoAtivo.diario)alunoAtivo.diario=[];
-  const d={id:'d'+Date.now(),data,texto};alunoAtivo.diario.push(d);alunoAtivo.updatedAt=new Date().toISOString();saveDB();renderDiario(sid);
+  const d={id:'d'+Date.now(),data,texto,autor:'personal'};alunoAtivo.diario.push(d);alunoAtivo.updatedAt=new Date().toISOString();saveDB();renderDiario(sid);
   syncDiarioSupabase(alunoAtivo.id,d);
 }
 function delDiario(sid,did){if(!alunoAtivo)return;alunoAtivo.diario=(alunoAtivo.diario||[]).filter(d=>d.id!==did);saveDB();renderDiario(sid);deletarDiarioSupabase(did)}
