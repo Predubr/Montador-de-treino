@@ -1059,7 +1059,20 @@ async function carregarDoSupabase(){
   return true;
 }
 
-async function deletarAlunoSupabase(id){ await sbDelete('alunos', id); }
+async function deletarAlunoSupabase(id){
+  // Limpa todas as tabelas relacionadas antes de apagar o registro do aluno,
+  // senão linhas órfãs podem fazer o aluno "reaparecer" parcialmente em
+  // recarregamentos futuros.
+  await sbDeleteWhere('exercicios','aluno_id',id);
+  await sbDeleteWhere('series','aluno_id',id);
+  await sbDeleteWhere('semanas','aluno_id',id);
+  await sbDeleteWhere('fichas','aluno_id',id);
+  await sbDeleteWhere('avaliacoes','aluno_id',id);
+  await sbDeleteWhere('diario','aluno_id',id);
+  await sbDeleteWhere('metas','aluno_id',id);
+  await sbDeleteWhere('fotos_evolucao','aluno_id',id);
+  return await sbDelete('alunos', id);
+}
 
 const MW_BUILTIN=[
   {nome:'Supino Reto (Barra)',musculo:'Peito',slug:'barbell-bench-press'},
@@ -1169,7 +1182,22 @@ async function criarAluno(){
   db.alunos.push(a);saveDB();fecharModal();renderAlunoList();selecionarAluno(a.id);
   await syncAlunoParaSupabase(a);
 }
-function deletarAluno(id,e){e.stopPropagation();const a=db.alunos.find(x=>x.id===id);if(!confirm('Remover '+( a?.nome||'aluno')+'?'))return;db.alunos=db.alunos.filter(x=>x.id!==id);saveDB();deletarAlunoSupabase(id);if(alunoAtivo?.id===id){alunoAtivo=null;renderEmpty()}renderAlunoList()}
+async function deletarAluno(id,e){
+  e.stopPropagation();
+  const a=db.alunos.find(x=>x.id===id);
+  if(!confirm('Remover '+(a?.nome||'aluno')+'?'))return;
+  const backup=db.alunos;
+  db.alunos=db.alunos.filter(x=>x.id!==id);saveDB();
+  if(alunoAtivo?.id===id){alunoAtivo=null;renderEmpty()}
+  renderAlunoList();
+  const ok=await deletarAlunoSupabase(id);
+  if(!ok){
+    // Falhou no servidor: restaura localmente e avisa, para não dar
+    // falsa sensação de que o aluno foi removido.
+    db.alunos=backup;saveDB();renderAlunoList();
+    showErrorBanner('Não foi possível remover "'+(a?.nome||'aluno')+'" no servidor. Tente novamente.');
+  }
+}
 
 function renderAlunoList(){
   const el=document.getElementById('alunoList');
@@ -1463,12 +1491,26 @@ document.getElementById('brandLogo').textContent=db.consultoria||'PH PERFORMANCE
 document.getElementById('emptyLogo').textContent=db.consultoria||'PH PERFORMANCE';
 renderAlunoList();
 mostrarDashboard();
-carregarDoSupabase().then(loaded=>{
-  if(loaded){
+carregarDoSupabase()
+  .then(loaded=>{
+    // Sempre re-renderiza, independente do retorno, para nunca travar
+    // a tela em "Carregando..." silenciosamente.
     renderAlunoList();
-    if(alunoAtivo){const id=alunoAtivo.id;alunoAtivo=db.alunos.find(x=>x.id===id);if(alunoAtivo)selecionarAluno(id);else mostrarDashboard()}
-  }
-});
+    if(alunoAtivo){
+      const id=alunoAtivo.id;
+      alunoAtivo=db.alunos.find(x=>x.id===id);
+      if(alunoAtivo)selecionarAluno(id);else mostrarDashboard();
+    }else{
+      mostrarDashboard();
+    }
+  })
+  .catch(e=>{
+    console.error('Falha ao carregar do Supabase:',e);
+    showErrorBanner('Erro ao carregar dados iniciais: '+e.message+'. Tente recarregar a página (F5).');
+    setSyncStatus('error');
+    renderAlunoList();
+    mostrarDashboard();
+  });
 </script>
 
 <!-- Modal editar banco de exercícios -->
