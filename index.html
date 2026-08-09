@@ -1533,7 +1533,7 @@ function gerarPDF(){
   <style>
     :root{--accent:#c9a84c;--bg:#0e0e0e;--bg2:#161616;--bg3:#1e1e1e;--border:#2a2a2a;--text:#f5f3ee;--muted:#888}
     @page{margin:14mm 12mm}
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
     body{font-family:'Space Grotesk',sans-serif;color:var(--text);background:var(--bg);margin:0;padding:28px 34px}
     .pdf-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--accent);padding-bottom:16px;margin-bottom:26px}
     .pdf-brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--accent)}
@@ -1556,33 +1556,24 @@ function gerarPDF(){
     .pdf-exlink:hover{opacity:.8}
     .pdf-link-ic{font-size:10px}
     .pdf-footer{margin-top:30px;font-size:10px;color:var(--muted);text-align:center;border-top:1px solid var(--border);padding-top:12px}
-    .pdf-noprint{position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:99}
-    .pdf-noprint button{padding:10px 18px;border-radius:9px;border:none;font-weight:700;font-size:13px;cursor:pointer;font-family:'Space Grotesk',sans-serif}
+    .pdf-noprint{position:fixed;top:16px;right:16px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:99;max-width:260px}
+    .pdf-noprint button{padding:10px 18px;border-radius:9px;border:none;font-weight:700;font-size:13px;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
     .pdf-btn-print{background:var(--accent);color:#111}
     .pdf-btn-close{background:var(--bg3);color:var(--text);border:1px solid var(--border)!important}
+    .pdf-hint{font-size:10px;color:var(--muted);text-align:right;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;line-height:1.4}
 
-    /* Impressão / Salvar como PDF: força fundo claro para não gastar tinta e ficar legível no papel */
+    /* Impressão / Salvar como PDF: mantém o mesmo tema escuro do site, só some com os botões */
     @media print{
       .pdf-noprint{display:none}
-      body{background:#fff;color:#1a1a1a}
-      .pdf-header{border-bottom-color:#1a1a1a}
-      .pdf-brand{color:#8a7326}
-      .pdf-aluno{color:#1a1a1a}
-      .pdf-meta{color:#666}
-      .pdf-serie{background:#fff;border-color:#ddd}
-      .pdf-serie-name{color:#1a1a1a}
-      .pdf-serie-grupos{color:#888}
-      .pdf-table th{background:#f2f2f2;color:#555;border-bottom-color:#ddd}
-      .pdf-table td{color:#1a1a1a;border-bottom-color:#eee}
-      .pdf-td-num,.pdf-td-obs,.pdf-empty{color:#777}
-      .pdf-serie-badge{color:#111}
-      .pdf-exlink{color:#8a7326;border-bottom-color:#8a7326}
-      .pdf-footer{color:#999;border-top-color:#eee}
+      .pdf-serie{break-inside:avoid}
     }
   </style></head><body>
     <div class="pdf-noprint">
-      <button class="pdf-btn-print" onclick="window.print()">🖨️ Salvar PDF</button>
-      <button class="pdf-btn-close" onclick="window.close()">Fechar</button>
+      <div class="pdf-hint">No diálogo que abrir, ative "Gráficos de segundo plano" (em "Mais configurações") para o fundo sair preto</div>
+      <div style="display:flex;gap:8px">
+        <button class="pdf-btn-print" onclick="window.print()">🖨️ Salvar PDF</button>
+        <button class="pdf-btn-close" onclick="window.close()">Fechar</button>
+      </div>
     </div>
     <div class="pdf-header">
       <div>
