@@ -1532,9 +1532,10 @@ function gerarPDF(){
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     :root{--accent:#c9a84c;--bg:#0e0e0e;--bg2:#161616;--bg3:#1e1e1e;--border:#2a2a2a;--text:#f5f3ee;--muted:#888}
-    @page{margin:14mm 12mm}
+    @page{margin:0}
     *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
-    body{font-family:'Space Grotesk',sans-serif;color:var(--text);background:var(--bg);margin:0;padding:28px 34px}
+    html{background:var(--bg)}
+    body{font-family:'Space Grotesk',sans-serif;color:var(--text);background:var(--bg);margin:0;padding:20mm 16mm;min-height:100vh}
     .pdf-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--accent);padding-bottom:16px;margin-bottom:26px}
     .pdf-brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--accent)}
     .pdf-aluno{font-size:24px;font-weight:800;margin-top:6px;color:var(--text)}
