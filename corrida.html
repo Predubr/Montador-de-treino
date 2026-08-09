@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PH Performance · Corrida</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#14161A;font-family:'Inter',system-ui,sans-serif;color:#EEF0EA}
+.pz-display{font-family:'Oswald',sans-serif}
+.pz-mono{font-family:'JetBrains Mono',monospace}
+input.pz-input,textarea.pz-input,select.pz-input{
+  background:#1D2025;border:1px solid rgba(238,240,234,0.15);color:#EEF0EA;
+  border-radius:6px;padding:8px 10px;font-size:13.5px;width:100%;outline:none;
+  transition:border-color .15s ease;font-family:'Inter',sans-serif
+}
+input.pz-input:focus,textarea.pz-input:focus,select.pz-input:focus{border-color:#D4FF3D}
+input.pz-input::placeholder,textarea.pz-input::placeholder{color:#6B6F68}
+select.pz-input{-webkit-appearance:none;appearance:none}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:3px}
+#loadScreen{position:fixed;inset:0;background:#14161A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
+.spinner{width:32px;height:32px;border:3px solid #1D2025;border-top-color:#D4FF3D;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1D2025;border:1px solid #2a2a2a;border-radius:30px;padding:9px 18px;font-size:12px;font-weight:600;color:#EEF0EA;z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+@media print{
+  body *{visibility:hidden}
+  .pz-print-area,.pz-print-area *{visibility:visible}
+  .pz-print-area{position:absolute;left:0;top:0;width:100%}
+  .pz-no-print{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<div id="loadScreen">
+  <div style="font-size:13px;font-weight:900;color:#D4FF3D;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">PH Performance · Corrida</div>
+  <div class="spinner"></div>
+  <div style="font-size:12px;color:#B9BDB2" id="loadMsg">Carregando...</div>
+</div>
+
+<div id="toast"></div>
+
+<div id="app" style="display:none"></div>
+
+<datalist id="bank-codes-list"></datalist>
+
+<script>
+const C = {
+  ink: "#14161A",
+  ink2: "#1D2025",
+  paper: "#EEF0EA",
+  paperDim: "#B9BDB2",
+  hivis: "#D4FF3D",
+  hivisDim: "#9DB32B",
+  blue: "#4FB2E8",
+  red: "#FF5C5C",
+  line: "rgba(238,240,234,0.12)",
+};
+
+const TYPES = {
+  off: { label: "Off", bg: "transparent", border: "1px dashed rgba(238,240,234,0.15)", tagBg: "transparent", tagColor: C.paperDim },
+  easy: { label: "Fácil", bg: "rgba(79,178,232,0.25)", border: `1px solid ${C.blue}`, tagBg: "rgba(79,178,232,0.15)", tagColor: C.blue },
+  quality: { label: "Qualidade", bg: "rgba(212,255,61,0.22)", border: `1px solid ${C.hivis}`, tagBg: "rgba(212,255,61,0.15)", tagColor: C.hivis },
+  long: { label: "Longo", bg: "rgba(157,179,43,0.3)", border: `1px solid ${C.hivisDim}`, tagBg: "rgba(157,179,43,0.2)", tagColor: C.hivisDim },
+  race: { label: "Prova", bg: "rgba(255,92,92,0.25)", border: `1px solid ${C.red}`, tagBg: "rgba(255,92,92,0.15)", tagColor: C.red },
+};
+const TYPE_KEYS = Object.keys(TYPES);
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+/* ------------------------------------------------------------------ */
+/*  Banco de treinos — taxonomia (igual à aba FONTE da planilha)       */
+/* ------------------------------------------------------------------ */
+const BANK_TYPE_TO_PLAN_TYPE = {
+  PROVA: "race",
+  LONGO: "long",
+  INTERVALADO: "quality",
+  RITMO: "quality",
+  TESTE: "quality",
+  PROGRESSIVO: "quality",
+  FARTLEK: "quality",
+  RODAGEM: "easy",
+  TROTE: "easy",
+  MISTO: "easy",
+  INICIANTE: "easy",
+  REGENERATIVO: "easy",
+  EDUCATIVOS: "easy",
+};
+const BANK_TYPE_OPTIONS = Object.keys(BANK_TYPE_TO_PLAN_TYPE);
+
+/* ------------------------------------------------------------------ */
+/*  Banco de treinos prontos — extraído da aba TREINOS da planilha     */
+/*  RX-PRO (código · tipo · aquecimento · parte principal · volta à    */
+/*  calma · distância estimada em km). Serve de seed inicial; tudo é   */
+/*  editável, e o usuário pode adicionar/remover treinos livremente.   */
+/* ------------------------------------------------------------------ */
+const BANK_SEED = [{"id":"seed-0","code":"FAR10-700X300","type":"FARTLEK","warmup":"5 MIN TROTE","main":"10KM INTERCALANDO 700M FORTE(Z4) X 300M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":11.63},{"id":"seed-1","code":"FAR12-1KMX1KM","type":"FARTLEK","warmup":"5 MIN TROTE","main":"12KM INTERCALANDO 1KM FORTE(Z4) X 1KM LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":13.63},{"id":"seed-2","code":"FAR12-2KMX1KM","type":"FARTLEK","warmup":"5 MIN TROTE","main":"12KM INTERCALANDO 2KM FORTE(Z4) X 1KM LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":13.63},{"id":"seed-3","code":"FAR12-3KMX3KM","type":"FARTLEK","warmup":"5 MIN TROTE","main":"12KM INTERCALANDO 3KM FORTE(Z4) X 3KM LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":13.63},{"id":"seed-4","code":"FAR12-500X500","type":"FARTLEK","warmup":"5 MIN TROTE","main":"12KM INTERCALANDO 500M FORTE(Z4) X 500M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":13.63},{"id":"seed-5","code":"FAR12-600X600","type":"FARTLEK","warmup":"5 MIN TROTE","main":"12KM INTERCALANDO 600M FORTE(Z4) X 600M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":13.63},{"id":"seed-6","code":"FAR6-300X300","type":"FARTLEK","warmup":"5 MIN TROTE","main":"6KM INTERCALANDO 300M FORTE(Z4) X 300M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-7","code":"FAR6-400X200","type":"FARTLEK","warmup":"5 MIN TROTE","main":"6KM INTERCALANDO 400M FORTE(Z4) X 200M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-8","code":"FAR6-400X400","type":"FARTLEK","warmup":"5 MIN TROTE","main":"6KM INTERCALANDO 400M FORTE(Z4) X 400M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-9","code":"FAR6-500X500","type":"FARTLEK","warmup":"5 MIN TROTE","main":"6KM INTERCALANDO 500M FORTE(Z4) X 500M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-10","code":"FAR6-600X600","type":"FARTLEK","warmup":"5 MIN TROTE","main":"6KM INTERCALANDO 600M FORTE(Z4) X 600M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-11","code":"FAR7KM-2'X2'","type":"FARTLEK","warmup":"5 MIN TROTE","main":"7KM INTERCALANDO 200M FORTE (Z4) X 200M LEVE (Z2)","cooldown":"5 MIN TROTE","estKm":8.63},{"id":"seed-12","code":"FAR8-400X400","type":"FARTLEK","warmup":"5 MIN TROTE","main":"8KM INTERCALANDO 400M FORTE(Z4) X 400M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-13","code":"FAR8-500X300","type":"FARTLEK","warmup":"5 MIN TROTE","main":"8KM INTERCALANDO 500M FORTE(Z4) X 300M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-14","code":"FAR8-500X500","type":"FARTLEK","warmup":"5 MIN TROTE","main":"8KM INTERCALANDO 500M FORTE(Z4) X 500M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-15","code":"FAR8-600X200","type":"FARTLEK","warmup":"5 MIN TROTE","main":"8KM INTERCALANDO 600M FORTE(Z4) X 200M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-16","code":"FAR8-800X800","type":"FARTLEK","warmup":"5 MIN TROTE","main":"8KM INTERCALANDO 800M FORTE(Z4) X 800M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-17","code":"Flamengo","type":"PROVA","warmup":"","main":"","cooldown":"","estKm":null},{"id":"seed-18","code":"INI35-1'X1'","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"35 MIN: 1' CORRIDA LEVE X 1' CAMINHANDO","cooldown":"5 MIN CAMINHANDO","estKm":6.73},{"id":"seed-19","code":"INI40-3'X1'","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"40 MINUTOS INTERCALANDO 3' CORRENDO X 1' CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":7.69},{"id":"seed-20","code":"INI45-1'X1'","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"45 MINUTOS INTERCALANDO 1' CORRENDO UM POUCO MAIS FORTE X 1' CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":8.75},{"id":"seed-21","code":"INI4KM-200X200","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"4KM INTERCALANDO 200M CORRENDO LEVE X 200 M CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":5.41},{"id":"seed-22","code":"INI4KM-300X200","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"4KM INTERCALANDO 300M CORRENDO X 200M CAMINHANDO","cooldown":"5 MIN CAMINHANDO","estKm":5.41},{"id":"seed-23","code":"INI50-4'X1'","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"50 MIN INTERCALANDO 4' CORRIDA X 1' CAMINHADA","cooldown":"5 MIN CAMINHADA","estKm":11.33},{"id":"seed-24","code":"INI5K-100X100|300X200","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"3KM - 100M CORRENDO x100M CAMINHANDO. 2 KM - 300M CORRENDO X 200M CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-25","code":"INI5K-700MX300M","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"5KM INTERCALANDO 700 M CORRENDO X 300M CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-26","code":"INI5KM-100FX100","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"5KM INTERCALANDO 100M FORTE X 100M CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-27","code":"INI5KM-2,5KMX4' PARADO","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"2,5KM CORRENDO + 4 ' PARADO + 2,5KM CORRENDO","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-28","code":"INI5KM-400X100","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"5KM INTERCALANDO 400M CORRIDA X 100M CAMINHADA","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-29","code":"INI5KM-4'X1'","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"5KM INTERCALANDO 4' CORRIDA X 1' CAMINHADA","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-30","code":"INI5KM-800X200","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"5KM INTERCALANDO 800M CORRENDO X 200M CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-31","code":"INI5KM-900X100","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"5KM INTERCALANDO 900M DE CORRIDA X 100M DE CAMINHADA","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-32","code":"INI5KM-TESTE","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"5KM CORRENDO, SEMPRE QUE PRECISAR CAMINHAR FAÇA POR 1'.","cooldown":"5 MIN CAMINHADA","estKm":6.41},{"id":"seed-33","code":"INI6K-400X200","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"6KM INTERCALANDO 400M CORRIDA X 200M CAMINHADA.","cooldown":"5 MIN CAMINHADA","estKm":7.41},{"id":"seed-34","code":"INI6KM-1800X200","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"6KM INTERCALANDO 1,8KM CORRENDO X 200M CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":7.41},{"id":"seed-35","code":"INI6KM-1KMX200M","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"5 X (1KM CORRENDO X 200M CAMINHANDO)","cooldown":"5MIN CAMINHADA","estKm":7.41},{"id":"seed-36","code":"INI6KM-200FX200","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"6KM INTERCALANDO 200M CORRENDO MAIS FORTE X 200M CAMINHANDO","cooldown":"5 MIN CAMINHADA","estKm":7.41},{"id":"seed-37","code":"INI6KM-400F X 100","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"6KM INTERCALANDO 400M MAIS FORTE X 100M CAMINHANDO","cooldown":"5MIN CAMINHADA","estKm":7.41},{"id":"seed-38","code":"INI6KM-500X100","type":"INICIANTE","warmup":"5 MIN CAMINHADA","main":"6KM INTERCALANDO 500M CORRENDO  X 100M CAMINHANDO","cooldown":"5 MIN CAMINHANDO","estKm":7.41},{"id":"seed-39","code":"INT10-1KMX2'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"10 TIROS DE 1KM (Z5) x RECUPERAÇÃO 2 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":11.63},{"id":"seed-40","code":"INT10-2KMX5'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"5 TIROS DE 2KM (Z5) x RECUPERAÇÃO 5 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":11.63},{"id":"seed-41","code":"INT10-300X200","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"10KM - TIROS DE 300M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":11.81},{"id":"seed-42","code":"INT10-400X100","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"10KM - TIROS DE 400M (Z5) x RECUPERAÇÃO DE 100M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":11.81},{"id":"seed-43","code":"INT10-700X300","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"10KM - TIROS DE 700M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":11.81},{"id":"seed-44","code":"INT10-800X200","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"10KM - TIROS DE 800M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":11.81},{"id":"seed-45","code":"INT40MIN-1'X1'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"40 MIN - TIROS DE 1' (Z5) x RECUPERAÇÃO DE 1' (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":9.4},{"id":"seed-46","code":"INT40MIN-2'X2'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"40 MIN - TIROS DE 2' (Z5) x RECUPERAÇÃO DE 2' (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":9.4},{"id":"seed-47","code":"INT40MIN-3'X2'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"40 MIN - TIROS DE 3' (Z5) x RECUPERAÇÃO DE 2' (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":9.94},{"id":"seed-48","code":"INT40MIN-4'X1'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"40 MIN - TIROS DE 4' (Z5) x RECUPERAÇÃO DE 1' (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":10.21},{"id":"seed-49","code":"INT6-100X100","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"6KM - TIROS DE 100M (Z5) x RECUPERAÇÃO DE 100M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-50","code":"INT6-200X200","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"6KM - TIROS DE 200M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-51","code":"INT6-2KMX5'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"3 TIROS DE 2KM (Z5) x RECUPERAÇÃO 5 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-52","code":"INT6-300X200","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"6KM - TIROS DE 300M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-53","code":"INT6-3KMX6'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"2 TIROS DE 3KM (Z5) x RECUPERAÇÃO 6 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-54","code":"INT6-400X1'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"15 X TIROS DE 400M (Z5) X 1 MIN RECUPERANDO PARADO","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-55","code":"INT6-400X100","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"6KM - TIROS DE 400M (Z5) x RECUPERAÇÃO DE 100M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-56","code":"INT6-400X200","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"6KM - TIROS DE 400M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-57","code":"INT6-500X1'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"12 X TIROS DE 500M (Z5) X 1 MIN RECUPERANDO PARADO","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-58","code":"INT6-500X100","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"6KM - TIROS DE 500M (Z5) x RECUPERAÇÃO DE 100M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-59","code":"INT7-100X100","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"7KM - TIROS DE 100M (Z5) x RECUPERAÇÃO DE 100M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":8.63},{"id":"seed-60","code":"INT7-1KMX2'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"7 TIROS DE 1KM (Z5) x RECUPERAÇÃO 2 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":8.63},{"id":"seed-61","code":"INT7-400X300","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"7KM - TIROS DE 400M (Z5) x RECUPERAÇÃO DE 300M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":8.63},{"id":"seed-62","code":"INT7-500X200","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"7KM - TIROS DE 500M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":8.63},{"id":"seed-63","code":"INT7-600X100","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"7KM - TIROS DE 600M (Z5) x RECUPERAÇÃO DE 100M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":8.63},{"id":"seed-64","code":"INT8-1KMX2'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"8 TIROS DE 1KM (Z5) x RECUPERAÇÃO 2 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-65","code":"INT8-200X200","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"8KM - TIROS DE 200M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":9.81},{"id":"seed-66","code":"INT8-2KMX5'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"4 TIROS DE 2KM (Z5) x RECUPERAÇÃO 5 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-67","code":"INT8-300X200","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"8KM - TIROS DE 300M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":9.81},{"id":"seed-68","code":"INT8-400X100","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"8KM - TIROS DE 400M (Z5) x RECUPERAÇÃO DE 100M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":9.81},{"id":"seed-69","code":"INT8-4KMX7'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"2 TIROS DE 4KM (Z5) x RECUPERAÇÃO 7 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-70","code":"INT8-600X200","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"8KM - TIROS DE 600M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":9.81},{"id":"seed-71","code":"INT9-1KMX2'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"9 TIROS DE 1KM (Z5) x RECUPERAÇÃO 2 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":10.63},{"id":"seed-72","code":"INT9-3KMX6'","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"3 TIROS DE 3KM (Z5) x RECUPERAÇÃO 6 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":10.63},{"id":"seed-73","code":"LON16","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 16KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":16.0},{"id":"seed-74","code":"LON17","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 17KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":17.0},{"id":"seed-75","code":"LON18","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 18KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":18.0},{"id":"seed-76","code":"LON19","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 19KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":19.0},{"id":"seed-77","code":"LON20","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 20KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":20.0},{"id":"seed-78","code":"LON21","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 21KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":21.0},{"id":"seed-79","code":"LON22","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 22KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":22.0},{"id":"seed-80","code":"LON23","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 23KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":23.0},{"id":"seed-81","code":"LON24","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 24KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":24.0},{"id":"seed-82","code":"LON25","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 25KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":25.0},{"id":"seed-83","code":"LON26","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 26KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":26.0},{"id":"seed-84","code":"LON27","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 27KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":27.0},{"id":"seed-85","code":"LON28","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 28KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":28.0},{"id":"seed-86","code":"LON29","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 29KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":29.0},{"id":"seed-87","code":"LON30","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 30KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":30.0},{"id":"seed-88","code":"LON31","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 31KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":31.0},{"id":"seed-89","code":"LON32","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 32KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":32.0},{"id":"seed-90","code":"LON33","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 33KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":33.0},{"id":"seed-91","code":"LON34","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 34KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":34.0},{"id":"seed-92","code":"LON35","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 35KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":35.0},{"id":"seed-93","code":"LON36","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 36KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":36.0},{"id":"seed-94","code":"LON37","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 37KM ENTRE Z2 E Z3","cooldown":"NÃO","estKm":37.0},{"id":"seed-95","code":"LON39","type":"LONGO","warmup":"NÃO","main":"RODAGEM DE 39KM EM RITMO CONFORTÁVEL","cooldown":"NÃO","estKm":39.0},{"id":"seed-96","code":"MARAT","type":"PROVA","warmup":"Não","main":"42KM DE CORRIDA","cooldown":"NÃO","estKm":42.0},{"id":"seed-97","code":"MEIA","type":"PROVA","warmup":"NÃO","main":"21KM DE CORRIDA","cooldown":"NÃO","estKm":21.0},{"id":"seed-98","code":"PIR7k - 2|1|1|1|2","type":"MISTO","warmup":"NÃO","main":"2KM - LEVE (Z2) + 1KM MODERADO (Z3) + 1 KM FORTE (Z4) + 1KM MODERADO (Z3) + 2KM LEVE (Z2)","cooldown":"5 MIN TROTE","estKm":7.81},{"id":"seed-99","code":"PRO10-1KM","type":"PROGRESSIVO","warmup":"NÃO","main":"10KM AUMENTANDO INTENSIDADE A CADA 1 KM","cooldown":"5 MIN TROTE","estKm":10.81},{"id":"seed-100","code":"PRO10-2KM","type":"PROGRESSIVO","warmup":"NÃO","main":"10KM AUMENTANDO INTENSIDADE A CADA 2 KM","cooldown":"5 MIN TROTE","estKm":10.81},{"id":"seed-101","code":"PRO12-1KM","type":"PROGRESSIVO","warmup":"NÃO","main":"12KM AUMENTANDO INTENSIDADE A CADA 1 KM","cooldown":"5 MIN TROTE","estKm":12.81},{"id":"seed-102","code":"PRO12-2KM","type":"PROGRESSIVO","warmup":"NÃO","main":"12KM AUMENTANDO INTENSIDADE A CADA 2 KM","cooldown":"5 MIN TROTE","estKm":12.81},{"id":"seed-103","code":"PRO12-3KM","type":"PROGRESSIVO","warmup":"NÃO","main":"12KM AUMENTANDO INTENSIDADE A CADA 3 KM","cooldown":"5 MIN TROTE","estKm":12.81},{"id":"seed-104","code":"PRO12-4KM","type":"PROGRESSIVO","warmup":"NÃO","main":"12KM AUMENTANDO INTENSIDADE A CADA 4 KM","cooldown":"5 MIN TROTE","estKm":12.81},{"id":"seed-105","code":"PRO16-4KM","type":"PROGRESSIVO","warmup":"NÃO","main":"16KM AUMENTANDO INTENSIDADE A CADA 4 KM","cooldown":"5 MIN TROTE","estKm":16.81},{"id":"seed-106","code":"PRO30-10|10|10","type":"PROGRESSIVO","warmup":"NÃO","main":"10' LEVE (Z2) + 10' MODERADO (Z3) + 10' FORTE (Z4)","cooldown":"5 MIN TROTE","estKm":6.34},{"id":"seed-107","code":"PRO30MIN","type":"PROGRESSIVO","warmup":"5 MIN TROTE","main":"RODAR: 10 MIN EM Z2 (LEVE), 10MIN EM Z3 (MODERADO) E 10 MIN EM Z4 (FORTE)","cooldown":"NÃO","estKm":6.34},{"id":"seed-108","code":"PRO40-20|10|10","type":"PROGRESSIVO","warmup":"NÃO","main":"20' LEVE (Z2) + 10' MODERADO (Z3) + 10' FORTE (Z4)","cooldown":"5 MIN TROTE","estKm":7.97},{"id":"seed-109","code":"PRO50-20|20|10","type":"PROGRESSIVO","warmup":"NÃO","main":"20' LEVE (Z2) + 20' MODERADO (Z3) + 10' FORTE (Z4)","cooldown":"5 MIN TROTE","estKm":9.81},{"id":"seed-110","code":"PRO60-20|20|20","type":"PROGRESSIVO","warmup":"NÃO","main":"20' LEVE (Z2) + 20' MODERADO (Z3) + 20' FORTE (Z4)","cooldown":"5 MIN TROTE","estKm":11.87},{"id":"seed-111","code":"PRO6-2KM","type":"PROGRESSIVO","warmup":"NÃO","main":"6KM AUMENTANDO INTENSIDADE A CADA 2 KM","cooldown":"5 MIN TROTE","estKm":6.81},{"id":"seed-112","code":"PRO7-1KM","type":"PROGRESSIVO","warmup":"NÃO","main":"7KM AUMENTANDO INTENSIDADE A CADA 1 KM","cooldown":"5 MIN TROTE","estKm":7.81},{"id":"seed-113","code":"PRO8-1KM","type":"PROGRESSIVO","warmup":"NÃO","main":"8KM AUMENTANDO INTENSIDADE A CADA 1 KM","cooldown":"5 MIN TROTE","estKm":8.81},{"id":"seed-114","code":"PRO8-2KM","type":"PROGRESSIVO","warmup":"NÃO","main":"8KM AUMENTANDO INTENSIDADE A CADA 2 KM","cooldown":"5 MIN TROTE","estKm":8.81},{"id":"seed-115","code":"PRO9-1KM","type":"PROGRESSIVO","warmup":"NÃO","main":"9KM AUMENTANDO INTENSIDADE A CADA 1 KM","cooldown":"5 MIN TROTE","estKm":9.81},{"id":"seed-116","code":"PRO9-3KM","type":"PROGRESSIVO","warmup":"NÃO","main":"9KM AUMENTANDO INTENSIDADE A CADA 3 KM","cooldown":"5 MIN TROTE","estKm":9.81},{"id":"seed-117","code":"PROVA10KM","type":"PROVA","warmup":"5 MIN TROTE","main":"10KM DE CORRIDA","cooldown":"NÃO","estKm":10.81},{"id":"seed-118","code":"PROVA5KM","type":"PROVA","warmup":"5 MIN TROTE","main":"5KM DE CORRIDA","cooldown":"NÃO","estKm":5.81},{"id":"seed-119","code":"RIT10KM","type":"RITMO","warmup":"5 MIN TROTE","main":"10KM RITMO 5 A 7 SEGUNDOS MAIS RÁPIDO QUE Z3","cooldown":"5 MIN TROTE","estKm":11.63},{"id":"seed-120","code":"RIT14KM","type":"RITMO","warmup":"5 MIN TROTE","main":"14KM 5 A 7 SEGUNDOS MAIS RÁPIDO QUE Z3","cooldown":"5 MIN TROTE","estKm":15.63},{"id":"seed-121","code":"RIT8KM","type":"RITMO","warmup":"5 MIN TROTE","main":"8KM RITMO 5 A 7 SEGUNDOS MAIS RÁPIDO QUE Z3","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-122","code":"ROD10","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 10KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":11.63},{"id":"seed-123","code":"ROD11","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 11KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":12.63},{"id":"seed-124","code":"ROD12","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 12KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":13.63},{"id":"seed-125","code":"ROD13","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 13KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":14.63},{"id":"seed-126","code":"ROD14","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 14KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":15.63},{"id":"seed-127","code":"ROD15","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 15KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":16.63},{"id":"seed-128","code":"ROD3","type":"RODAGEM","warmup":"1KM DE TROTE","main":"3KM DE RODAGEM","cooldown":"1KM DE TROTE","estKm":5.0},{"id":"seed-129","code":"ROD40","type":"RODAGEM","warmup":"NAO","main":"RODAGEM DE 40 KM COM RITMO CONFORTÁVEL","cooldown":"NÃO","estKm":40.0},{"id":"seed-130","code":"ROD43MIN","type":"RODAGEM","warmup":"NÃO","main":"RODAGEM DE 43 MINUTOS EM RITMO LEVE","cooldown":"NÃO","estKm":6.99},{"id":"seed-131","code":"ROD47","type":"RODAGEM","warmup":"NÃO","main":"RODAGEM DE 47KM","cooldown":"NÃO","estKm":47.0},{"id":"seed-132","code":"ROD49","type":"RODAGEM","warmup":"NÃO","main":"RODAGEM DE 49KM","cooldown":"NÃO","estKm":49.0},{"id":"seed-133","code":"ROD5","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 5KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":6.63},{"id":"seed-134","code":"ROD50","type":"RODAGEM","warmup":"NÃO","main":"RODAGEM 50KM","cooldown":"NÃO","estKm":50.0},{"id":"seed-135","code":"ROD6","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 6KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-136","code":"ROD7","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 7KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":8.63},{"id":"seed-137","code":"ROD8","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 8KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":9.63},{"id":"seed-138","code":"ROD9","type":"RODAGEM","warmup":"5 MIN TROTE","main":"RODAGEM DE 9KM EM Z3 (MODERADO)","cooldown":"5 MIN TROTE","estKm":10.63},{"id":"seed-139","code":"TESTE","type":"TESTE","warmup":"5 MIN DE TROTE","main":"CORRER 3.200 METROS MAIS RÁPIDO QUE CONSEGUIR","cooldown":"1KM DE TROTE","estKm":4.01},{"id":"seed-140","code":"TRO10KM","type":"TROTE","warmup":"NÃO","main":"TROTE DE 10KM EM Z2 (LEVE)","cooldown":"NÃO","estKm":10.0},{"id":"seed-141","code":"TRO12KM","type":"TROTE","warmup":"NÃO","main":"TROTE DE 12 KM EM Z2 (LEVE)","cooldown":"NÃO","estKm":12.0},{"id":"seed-142","code":"TRO30","type":"TROTE","warmup":"NÃO","main":"TROTE DE 30 MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":4.88},{"id":"seed-143","code":"TRO35","type":"TROTE","warmup":"NÃO","main":"TROTE DE 35 MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":5.69},{"id":"seed-144","code":"TRO40","type":"TROTE","warmup":"NÃO","main":"TROTE DE 40 MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":6.5},{"id":"seed-145","code":"TRO45","type":"TROTE","warmup":"NÃO","main":"TROTE DE 45 MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":7.31},{"id":"seed-146","code":"TRO50","type":"TROTE","warmup":"NÃO","main":"TROTE DE 50 MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":8.13},{"id":"seed-147","code":"TRO5KM","type":"TROTE","warmup":"NÃO","main":"TROTE DE 5KM MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":5.0},{"id":"seed-148","code":"TRO60","type":"TROTE","warmup":"NÃO","main":"TROTE DE 60 MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":9.75},{"id":"seed-149","code":"TRO6KM","type":"TROTE","warmup":"NÃO","main":"TROTE DE 6KM MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":6.0},{"id":"seed-150","code":"TRO70","type":"TROTE","warmup":"NÃO","main":"TROTE DE 70 MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":11.38},{"id":"seed-151","code":"TRO7KM","type":"TROTE","warmup":"NÃO","main":"TROTE DE 7KM MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":7.0},{"id":"seed-152","code":"TRO8KM","type":"TROTE","warmup":"NÃO","main":"TROTE DE 8KM MINUTOS EM Z2 (LEVE)","cooldown":"NÃO","estKm":8.0},{"id":"seed-153","code":"INT4-200X200","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"4KM - TIROS DE 200M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":5.63},{"id":"seed-154","code":"INT4-300X300","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"4KM - TIROS DE 300M (Z5) x RECUPERAÇÃO DE 300M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":5.63},{"id":"seed-155","code":"INT5-100X100","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"5KM - TIROS DE 100M (Z5) x RECUPERAÇÃO DE 100M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":6.63},{"id":"seed-156","code":"INT5-300X300","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"5KM - TIROS DE 300M (Z5) x RECUPERAÇÃO DE 300M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":6.63},{"id":"seed-157","code":"INT5-400X200","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"5KM - TIROS DE 400M (Z5) x RECUPERAÇÃO DE 200M (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":6.63},{"id":"seed-158","code":"INT6-30SX30S","type":"INTERVALADO","warmup":"5 MIN TROTE","main":"6KM - TIROS DE 30 SEGUNDOS (Z5) x RECUPERAÇÃO DE 30 SEGUNDOS (Z1/Z2)","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-159","code":"INT14-1KMX2'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"7 TIROS DE 1KM (Z4/Z5) x RECUPERAÇÃO 2 MINUTOS TROTE LEVE","cooldown":"5 MIN TROTE","estKm":15.81},{"id":"seed-160","code":"INT16-2KMX4'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"8 TIROS DE 2KM (Z4) x RECUPERAÇÃO 4 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":17.81},{"id":"seed-161","code":"INT18-3KMX5'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"6 TIROS DE 3KM (Z3/Z4) x RECUPERAÇÃO 5 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":19.81},{"id":"seed-162","code":"INT20-1KMX90S","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"20 TIROS DE 1KM (Z4) x RECUPERAÇÃO 90 SEGUNDOS TROTE LEVE","cooldown":"5 MIN TROTE","estKm":21.81},{"id":"seed-163","code":"FAR4-200X200","type":"FARTLEK","warmup":"5 MIN TROTE","main":"4KM INTERCALANDO 200M FORTE(Z4) X 200M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":5.63},{"id":"seed-164","code":"FAR5-300X300","type":"FARTLEK","warmup":"5 MIN TROTE","main":"5KM INTERCALANDO 300M FORTE(Z4) X 300M LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":6.63},{"id":"seed-165","code":"FAR6-15SX15S","type":"FARTLEK","warmup":"5 MIN TROTE","main":"6KM INTERCALANDO 15S FORTE(Z5) X 15S LEVE(Z2) - ESTÍMULOS DE VELOCIDADE","cooldown":"5 MIN TROTE","estKm":7.63},{"id":"seed-166","code":"FAR14-1KMX1KM","type":"FARTLEK","warmup":"5 MIN TROTE","main":"14KM INTERCALANDO 1KM FORTE(Z4) X 1KM LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":15.63},{"id":"seed-167","code":"FAR16-2KMX1KM","type":"FARTLEK","warmup":"5 MIN TROTE","main":"16KM INTERCALANDO 2KM FORTE(Z4) X 1KM LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":17.63},{"id":"seed-168","code":"FAR18-3KMX2KM","type":"FARTLEK","warmup":"5 MIN TROTE","main":"18KM INTERCALANDO 3KM FORTE(Z4) X 2KM LEVE(Z2)","cooldown":"5 MIN TROTE","estKm":19.63},{"id":"seed-169","code":"FAR20-RITPROVA","type":"FARTLEK","warmup":"5 MIN TROTE","main":"20KM INTERCALANDO 3KM NO RITMO DE PROVA (Z3/Z4) X 1KM LEVE(Z2) - SIMULAÇÃO DE MARATONA","cooldown":"5 MIN TROTE","estKm":21.63},{"id":"seed-170","code":"RIT16KM","type":"RITMO","warmup":"5 MIN TROTE","main":"16KM RITMO 5 A 7 SEGUNDOS MAIS RÁPIDO QUE Z3","cooldown":"5 MIN TROTE","estKm":17.63},{"id":"seed-171","code":"RIT18KM","type":"RITMO","warmup":"5 MIN TROTE","main":"18KM RITMO 5 A 7 SEGUNDOS MAIS RÁPIDO QUE Z3","cooldown":"5 MIN TROTE","estKm":19.63},{"id":"seed-172","code":"RIT20KM","type":"RITMO","warmup":"5 MIN TROTE","main":"20KM RITMO 5 A 7 SEGUNDOS MAIS RÁPIDO QUE Z3","cooldown":"5 MIN TROTE","estKm":21.63},{"id":"seed-173","code":"INT8-1KMX90S","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"8 TIROS DE 1KM (Z5) x RECUPERAÇÃO 90 SEGUNDOS TROTE LEVE","cooldown":"5 MIN TROTE","estKm":9.81},{"id":"seed-174","code":"INT12-1KMX2'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"12 TIROS DE 1KM (Z4/Z5) x RECUPERAÇÃO 2 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":13.81},{"id":"seed-175","code":"INT12-2KMX3'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"6 TIROS DE 2KM (Z4/Z5) x RECUPERAÇÃO 3 MINUTOS TROTE LEVE","cooldown":"5 MIN TROTE","estKm":13.81},{"id":"seed-176","code":"INT18-2KMX4'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"9 TIROS DE 2KM (Z4) x RECUPERAÇÃO 4 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":19.81},{"id":"seed-177","code":"INT12-3KMX4'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"4 TIROS DE 3KM (Z4) x RECUPERAÇÃO 4 MINUTOS TROTE LEVE","cooldown":"5 MIN TROTE","estKm":13.81},{"id":"seed-178","code":"INT15-3KMX5'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"5 TIROS DE 3KM (Z3/Z4) x RECUPERAÇÃO 5 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":16.81},{"id":"seed-179","code":"INT12-4KMX5'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"3 TIROS DE 4KM (Z3/Z4) x RECUPERAÇÃO 5 MINUTOS TROTE LEVE","cooldown":"5 MIN TROTE","estKm":13.81},{"id":"seed-180","code":"INT16-4KMX6'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"4 TIROS DE 4KM (Z3/Z4) x RECUPERAÇÃO 6 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":17.81},{"id":"seed-181","code":"INT10-5KMX8'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"2 TIROS DE 5KM (Z3/Z4) x RECUPERAÇÃO 8 MINUTOS TROTE LEVE","cooldown":"5 MIN TROTE","estKm":11.81},{"id":"seed-182","code":"INT15-5KMX8'","type":"INTERVALADO","warmup":"1KM DE TROTE","main":"3 TIROS DE 5KM (Z3) x RECUPERAÇÃO 8 MINUTOS PARADO","cooldown":"5 MIN TROTE","estKm":16.81}];
+
+/* ------------------------------------------------------------------ */
+/*  Calculadora de VO2máx, zonas de pace e zonas cardíacas             */
+/*  Réplica fiel das 7 fórmulas de protocolo da aba ZONAS da planilha  */
+/*  RX-PRO (Weltman, Cooper 2.400m, Cooper 12min, Dabonneville 5min,   */
+/*  VO2PRO, Almeida 1.600m e Velocidade Crítica 3.000m).               */
+/* ------------------------------------------------------------------ */
+const MONTHS_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+const DOW_OFFSET = { seg: 0, ter: 1, qua: 2, qui: 3, sex: 4, sab: 5, dom: 6 };
+
+const pad2 = (n) => String(n).padStart(2, "0");
+const addDays = (date, n) => { const d = new Date(date); d.setDate(d.getDate() + n); return d; };
+const normDow = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().slice(0, 3);
+const formatRange = (start, end) => {
+  const sD = pad2(start.getDate()), eD = pad2(end.getDate());
+  const sM = MONTHS_PT[start.getMonth()], eM = MONTHS_PT[end.getMonth()];
+  return sM === eM ? `${sD}–${eD} ${sM}` : `${sD} ${sM}–${eD} ${eM}`;
+};
+const formatDatePt = (d) => `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+const secToClock = (totalSec) => {
+  if (!isFinite(totalSec) || totalSec <= 0) return "--:--";
+  const s = Math.round(totalSec);
+  const m = Math.floor(s / 60), r = s % 60;
+  return `${pad2(m)}:${pad2(r)}`;
+};
+const calcAge = (birthDateStr) => {
+  if (!birthDateStr) return null;
+  const y = Number(String(birthDateStr).slice(0, 4));
+  if (!y) return null;
+  return new Date().getFullYear() - y;
+};
+const titleCase = (s) => (s ? s.charAt(0) + s.slice(1).toLowerCase() : "");
+
+const ZONE_DEFS = [
+  { key: "Z1", pct: 0.65, label: "Muito Leve" },
+  { key: "Z2", pct: 0.75, label: "Leve" },
+  { key: "Z3", pct: 0.85, label: "Moderado" },
+  { key: "Z4", pct: 0.95, label: "Forte" },
+  { key: "Z5", pct: 1.00, label: "Muito Forte" },
+];
+
+// Faixa (min/max %) de cada zona — ponto médio entre zonas vizinhas. É o que
+// permite mostrar uma FAIXA de pace/FC por zona (não só um valor pontual),
+// pra aplicar direto numa sessão como "frequência mínima e máxima".
+const ZONE_BOUNDS = ZONE_DEFS.map((z, i) => {
+  const prev = ZONE_DEFS[i - 1];
+  const next = ZONE_DEFS[i + 1];
+  const lower = prev ? (prev.pct + z.pct) / 2 : z.pct - 0.05;
+  const upper = next ? (z.pct + next.pct) / 2 : z.pct + 0.05;
+  return { lower, upper };
+});
+
+const PROTOCOLS = [
+  { key: "weltmann", label: "Weltman · 3.200 m (tempo)", fields: ["time"] },
+  { key: "cooper2400", label: "Cooper · 2.400 m (tempo)", fields: ["time"] },
+  { key: "cooper12min", label: "Cooper · 12 minutos (distância)", fields: ["dist"] },
+  { key: "dabonneville", label: "5 min · V5 Dabonneville (distância)", fields: ["dist"] },
+  { key: "vo2pro", label: "VO2PRO · prova/teste livre (distância + tempo)", fields: ["dist", "time"] },
+  { key: "almeida", label: "1.600 m · Almeida (tempo)", fields: ["time"] },
+  { key: "critica", label: "3.000 m · Velocidade Crítica (tempo)", fields: ["time"] },
+];
+
+// Tabela de classificação de aptidão (Cooper), por sexo e faixa etária.
+// Valores = limite inferior de VO2máx (ml/kg/min) para cada nível.
+const VO2_LEVELS = ["Muito Fraca", "Fraca", "Regular", "Boa", "Excelente", "Superior"];
+const VO2_TABLE = {
+  M: {
+    "13-19": [0, 35.1, 38.4, 45.2, 51.0, 56.0],
+    "20-29": [0, 33.1, 36.5, 42.5, 46.5, 52.5],
+    "30-39": [0, 31.6, 35.5, 41.0, 45.0, 49.5],
+    "40-49": [0, 30.3, 33.6, 39.0, 43.8, 48.1],
+    "50-59": [0, 26.2, 31.0, 35.8, 41.0, 45.4],
+    "60+": [0, 20.6, 26.1, 32.4, 36.5, 44.3],
+  },
+  F: {
+    "13-19": [0, 25.0, 31.0, 35.0, 39.0, 42.0],
+    "20-29": [0, 23.7, 29.0, 33.0, 37.0, 41.0],
+    "30-39": [0, 22.9, 27.0, 31.5, 35.7, 40.1],
+    "40-49": [0, 21.1, 24.5, 29.0, 32.9, 37.0],
+    "50-59": [0, 20.3, 22.8, 27.0, 31.5, 35.8],
+    "60+": [0, 17.6, 20.2, 24.5, 30.3, 31.5],
+  },
+};
+const ageBand = (age) => {
+  if (age < 20) return "13-19";
+  if (age < 30) return "20-29";
+  if (age < 40) return "30-39";
+  if (age < 50) return "40-49";
+  if (age < 60) return "50-59";
+  return "60+";
+};
+const classifyVO2 = (vo2, age, sex) => {
+  const table = VO2_TABLE[sex === "F" ? "F" : "M"];
+  const bounds = table[ageBand(age)];
+  let idx = 0;
+  for (let i = 0; i < bounds.length; i++) { if (vo2 >= bounds[i]) idx = i; }
+  return VO2_LEVELS[idx];
+};
+
+// Fórmulas exatas de cada protocolo (aba ZONAS da planilha RX-PRO).
+function computeProtocol(key, inputs) {
+  const min = Number(inputs.min) || 0;
+  const sec = Number(inputs.sec) || 0;
+  const distKm = Number(inputs.distKm) || 0;
+  const testSec0 = min * 60 + sec;
+  let testKm, testSec, vo2max, vam = null;
+
+  switch (key) {
+    case "weltmann":
+      if (testSec0 <= 0) return null;
+      testKm = 3.2; testSec = testSec0;
+      vo2max = 118.4 - 4.774 * (testSec / 60);
+      break;
+    case "cooper2400":
+      if (testSec0 <= 0) return null;
+      testKm = 2.4; testSec = testSec0;
+      vo2max = (2400 * 12 + 3.5) / testSec;
+      break;
+    case "cooper12min":
+      if (distKm <= 0) return null;
+      testKm = distKm; testSec = 720;
+      vo2max = (distKm * 1000 - 504) / 44.73;
+      break;
+    case "dabonneville":
+      if (distKm <= 0) return null;
+      testKm = distKm; testSec = 300;
+      vo2max = (distKm * 1000 / 5) * 0.2 + 3.5;
+      break;
+    case "vo2pro": {
+      if (distKm <= 0 || testSec0 <= 0) return null;
+      testKm = distKm; testSec = testSec0;
+      const paceSec = testSec / distKm;
+      const equivSec = paceSec * 3.2;
+      vo2max = 118.4 - 4.774 * (equivSec / 60);
+      break;
+    }
+    case "almeida": {
+      if (testSec0 <= 0) return null;
+      testKm = 1.6; testSec = testSec0;
+      const decMin = testSec / 60;
+      vo2max = (1600 / decMin) * 0.177 + 8.101;
+      vam = vo2max / 3.5;
+      break;
+    }
+    case "critica": {
+      if (testSec0 <= 0) return null;
+      testKm = 3; testSec = testSec0;
+      const velKmH = (testKm * 3600) / testSec;
+      vo2max = velKmH * 3.5;
+      break;
+    }
+    default:
+      return null;
+  }
+  if (!isFinite(vo2max) || vo2max <= 0) return null;
+  return { testKm, testSec, vo2max, vam };
+}
+
+function paceZonesFrom(testKm, testSec) {
+  const basePace = testSec / testKm; // segundos/km no esforço do teste (100%)
+  return ZONE_DEFS.map((z, i) => {
+    const paceSec = basePace / z.pct;
+    const bounds = ZONE_BOUNDS[i];
+    const paceMaxSec = basePace / bounds.lower; // % menor => pace mais lento (tempo maior)
+    const paceMinSec = basePace / bounds.upper; // % maior => pace mais rápido (tempo menor)
+    return {
+      ...z,
+      paceSec,
+      paceLabel: secToClock(paceSec),
+      kmh: +(3600 / paceSec).toFixed(2),
+      paceMinLabel: secToClock(paceMinSec),
+      paceMaxLabel: secToClock(paceMaxSec),
+    };
+  });
+}
+function hrZonesFrom(hrMaxVal) {
+  return ZONE_DEFS.map((z, i) => {
+    const bounds = ZONE_BOUNDS[i];
+    return {
+      ...z,
+      bpm: Math.round(hrMaxVal * z.pct),
+      bpmMin: Math.round(hrMaxVal * bounds.lower),
+      bpmMax: Math.round(hrMaxVal * bounds.upper),
+    };
+  });
+}
+
+// Combina zona de pace + zona de FC num formato pronto pra aplicar direto
+// numa sessão: pace (ponto) e frequência (faixa mínima–máxima).
+function buildZoneOptions(result) {
+  if (!result) return [];
+  return result.paceZones.map((pz, i) => {
+    const hz = result.hrZones ? result.hrZones[i] : null;
+    return {
+      key: pz.key,
+      label: `${pz.key} · ${pz.label}`,
+      paceText: `${pz.paceLabel}/km`,
+      freqText: hz ? `${hz.bpmMin}–${hz.bpmMax} bpm` : "",
+    };
+  });
+}
+
+// Função pura: dado um plano, calcula VO2máx + zonas (sem guardar estado derivado).
+function getVO2Result(plan) {
+  const protocol = plan.vo2Protocol || "vo2pro";
+  const inputs = (plan.vo2Inputs && plan.vo2Inputs[protocol]) || {};
+  const base = computeProtocol(protocol, inputs);
+  if (!base) return null;
+  const age = calcAge(plan.birthDate);
+  const sex = plan.sex === "F" ? "F" : "M";
+  const level = age ? classifyVO2(base.vo2max, age, sex) : null;
+  const paceZones = paceZonesFrom(base.testKm, base.testSec);
+  const hrMax = Number(plan.hrMax) || 0;
+  const hrZones = hrMax > 0 ? hrZonesFrom(hrMax) : null;
+  return { ...base, age, sex, level, paceZones, hrZones, hrMax };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Motor de Periodização — gera o macrociclo inteiro (mesociclos em     */
+/*  curva reversa, progressão de volume com deload/taper, distribuição   */
+/*  semanal de dias) a partir da prova-alvo, nível e volume atual.       */
+/*  Porta fiel da lógica da calculadora HTML standalone.                 */
+/* ------------------------------------------------------------------ */
+const MESO_DOW = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"]; // índice 0=Dom..6=Sáb (como no motor original)
+// Mapeia o índice de dia do motor (0=Dom..6=Sáb) pro índice das cells do
+// plano (0=Seg..6=Dom, ver WEEKDAYS).
+const MESO_DOW_TO_CELL_INDEX = [6, 0, 1, 2, 3, 4, 5];
+
+const NIVEL_CONFIG = {
+  iniciante: { progMax: 0.08, picoMult: 1.35, taperExtra: 1 },
+  intermediario: { progMax: 0.10, picoMult: 1.55, taperExtra: 0 },
+  avancado: { progMax: 0.12, picoMult: 1.75, taperExtra: 0 },
+};
+
+// Distribuição-alvo de intensidade por prova (E=easy, M=ritmo de prova, T=limiar, I=intervalado, R=repetição/velocidade)
+const INTENSITY_BY_RACE = {
+  5: { E: 0.55, M: 0.05, T: 0.15, I: 0.18, R: 0.07 },
+  10: { E: 0.65, M: 0.08, T: 0.15, I: 0.10, R: 0.02 },
+  21: { E: 0.72, M: 0.13, T: 0.11, I: 0.03, R: 0.01 },
+  42: { E: 0.78, M: 0.14, T: 0.06, I: 0.02, R: 0.00 },
+};
+const INTENSITY_LABELS = { E: "Fácil / Regen.", M: "Ritmo de prova", T: "Limiar", I: "Intervalado", R: "Repetição" };
+
+const MESO_TAG_LABELS = { intro: "Introdução", build: "Construção", peak: "Pico", taper: "Polimento", race: "Prova", deload: "Recuo" };
+
+function round1(n) { return Math.round(n * 10) / 10; }
+
+function distribuirSemanasMeso(total, nMeso, taperWeeks) {
+  const resto = total - taperWeeks;
+  const base = Math.floor(resto / (nMeso - 1));
+  const sobra = resto - base * (nMeso - 1);
+  const arr = [];
+  for (let i = 0; i < nMeso - 1; i++) arr.push(base + (i < sobra ? 1 : 0));
+  arr.push(taperWeeks);
+  return arr;
+}
+
+// Mesociclos: curva de %volume em sino (sobe, platô, cai no taper/polimento).
+function gerarMesociclos(prova, totalSemanas, cfg) {
+  const nMeso = totalSemanas <= 8 ? 3 : totalSemanas <= 14 ? 4 : totalSemanas <= 20 ? 5 : 6;
+  const taperWeeks = prova >= 42 ? 3 : prova >= 21 ? 2 : 1 + cfg.taperExtra;
+  const nomesFase = ["Introdutório", "Desenvolvimento", "Específico", "Pico", "Manutenção", "Polimento"];
+
+  let curva = [];
+  if (nMeso === 3) curva = [0.80, 1.00, 0.60];
+  else if (nMeso === 4) curva = [0.80, 0.95, 1.00, 0.65];
+  else if (nMeso === 5) curva = [0.75, 0.90, 1.00, 0.95, 0.60];
+  else curva = [0.70, 0.85, 0.95, 1.00, 0.90, 0.55];
+
+  const semanasPorMeso = distribuirSemanasMeso(totalSemanas, nMeso, taperWeeks);
+  const fases = [];
+  for (let i = 0; i < nMeso; i++) {
+    fases.push({
+      nome: i === nMeso - 1 ? "Polimento (Taper)" : (nomesFase[i] || `Bloco ${i + 1}`),
+      pct: curva[i],
+      semanas: semanasPorMeso[i],
+      isTaper: i === nMeso - 1,
+    });
+  }
+  return fases;
+}
+
+// Semanas: volume progressivo com deload a cada 4 semanas + taper no final.
+function gerarSemanasMeso(mesociclos, volumeAtual, picoVolume, freq, prova) {
+  const semanas = [];
+  let semanaGlobal = 1;
+  const totalBuildWeeks = mesociclos.filter((m) => !m.isTaper).reduce((s, m) => s + m.semanas, 0);
+
+  mesociclos.forEach((meso, mi) => {
+    for (let w = 0; w < meso.semanas; w++) {
+      let volKm;
+      if (meso.isTaper) {
+        const isRaceWeek = w === meso.semanas - 1;
+        const taperProgress = meso.semanas === 1 ? 1 : w / (meso.semanas - 1);
+        const minFactor = 0.45, maxFactor = 0.80;
+        const factor = maxFactor - taperProgress * (maxFactor - minFactor);
+        volKm = isRaceWeek ? picoVolume * minFactor : picoVolume * factor;
+      } else {
+        const progressoGlobal = (semanaGlobal - 1) / Math.max(1, totalBuildWeeks - 1);
+        let vol = volumeAtual + (picoVolume - volumeAtual) * progressoGlobal;
+        if (semanaGlobal % 4 === 0) vol *= 0.82;
+        volKm = vol;
+      }
+      volKm = Math.round(volKm);
+
+      let tag = "build";
+      if (mi === 0) tag = "intro";
+      else if (meso.isTaper) tag = "taper";
+      else if (mi === mesociclos.length - 2) tag = "peak";
+
+      const isRaceWeek = meso.isTaper && w === meso.semanas - 1;
+      const isDeload = !meso.isTaper && semanaGlobal % 4 === 0;
+      if (isDeload) tag = "deload";
+
+      semanas.push({ numero: semanaGlobal, mesociclo: meso.nome, km: volKm, tag: isRaceWeek ? "race" : tag, isRaceWeek });
+      semanaGlobal++;
+    }
+  });
+  return semanas;
+}
+
+// Distribuição dos dias da semana (baseado em frequência e tipo de semana).
+function gerarDiasSemanaMeso(semanaObj, freq, prova) {
+  const km = semanaObj.km;
+  const dist = INTENSITY_BY_RACE[prova];
+  const dias = [];
+
+  const slotsPorFreq = { 3: [1, 3, 6], 4: [1, 3, 5, 6], 5: [1, 2, 4, 5, 6], 6: [1, 2, 3, 4, 5, 6], 7: [0, 1, 2, 3, 4, 5, 6] };
+  const slots = slotsPorFreq[freq] || slotsPorFreq[5];
+
+  if (semanaObj.isRaceWeek) {
+    const easyDays = slots.slice(0, Math.max(1, slots.length - 2));
+    const kmEasyTotal = km * 0.5;
+    easyDays.forEach((d) => dias.push({ dow: d, tipo: "Rodagem leve", classe: "easy", km: round1(kmEasyTotal / easyDays.length) }));
+    dias.push({ dow: slots[slots.length - 1], tipo: `PROVA — ${prova} km`, classe: "race", km: prova });
+    return dias.sort((a, b) => a.dow - b.dow);
+  }
+
+  const isDeload = semanaObj.tag === "deload";
+  const kmLonga = round1(km * (prova >= 21 ? 0.32 : 0.28) * (isDeload ? 0.85 : 1));
+  const temQualidade = (semanaObj.tag !== "intro" && !isDeload) || freq >= 4;
+  const kmQualidade = temQualidade ? round1(km * (dist.T + dist.I + dist.R + 0.03)) : 0;
+
+  let kmRestante = km - kmLonga - kmQualidade;
+  const nEasyDays = slots.length - (temQualidade ? 2 : 1);
+  const kmPorEasy = nEasyDays > 0 ? round1(kmRestante / nEasyDays) : 0;
+
+  slots.forEach((d, idx) => {
+    const isLast = idx === slots.length - 1;
+    const isQualityDay = temQualidade && idx === Math.floor(slots.length / 2);
+    if (isLast) {
+      dias.push({ dow: d, tipo: "Rodagem longa", classe: "long", km: kmLonga });
+    } else if (isQualityDay) {
+      const tipoQualidade = semanaObj.tag === "peak" || semanaObj.tag === "build"
+        ? (prova <= 10 ? "Intervalado" : "Tiros em ritmo de limiar")
+        : "Ritmo de limiar (contínuo)";
+      const classeQualidade = tipoQualidade === "Intervalado" ? "interval" : "threshold";
+      dias.push({ dow: d, tipo: tipoQualidade, classe: classeQualidade, km: kmQualidade });
+    } else {
+      dias.push({ dow: d, tipo: "Rodagem leve / regenerativo", classe: "easy", km: kmPorEasy });
+    }
+  });
+  return dias.sort((a, b) => a.dow - b.dow);
+}
+
+// Classe do dia (motor) -> tipo de treino do plano (TYPES).
+const MESO_CLASSE_TO_TYPE = { easy: "easy", long: "long", threshold: "quality", interval: "quality", race: "race" };
+
+// Roda o motor completo e devolve as semanas já no formato do plano
+// (cells + sessions), prontas pra substituir plan.weeks.
+function gerarMacrocicloParaPlano({ prova, volumeAtual, freq, nivel, totalSemanas, blockStartDate }) {
+  const cfg = NIVEL_CONFIG[nivel];
+  const picoVolume = Math.round(volumeAtual * cfg.picoMult);
+  const mesociclos = gerarMesociclos(prova, totalSemanas, cfg);
+  const semanasMeso = gerarSemanasMeso(mesociclos, volumeAtual, picoVolume, freq, prova);
+
+  const weeks = semanasMeso.map((s, wi) => {
+    const dias = gerarDiasSemanaMeso(s, freq, prova);
+    const week = newWeek(s.numero);
+    const cells = week.cells.map((c) => ({ ...c }));
+    const sessions = [];
+
+    dias.forEach((d) => {
+      const cellIdx = MESO_DOW_TO_CELL_INDEX[d.dow];
+      const planType = MESO_CLASSE_TO_TYPE[d.classe] || "easy";
+      cells[cellIdx] = { ...cells[cellIdx], type: planType, micro: `${d.km}km` };
+      sessions.push({
+        ...newSession(),
+        dow: WEEKDAYS[cellIdx],
+        type: planType,
+        tagText: d.tipo,
+        title: d.tipo,
+        km: d.km,
+      });
+    });
+
+    let tag = `Semana ${s.numero} · ${MESO_TAG_LABELS[s.tag] || s.tag}`;
+    if (blockStartDate) {
+      const wStart = addDays(new Date(blockStartDate + "T00:00:00"), wi * 7);
+      const wEnd = addDays(wStart, 6);
+      tag = `Semana ${s.numero} · ${formatRange(wStart, wEnd)} · ${MESO_TAG_LABELS[s.tag] || s.tag}`;
+      cells.forEach((c, ci) => { cells[ci] = { ...c, date: pad2(addDays(wStart, ci).getDate()) }; });
+      sessions.forEach((sess, si) => {
+        const off = WEEKDAYS.indexOf(sess.dow);
+        if (off < 0) return;
+        const d = addDays(wStart, off);
+        sessions[si] = { ...sess, date: `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}` };
+      });
+    }
+
+    return { ...week, tag, title: s.mesociclo, cells, sessions };
+  });
+
+  return weeks;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Data model                                                         */
+/* ------------------------------------------------------------------ */
+const newCell = () => ({ id: uid(), date: "", type: "off", micro: "off" });
+const newSession = () => ({ id: uid(), dow: "", date: "", type: "easy", tagText: "Fácil", title: "", detail: "", code: "", km: "", pace: "", velocidade: "", esforco: "", freq: "" });
+
+// Soma o volume (km) de todas as sessões de uma semana — usado pra calcular
+// automaticamente o total semanal exibido no editor e na prévia.
+const weekVolumeKm = (week) => (week.sessions || []).reduce((sum, s) => sum + (Number(s.km) || 0), 0);
+const fmtKm = (n) => (Math.round(n * 10) / 10).toString().replace(".", ",");
+const newWeek = (n) => ({
+  id: uid(),
+  tag: `Semana ${n}`,
+  title: "",
+  stripCaption: "SEG · TER · QUA · QUI · SEX · SÁB · DOM",
+  cells: Array.from({ length: 7 }, newCell),
+  sessions: [newSession()],
+});
+
+// Gera a faixa de 7 dias já com as datas certas a partir da data de início do
+// bloco + índice da semana (0-based). Preenche cells[].date; o dia da semana
+// (Seg–Dom) é sempre exibido no StripCell independente disso.
+const newWeekWithDates = (n, blockStartDate, weekIdx) => {
+  const w = newWeek(n);
+  if (!blockStartDate) return w;
+  const wStart = addDays(new Date(blockStartDate + "T00:00:00"), weekIdx * 7);
+  const wEnd = addDays(wStart, 6);
+  const cells = w.cells.map((c, ci) => ({ ...c, date: pad2(addDays(wStart, ci).getDate()) }));
+  return { ...w, tag: `Semana ${n} · ${formatRange(wStart, wEnd)}`, cells };
+};
+
+const newStat = () => ({ id: uid(), value: "", label: "" });
+const newStrategyItem = () => ({ id: uid(), num: "", text: "" });
+const newStrategyGroup = () => ({ id: uid(), items: [newStrategyItem()] });
+const newPlan = () => ({
+  id: uid(),
+  name: "",
+  bibLabel: "PH PERFORMANCE",
+  countdownNumber: "",
+  countdownUnit: "",
+  heroSub: "",
+  stats: [newStat(), newStat(), newStat()],
+  // Perfil do aluno + calculadora de VO2máx
+  athleteName: "",
+  objective: "",
+  birthDate: "",
+  sex: "M",
+  hrMax: "",
+  vo2Protocol: "vo2pro",
+  vo2Inputs: {},
+  // Calendário do bloco
+  blockStartDate: "",
+  weeks: [newWeek(1)],
+  strategyTitle: "Pacing km a km",
+  strategyGroups: [newStrategyGroup()],
+  footerNote: "",
+  updatedAt: Date.now(),
+});
+
+/* ------------------------------------------------------------------ */
+/*  Editor building blocks                                             */
+/* ==================================================================== */
+/*  SUPABASE                                                            */
+/* ==================================================================== */
+const SB_URL = 'https://fdojstrsiojbcoiumobv.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkb2pzdHJzaW9qYmNvaXVtb2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDk3NjYsImV4cCI6MjA5NjU4NTc2Nn0.uDymw4Dsj40RH46dXxVLn6CjutJaruADrUFriQmqVbM';
+const SB_HDR = { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+
+async function sbGet(table, q) {
+  const r = await fetch(SB_URL + '/rest/v1/' + table + (q ? '?' + q : ''), { headers: SB_HDR });
+  if (!r.ok) { console.error('sbGet', table, await r.text()); return []; }
+  return r.json();
+}
+async function sbUpsert(table, body) {
+  const h = { ...SB_HDR, 'Prefer': 'resolution=merge-duplicates,return=representation' };
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/' + table, { method: 'POST', headers: h, body: JSON.stringify(body) });
+    if (!r.ok) { console.error('sbUpsert', table, await r.text()); return false; }
+    return true;
+  } catch (e) { console.error('sbUpsert falha de rede', table, e); return false; }
+}
+async function sbDelete(table, id) {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: SB_HDR });
+    return r.ok;
+  } catch (e) { return false; }
+}
+
+/* ==================================================================== */
+/*  ESTADO GLOBAL                                                       */
+/* ==================================================================== */
+let roster = {};           // id -> plano (dados completos + id + alunoId + updatedAt)
+let bank = {};              // id -> treino do banco
+let alunosList = [];        // [{id,nome}] pra vincular plano a um aluno existente
+let currentPlanId = null;
+let mode = 'edit';          // edit | preview
+let screen = 'roster';      // roster | bank
+let loadingRoster = true;
+let loadingBank = true;
+let saveTimer = null, bankSaveTimer = null;
+let saveState = 'idle';     // idle | saving | saved
+let pdfState = 'idle';      // idle | loading | error
+
+// estado só de interface (não persiste)
+let weekOpen = {};          // weekId -> bool (default aberto)
+let notFoundFlag = {};      // sessionId -> bool transitório
+let bankQuery = '', bankTypeFilter = '', bankOpenId = null;
+let periodOpen = false;
+let periodForm = { prova: '10', volumeAtual: '30', freq: '5', nivel: 'intermediario', totalSemanas: '12', error: '' };
+
+/* ==================================================================== */
+/*  PERSISTÊNCIA                                                        */
+/* ==================================================================== */
+async function loadAlunos() {
+  try { alunosList = await sbGet('alunos', 'select=id,nome&order=nome'); } catch (e) { alunosList = []; }
+}
+async function loadRoster() {
+  const rows = await sbGet('planos_corrida', 'order=updated_at.desc');
+  roster = {};
+  rows.forEach((r) => {
+    roster[r.id] = { ...(r.dados || {}), id: r.id, alunoId: r.aluno_id || '', updatedAt: r.updated_at ? new Date(r.updated_at).getTime() : Date.now() };
+  });
+  loadingRoster = false;
+}
+async function loadBank() {
+  let rows = await sbGet('banco_treinos_corrida', 'order=code');
+  if (!rows.length) {
+    const chunks = [];
+    for (let i = 0; i < BANK_SEED.length; i += 80) chunks.push(BANK_SEED.slice(i, i + 80));
+    for (const c of chunks) {
+      await sbUpsert('banco_treinos_corrida', c.map((it) => ({ id: it.id, code: it.code, type: it.type, warmup: it.warmup, main: it.main, cooldown: it.cooldown, est_km: it.estKm })));
+    }
+    rows = BANK_SEED.map((it) => ({ id: it.id, code: it.code, type: it.type, warmup: it.warmup, main: it.main, cooldown: it.cooldown, est_km: it.estKm }));
+  }
+  bank = {};
+  rows.forEach((r) => { bank[r.id] = { id: r.id, code: r.code || '', type: r.type || '', warmup: r.warmup || '', main: r.main || '', cooldown: r.cooldown || '', estKm: r.est_km }; });
+  loadingBank = false;
+}
+
+function persistPlan(plan, skipRender) {
+  roster[plan.id] = { ...plan, updatedAt: Date.now() };
+  if (!skipRender) render();
+  saveState = 'saving';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const p = roster[plan.id]; if (!p) return;
+    const { id, alunoId, updatedAt, ...dados } = p;
+    const ok = await sbUpsert('planos_corrida', { id, aluno_id: alunoId || null, nome: dados.name || dados.athleteName || '', dados, updated_at: new Date().toISOString() });
+    saveState = ok ? 'saved' : 'idle';
+    updateSaveIndicator();
+  }, 500);
+}
+function updateSaveIndicator() {
+  const el = document.getElementById('saveIndicator');
+  if (!el) return;
+  el.innerHTML = saveState === 'saving' ? '<span class="pz-mono">salvando...</span>' : saveState === 'saved' ? '<span class="pz-mono">salvo</span>' : '';
+}
+
+async function createPlan() {
+  const p = newPlan();
+  roster[p.id] = p;
+  await sbUpsert('planos_corrida', { id: p.id, aluno_id: null, nome: '', dados: stripMeta(p), updated_at: new Date().toISOString() });
+  currentPlanId = p.id; mode = 'edit';
+  render();
+}
+function stripMeta(p) { const { id, alunoId, updatedAt, ...dados } = p; return dados; }
+
+async function deletePlan(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (!confirm('Remover este plano de corrida?')) return;
+  delete roster[id];
+  if (currentPlanId === id) currentPlanId = null;
+  render();
+  await sbDelete('planos_corrida', id);
+}
+
+function persistBankItem(item) {
+  bank[item.id] = item;
+  clearTimeout(bankSaveTimer);
+  bankSaveTimer = setTimeout(async () => {
+    await sbUpsert('banco_treinos_corrida', { id: item.id, code: item.code, type: item.type, warmup: item.warmup, main: item.main, cooldown: item.cooldown, est_km: item.estKm });
+  }, 500);
+}
+async function addBankItem() {
+  const item = { id: 'b' + uid(), code: '', type: 'RODAGEM', warmup: '', main: '', cooldown: '', estKm: null };
+  bank[item.id] = item;
+  bankOpenId = item.id;
+  await sbUpsert('banco_treinos_corrida', { id: item.id, code: '', type: 'RODAGEM', warmup: '', main: '', cooldown: '', est_km: null });
+  render();
+}
+async function removeBankItem(id) {
+  delete bank[id]; render();
+  await sbDelete('banco_treinos_corrida', id);
+}
+
+/* ==================================================================== */
+/*  UTIL DE FORM                                                        */
+/* ==================================================================== */
+function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function getPlan() { return currentPlanId ? roster[currentPlanId] : null; }
+
+// Atualiza campos do plano sem re-renderizar tudo (evita perder foco do input).
+function updatePlanField(field, value) {
+  const p = getPlan(); if (!p) return;
+  p[field] = value;
+  persistPlan(p, true);
+}
+function updatePlanFieldAndRender(field, value) {
+  const p = getPlan(); if (!p) return;
+  p[field] = value;
+  persistPlan(p);
+}
+function updateStat(i, field, value) {
+  const p = getPlan(); if (!p) return;
+  p.stats[i] = { ...p.stats[i], [field]: value };
+  persistPlan(p, true);
+}
+function addStat() { const p = getPlan(); if (!p) return; p.stats.push(newStat()); persistPlan(p); }
+function removeStat(i) { const p = getPlan(); if (!p) return; p.stats.splice(i, 1); persistPlan(p); }
+
+function findWeek(weekId) { const p = getPlan(); return p ? p.weeks.find((w) => w.id === weekId) : null; }
+function findWeekIndex(weekId) { const p = getPlan(); return p ? p.weeks.findIndex((w) => w.id === weekId) : -1; }
+
+function addWeek() {
+  const p = getPlan(); if (!p) return;
+  const w = newWeekWithDates(p.weeks.length + 1, p.blockStartDate, p.weeks.length);
+  p.weeks.push(w);
+  weekOpen[w.id] = true;
+  persistPlan(p);
+}
+function removeWeek(weekId) {
+  const p = getPlan(); if (!p) return;
+  if (!confirm('Remover esta semana?')) return;
+  p.weeks = p.weeks.filter((w) => w.id !== weekId);
+  persistPlan(p);
+}
+function moveWeek(weekId, dir) {
+  const p = getPlan(); if (!p) return;
+  const i = findWeekIndex(weekId); const j = i + dir;
+  if (i < 0 || j < 0 || j >= p.weeks.length) return;
+  [p.weeks[i], p.weeks[j]] = [p.weeks[j], p.weeks[i]];
+  persistPlan(p);
+}
+function duplicateWeek(weekId) {
+  const p = getPlan(); if (!p) return;
+  const i = findWeekIndex(weekId); if (i < 0) return;
+  const original = p.weeks[i]; const newIndex = i + 1;
+  let cells = original.cells.map((c) => ({ ...c, id: uid() }));
+  let tag = original.tag ? original.tag + ' (repetida)' : 'Semana ' + (newIndex + 1);
+  let sessions = original.sessions.map((s) => ({ ...s, id: uid() }));
+  if (p.blockStartDate) {
+    const wStart = addDays(new Date(p.blockStartDate + 'T00:00:00'), newIndex * 7);
+    const wEnd = addDays(wStart, 6);
+    cells = cells.map((c, ci) => ({ ...c, date: pad2(addDays(wStart, ci).getDate()) }));
+    tag = 'Semana ' + (newIndex + 1) + ' · ' + formatRange(wStart, wEnd);
+    sessions = sessions.map((s) => {
+      const off = WEEKDAYS.indexOf(s.dow); if (off < 0) return s;
+      const d = addDays(wStart, off);
+      return { ...s, date: pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) };
+    });
+  }
+  const weekCopy = { ...original, id: uid(), tag, cells, sessions };
+  p.weeks.splice(newIndex, 0, weekCopy);
+  weekOpen[weekCopy.id] = true;
+  persistPlan(p);
+}
+function toggleWeekOpen(weekId) { weekOpen[weekId] = !weekOpen[weekId]; render(); }
+function updateWeekField(weekId, field, value) {
+  const w = findWeek(weekId); if (!w) return;
+  w[field] = value;
+  const p = getPlan(); persistPlan(p, true);
+}
+
+function setCell(weekId, i, patch) {
+  const w = findWeek(weekId); if (!w) return;
+  const cells = [...w.cells]; cells[i] = { ...cells[i], ...patch };
+  let sessions = w.sessions;
+  if (patch.type && patch.type !== 'off') {
+    const dowLabel = WEEKDAYS[i];
+    const idx = sessions.findIndex((s) => s.dow === dowLabel);
+    if (idx >= 0) {
+      sessions = [...sessions];
+      sessions[idx] = { ...sessions[idx], type: patch.type, date: cells[i].date || sessions[idx].date, tagText: sessions[idx].tagText || TYPES[patch.type].label };
+    } else {
+      sessions = [...sessions, { ...newSession(), dow: dowLabel, date: cells[i].date, type: patch.type, tagText: TYPES[patch.type].label }];
+    }
+  } else if (patch.date !== undefined) {
+    const dowLabel = WEEKDAYS[i];
+    sessions = sessions.map((s) => (s.dow === dowLabel ? { ...s, date: cells[i].date } : s));
+  }
+  w.cells = cells; w.sessions = sessions;
+  const p = getPlan();
+  // type/assign muda estrutura -> renderiza; edição de data/rótulo não precisa
+  persistPlan(p, patch.type === undefined && patch.micro === undefined);
+}
+function assignCellToSession(weekId, i, target) {
+  const w = findWeek(weekId); if (!w) return;
+  const cell = w.cells[i]; const dowLabel = WEEKDAYS[i];
+  if (target === '__new__') {
+    w.sessions.push({ ...newSession(), dow: dowLabel, date: cell.date, type: cell.type, tagText: TYPES[cell.type].label });
+  } else {
+    const si = Number(target); if (Number.isNaN(si) || !w.sessions[si]) return;
+    w.sessions[si] = { ...w.sessions[si], dow: dowLabel, date: cell.date || w.sessions[si].date, type: cell.type, tagText: TYPES[cell.type].label };
+  }
+  const p = getPlan(); persistPlan(p);
+}
+
+function addSession(weekId) { const w = findWeek(weekId); if (!w) return; w.sessions.push(newSession()); const p = getPlan(); persistPlan(p); }
+function removeSession(weekId, i) { const w = findWeek(weekId); if (!w) return; w.sessions.splice(i, 1); const p = getPlan(); persistPlan(p); }
+function moveSession(weekId, i, dir) {
+  const w = findWeek(weekId); if (!w) return; const j = i + dir;
+  if (j < 0 || j >= w.sessions.length) return;
+  [w.sessions[i], w.sessions[j]] = [w.sessions[j], w.sessions[i]];
+  const p = getPlan(); persistPlan(p);
+}
+function updateSessionField(weekId, i, field, value, needsRender) {
+  const w = findWeek(weekId); if (!w) return;
+  w.sessions[i] = { ...w.sessions[i], [field]: value };
+  const p = getPlan(); persistPlan(p, !needsRender);
+}
+function pullFromStrip(weekId, i) {
+  const w = findWeek(weekId); if (!w) return;
+  const s = w.sessions[i]; const di = WEEKDAYS.indexOf(s.dow); if (di < 0) return;
+  const cell = w.cells[di];
+  w.sessions[i] = { ...s, date: cell.date || s.date, type: cell.type, tagText: TYPES[cell.type].label };
+  const p = getPlan(); persistPlan(p);
+}
+function applyZoneToSession(weekId, i, zoneKey) {
+  const p = getPlan(); if (!p) return;
+  const opts = buildZoneOptions(getVO2Result(p));
+  const opt = opts.find((z) => z.key === zoneKey); if (!opt) return;
+  const w = findWeek(weekId);
+  w.sessions[i] = { ...w.sessions[i], pace: opt.paceText, freq: opt.freqText };
+  persistPlan(p);
+}
+function applyBankCode(weekId, i) {
+  const w = findWeek(weekId); if (!w) return;
+  const s = w.sessions[i]; const code = (s.code || '').trim().toUpperCase(); if (!code) return;
+  const match = Object.values(bank).find((b) => (b.code || '').trim().toUpperCase() === code);
+  if (!match) { notFoundFlag[s.id] = true; render(); setTimeout(() => { notFoundFlag[s.id] = false; render(); }, 2200); return; }
+  const mapped = BANK_TYPE_TO_PLAN_TYPE[match.type] || 'easy';
+  w.sessions[i] = { ...s, code: match.code, type: mapped, tagText: titleCase(match.type) || 'Treino', title: match.main, detail: 'Aquecimento: ' + (match.warmup || '—') + '. Volta à calma: ' + (match.cooldown || '—') + '.', km: match.estKm != null ? match.estKm : s.km };
+  const p = getPlan(); persistPlan(p);
+}
+function handleCodeInput(weekId, i, value) {
+  const w = findWeek(weekId); if (!w) return;
+  const code = value.trim().toUpperCase();
+  const match = code ? Object.values(bank).find((b) => (b.code || '').trim().toUpperCase() === code) : null;
+  if (match) {
+    const mapped = BANK_TYPE_TO_PLAN_TYPE[match.type] || 'easy';
+    const s = w.sessions[i];
+    w.sessions[i] = { ...s, code: match.code, type: mapped, tagText: titleCase(match.type) || 'Treino', title: match.main, detail: 'Aquecimento: ' + (match.warmup || '—') + '. Volta à calma: ' + (match.cooldown || '—') + '.', km: match.estKm != null ? match.estKm : s.km };
+    const p = getPlan(); persistPlan(p);
+  } else {
+    w.sessions[i] = { ...w.sessions[i], code: value };
+    const p = getPlan(); persistPlan(p, true);
+  }
+}
+
+function updateVo2Input(field, value) {
+  const p = getPlan(); if (!p) return;
+  const protocol = p.vo2Protocol || 'vo2pro';
+  p.vo2Inputs = { ...(p.vo2Inputs || {}), [protocol]: { ...((p.vo2Inputs || {})[protocol] || {}), [field]: value } };
+  persistPlan(p, true);
+  // resultado precisa recalcular, mas sem perder foco do input: só re-renderiza o painel de resultado
+  refreshVo2ResultPanel();
+}
+function refreshVo2ResultPanel() {
+  const p = getPlan(); if (!p) return;
+  const el = document.getElementById('vo2ResultPanel');
+  if (el) el.innerHTML = renderVo2Result(p);
+}
+function suggestHrMax() {
+  const p = getPlan(); if (!p) return;
+  const age = calcAge(p.birthDate); if (!age) return;
+  p.hrMax = String(Math.round(208 - 0.7 * age));
+  persistPlan(p);
+}
+
+/* ==================================================================== */
+/*  MOTOR DE PERIODIZAÇÃO — UI                                          */
+/* ==================================================================== */
+function togglePeriodOpen() { periodOpen = !periodOpen; render(); }
+function setPeriodField(field, value) { periodForm[field] = value; if (field !== 'nivel') return; render(); }
+function setPeriodFieldNoRender(field, value) { periodForm[field] = value; }
+function gerarMacrociclo() {
+  const p = getPlan(); if (!p) return;
+  periodForm.error = '';
+  const prova = Number(periodForm.prova), vol = Number(periodForm.volumeAtual), freq = Number(periodForm.freq), s = Number(periodForm.totalSemanas);
+  if (!vol || vol < 5) { periodForm.error = 'Informe um volume semanal válido (mín. 5 km).'; render(); return; }
+  if (!freq || freq < 3 || freq > 7) { periodForm.error = 'Frequência deve ser entre 3 e 7 treinos/semana.'; render(); return; }
+  if (!s || s < 6) { periodForm.error = 'O macrociclo precisa de pelo menos 6 semanas.'; render(); return; }
+  if (prova >= 21 && s < 10) { periodForm.error = 'Para 21km/42km, recomenda-se um macrociclo de pelo menos 10 semanas.'; render(); return; }
+  const hasContent = p.weeks.some((w) => w.sessions.some((sess) => sess.title || sess.detail || sess.code));
+  if (hasContent && !confirm('Isso vai SUBSTITUIR todas as semanas atuais deste plano pelo macrociclo gerado. Continuar?')) return;
+  const weeks = gerarMacrocicloParaPlano({ prova, volumeAtual: vol, freq, nivel: periodForm.nivel, totalSemanas: s, blockStartDate: p.blockStartDate });
+  p.weeks = weeks;
+  periodOpen = false;
+  persistPlan(p);
+}
+
+/* ==================================================================== */
+/*  CALENDÁRIO DO BLOCO                                                 */
+/* ==================================================================== */
+function gerarCalendario() {
+  const p = getPlan(); if (!p || !p.blockStartDate) return;
+  const start = new Date(p.blockStartDate + 'T00:00:00');
+  const n = p.weeks.length;
+  p.weeks = p.weeks.map((w, i) => {
+    const wStart = addDays(start, i * 7); const wEnd = addDays(wStart, 6);
+    const cells = w.cells.map((c, ci) => ({ ...c, date: pad2(addDays(wStart, ci).getDate()) }));
+    const sessions = w.sessions.map((s) => {
+      const off = DOW_OFFSET[normDow(s.dow)]; if (off === undefined) return s;
+      const d = addDays(wStart, off);
+      return { ...s, date: pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) };
+    });
+    return { ...w, tag: 'Semana ' + (i + 1) + ' · ' + formatRange(wStart, wEnd), cells, sessions };
+  });
+  persistPlan(p);
+}
+
+/* ==================================================================== */
+/*  PDF                                                                  */
+/* ==================================================================== */
+function loadHtml2Pdf() {
+  return new Promise((resolve, reject) => {
+    if (window.html2pdf) { resolve(window.html2pdf); return; }
+    let s = document.querySelector('script[data-lib="html2pdf"]');
+    if (s) { s.addEventListener('load', () => resolve(window.html2pdf)); s.addEventListener('error', () => reject(new Error('load-fail'))); return; }
+    s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.dataset.lib = 'html2pdf';
+    s.onload = () => resolve(window.html2pdf);
+    s.onerror = () => reject(new Error('load-fail'));
+    document.head.appendChild(s);
+  });
+}
+async function downloadPdf() {
+  const p = getPlan(); if (!p) return;
+  const node = document.getElementById('printArea'); if (!node) return;
+  pdfState = 'loading'; renderPdfButtons();
+  try {
+    const html2pdf = await loadHtml2Pdf();
+    const filename = (p.name || p.athleteName || 'plano').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'plano';
+    await html2pdf().set({
+      margin: 0, filename: filename + '.pdf',
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, backgroundColor: '#14161A', useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] },
+    }).from(node).save();
+    pdfState = 'idle';
+  } catch (e) { pdfState = 'error'; setTimeout(() => { pdfState = 'idle'; renderPdfButtons(); }, 3500); }
+  renderPdfButtons();
+}
+function renderPdfButtons() {
+  const el = document.getElementById('pdfBtnWrap');
+  if (el) el.innerHTML = pdfButtonsHtml();
+}
+
+/* ==================================================================== */
+/*  TOAST                                                                */
+/* ==================================================================== */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast'); if (!el) return;
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+/* ==================================================================== */
+/*  HELPERS DE UI (usa o objeto C já definido em pure_logic.js)         */
+/* ==================================================================== */
+function fieldHtml(label, inner) {
+  return `<label class="block"><span class="block text-[11px] uppercase tracking-wider mb-1" style="color:${C.paperDim}">${esc(label)}</span>${inner}</label>`;
+}
+function sectionCardHtml(title, actionHtml, innerHtml) {
+  return `<div class="rounded-lg mb-4" style="background:${C.ink2};border:1px solid ${C.line}">
+    <div class="flex items-center justify-between px-4 py-3" style="border-bottom:1px solid ${C.line}">
+      <h3 class="pz-mono text-[12px] uppercase tracking-widest" style="color:${C.hivis}">${esc(title)}</h3>
+      ${actionHtml || ''}
+    </div>
+    <div class="p-4">${innerHtml}</div>
+  </div>`;
+}
+function iconBtnHtml(onclick, label, tone, title, extraStyle) {
+  const toneColor = tone === 'danger' ? '#E88379' : tone === 'accent' ? C.hivis : C.paperDim;
+  return `<button onclick="${onclick}" ${title ? `title="${esc(title)}"` : ''} class="inline-flex items-center gap-1 text-[12px] px-2 py-1 rounded hover:bg-white/5 transition-colors" style="color:${toneColor};${extraStyle || ''}">${label}</button>`;
+}
+function typeSelectHtml(value, onchange) {
+  return `<select class="pz-input" onchange="${onchange}">${TYPE_KEYS.map((k) => `<option value="${k}" ${k === value ? 'selected' : ''}>${TYPES[k].label}</option>`).join('')}</select>`;
+}
+function screenTabsHtml() {
+  return `<div class="flex gap-1 mb-6 rounded-lg p-1 w-fit" style="background:${C.ink2};border:1px solid ${C.line}">
+    <button onclick="setScreen('roster')" class="px-3.5 py-1.5 rounded-md text-[12px] pz-display uppercase flex items-center gap-1.5" style="background:${screen === 'roster' ? C.hivis : 'transparent'};color:${screen === 'roster' ? C.ink : C.paperDim}">📋 Planos</button>
+    <button onclick="setScreen('bank')" class="px-3.5 py-1.5 rounded-md text-[12px] pz-display uppercase flex items-center gap-1.5" style="background:${screen === 'bank' ? C.hivis : 'transparent'};color:${screen === 'bank' ? C.ink : C.paperDim}">📖 Banco de treinos</button>
+  </div>`;
+}
+function setScreen(s) { screen = s; render(); }
+function openPlan(id) { currentPlanId = id; mode = 'edit'; render(); }
+function backToRoster() { currentPlanId = null; render(); }
+function setMode(m) { mode = m; render(); }
+
+/* ==================================================================== */
+/*  ROSTER (lista de planos)                                            */
+/* ==================================================================== */
+function renderPlanList() {
+  const ids = Object.keys(roster).sort((a, b) => (roster[b].updatedAt || 0) - (roster[a].updatedAt || 0));
+  let body;
+  if (loadingRoster) {
+    body = `<div class="flex items-center gap-2 text-[13px] py-10 justify-center" style="color:${C.paperDim}">⏳ Carregando...</div>`;
+  } else if (!ids.length) {
+    body = `<div class="text-center py-16 rounded-lg" style="background:${C.ink2};border:1px dashed ${C.line}">
+      <p class="text-[14px] mb-1" style="color:${C.paper}">Nenhum plano ainda</p>
+      <p class="text-[13px]" style="color:${C.paperDim}">Crie o primeiro plano de corrida pra entregar.</p>
+    </div>`;
+  } else {
+    body = `<div class="space-y-2">${ids.map((id) => {
+      const p = roster[id];
+      return `<div class="flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer hover:border-white/20 transition-colors" style="background:${C.ink2};border:1px solid ${C.line}" onclick="openPlan('${id}')">
+        <div>
+          <div class="pz-display text-[15px] uppercase font-semibold" style="color:${C.paper}">${esc(p.name || p.athleteName || 'Plano sem nome')}</div>
+          <div class="text-[12px]" style="color:${C.paperDim}">${p.athleteName ? esc(p.athleteName) + ' · ' : ''}${p.weeks.length} semana${p.weeks.length !== 1 ? 's' : ''} · ${p.countdownNumber ? esc(p.countdownNumber) + ' ' + esc(p.countdownUnit) : 'sem countdown'}</div>
+        </div>
+        ${iconBtnHtml(`deletePlan('${id}', event)`, '✕', 'danger')}
+      </div>`;
+    }).join('')}</div>`;
+  }
+  return `<div class="max-w-[640px] mx-auto py-10 px-6">
+    ${screenTabsHtml()}
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <div class="pz-mono text-[11px] uppercase tracking-widest mb-1" style="color:${C.hivisDim}">PH Performance</div>
+        <h1 class="pz-display text-[26px] uppercase font-semibold" style="color:${C.paper}">Planos de corrida</h1>
+      </div>
+      <button onclick="createPlan()" class="flex items-center gap-2 px-4 py-2.5 rounded-lg pz-display text-[13px] uppercase font-semibold" style="background:${C.hivis};color:${C.ink}">＋ Novo plano</button>
+    </div>
+    ${body}
+  </div>`;
+}
+
+/* ==================================================================== */
+/*  BANCO DE TREINOS                                                    */
+/* ==================================================================== */
+function bankRowHtml(item) {
+  const mapped = BANK_TYPE_TO_PLAN_TYPE[item.type] || 'easy';
+  const tstyle = TYPES[mapped];
+  const isOpen = bankOpenId === item.id;
+  let inner = '';
+  if (isOpen) {
+    inner = `<div class="p-3.5 pt-1" style="border-top:1px solid ${C.line}">
+      <div class="grid grid-cols-2 gap-3 mb-2 mt-3">
+        ${fieldHtml('Código', `<input class="pz-input" value="${esc(item.code)}" oninput="updateBankField('${item.id}','code',this.value)"/>`)}
+        ${fieldHtml('Tipo', `<select class="pz-input" onchange="updateBankField('${item.id}','type',this.value)">${BANK_TYPE_OPTIONS.map((t) => `<option value="${t}" ${t === item.type ? 'selected' : ''}>${t}</option>`).join('')}</select>`)}
+      </div>
+      ${fieldHtml('Aquecimento', `<input class="pz-input mb-2" value="${esc(item.warmup)}" oninput="updateBankField('${item.id}','warmup',this.value)"/>`)}
+      ${fieldHtml('Parte principal', `<textarea class="pz-input mb-2" rows="2" oninput="updateBankField('${item.id}','main',this.value)">${esc(item.main)}</textarea>`)}
+      <div class="grid grid-cols-2 gap-3 mb-1">
+        ${fieldHtml('Volta à calma', `<input class="pz-input" value="${esc(item.cooldown)}" oninput="updateBankField('${item.id}','cooldown',this.value)"/>`)}
+        ${fieldHtml('Distância estimada (km)', `<input class="pz-input" type="number" step="0.01" value="${item.estKm ?? ''}" oninput="updateBankField('${item.id}','estKm',this.value===''?null:Number(this.value))"/>`)}
+      </div>
+      <div class="flex justify-end mt-2">${iconBtnHtml(`removeBankItem('${item.id}')`, '✕ Remover treino', 'danger')}</div>
+    </div>`;
+  }
+  return `<div class="rounded-lg mb-2 overflow-hidden" style="background:${C.ink2};border:1px solid ${C.line}">
+    <button onclick="toggleBankOpen('${item.id}')" class="w-full flex items-center gap-3 px-3.5 py-2.5 text-left">
+      <span class="pz-mono text-[12px] font-bold shrink-0" style="color:${C.paper};min-width:140px">${esc(item.code) || '(sem código)'}</span>
+      <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold shrink-0" style="background:${tstyle.tagBg};color:${tstyle.tagColor}">${esc(item.type) || '—'}</span>
+      <span class="text-[12px] truncate flex-1" style="color:${C.paperDim}">${esc(item.main) || '—'}</span>
+      ${item.estKm != null && item.estKm !== '' ? `<span class="pz-mono text-[11px] shrink-0" style="color:${C.paperDim}">~${item.estKm}km</span>` : ''}
+      <span style="color:${C.paperDim}">${isOpen ? '▴' : '▾'}</span>
+    </button>
+    ${inner}
+  </div>`;
+}
+function toggleBankOpen(id) { bankOpenId = bankOpenId === id ? null : id; render(); }
+function updateBankField(id, field, value) { const item = bank[id]; if (!item) return; const next = { ...item, [field]: value }; persistBankItem(next); render(); }
+function setBankQuery(v) { bankQuery = v; renderBankList(); }
+function setBankTypeFilter(v) { bankTypeFilter = v; render(); }
+function renderBankList() {
+  const el = document.getElementById('bankListArea'); if (!el) return;
+  const { filtered, items } = filteredBankItems();
+  el.innerHTML = bankListInnerHtml(filtered, items);
+  const countEl = document.getElementById('bankCount'); if (countEl) countEl.textContent = filtered.length + ' de ' + items.length + ' treinos';
+}
+function filteredBankItems() {
+  const items = Object.values(bank).sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+  const q = bankQuery.trim().toUpperCase();
+  const filtered = items.filter((i) => {
+    const matchesQ = !q || (i.code || '').toUpperCase().includes(q) || (i.main || '').toUpperCase().includes(q);
+    const matchesT = !bankTypeFilter || i.type === bankTypeFilter;
+    return matchesQ && matchesT;
+  });
+  return { filtered, items };
+}
+function bankListInnerHtml(filtered, items) {
+  if (loadingBank) return `<div class="flex items-center gap-2 text-[13px] py-10 justify-center" style="color:${C.paperDim}">⏳ Carregando...</div>`;
+  if (!filtered.length) return `<div class="text-center py-16 rounded-lg" style="background:${C.ink2};border:1px dashed ${C.line}"><p class="text-[14px]" style="color:${C.paper}">Nenhum treino encontrado</p></div>`;
+  return filtered.map(bankRowHtml).join('');
+}
+function renderBankView() {
+  const { filtered, items } = filteredBankItems();
+  return `<div class="max-w-[820px] mx-auto py-10 px-6">
+    ${screenTabsHtml()}
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <div class="pz-mono text-[11px] uppercase tracking-widest mb-1" style="color:${C.hivisDim}">PH Performance</div>
+        <h1 class="pz-display text-[26px] uppercase font-semibold" style="color:${C.paper}">Banco de treinos</h1>
+      </div>
+      <button onclick="addBankItem()" class="flex items-center gap-2 px-4 py-2.5 rounded-lg pz-display text-[13px] uppercase font-semibold" style="background:${C.hivis};color:${C.ink}">＋ Novo treino</button>
+    </div>
+    <div class="flex gap-2 mb-4">
+      <div class="relative flex-1">
+        <input class="pz-input" style="padding-left:32px" value="${esc(bankQuery)}" oninput="setBankQuery(this.value)" placeholder="Buscar por código ou descrição..."/>
+        <span style="position:absolute;left:10px;top:9px;color:${C.paperDim}">🔍</span>
+      </div>
+      <select class="pz-input" style="max-width:190px" onchange="setBankTypeFilter(this.value)">
+        <option value="">Todos os tipos</option>
+        ${BANK_TYPE_OPTIONS.map((t) => `<option value="${t}" ${t === bankTypeFilter ? 'selected' : ''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="text-[12px] mb-3" id="bankCount" style="color:${C.paperDim}">${filtered.length} de ${items.length} treinos</div>
+    <div id="bankListArea">${bankListInnerHtml(filtered, items)}</div>
+  </div>`;
+}
+
+/* ==================================================================== */
+/*  EDITOR: HERO                                                        */
+/* ==================================================================== */
+function renderHero(p) {
+  const statsHtml = p.stats.map((s, i) => `<div class="flex gap-2">
+    <input class="pz-input" value="${esc(s.value)}" oninput="updateStat(${i},'value',this.value)" placeholder="49:34"/>
+    <input class="pz-input" value="${esc(s.label)}" oninput="updateStat(${i},'label',this.value)" placeholder="PR 10km (teste)"/>
+    ${iconBtnHtml(`removeStat(${i})`, '✕', 'danger')}
+  </div>`).join('');
+  const inner = `
+    ${fieldHtml('Nome do plano (uso interno, aparece na lista)', `<input class="pz-input mb-3" value="${esc(p.name)}" oninput="updatePlanField('name',this.value)" placeholder="Sub-50 · Reta Final"/>`)}
+    ${fieldHtml('Linha do bib (topo)', `<input class="pz-input mb-3" value="${esc(p.bibLabel)}" oninput="updatePlanField('bibLabel',this.value)" placeholder="PH PERFORMANCE / AJUSTADO À ROTINA"/>`)}
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      ${fieldHtml('Número do countdown', `<input class="pz-input" value="${esc(p.countdownNumber)}" oninput="updatePlanField('countdownNumber',this.value)" placeholder="14"/>`)}
+      ${fieldHtml('Unidade do countdown', `<input class="pz-input" value="${esc(p.countdownUnit)}" oninput="updatePlanField('countdownUnit',this.value)" placeholder="dias p/ o Soldado"/>`)}
+    </div>
+    ${fieldHtml('Subtítulo do hero', `<textarea class="pz-input mb-3" rows="2" oninput="updatePlanField('heroSub',this.value)" placeholder="Só 4 sessões por semana...">${esc(p.heroSub)}</textarea>`)}
+    <div class="flex items-center justify-between mb-1.5">
+      <span class="text-[11px] uppercase tracking-wider" style="color:${C.paperDim}">Stats (grid de 3 no topo)</span>
+      ${iconBtnHtml('addStat()', '＋ stat', 'accent')}
+    </div>
+    <div class="space-y-2">${statsHtml}</div>
+  `;
+  return sectionCardHtml('Hero / capa do plano', '', inner);
+}
+
+/* ==================================================================== */
+/*  EDITOR: ALUNO VINCULADO                                             */
+/* ==================================================================== */
+function renderAlunoLink(p) {
+  const opts = alunosList.map((a) => `<option value="${a.id}" ${a.id === p.alunoId ? 'selected' : ''}>${esc(a.nome)}</option>`).join('');
+  const inner = `${fieldHtml('Vincular a um aluno já cadastrado (opcional)', `<select class="pz-input" onchange="linkAluno(this.value)">
+    <option value="">— Plano avulso, sem vínculo —</option>${opts}
+  </select>`)}
+  ${p.alunoId ? `<a href="index.html?ver=${p.alunoId}" target="_blank" class="text-[11px] mt-2 inline-block" style="color:${C.hivis};text-decoration:underline">Abrir ficha de musculação deste aluno ↗</a>` : ''}`;
+  return sectionCardHtml('Aluno', '', inner);
+}
+function linkAluno(alunoId) {
+  const p = getPlan(); if (!p) return;
+  p.alunoId = alunoId || '';
+  if (alunoId) { const a = alunosList.find((x) => x.id === alunoId); if (a && !p.athleteName) p.athleteName = a.nome; }
+  persistPlan(p);
+}
+
+/* ==================================================================== */
+/*  EDITOR: CALCULADORA DE VO2MÁX                                       */
+/* ==================================================================== */
+function renderVo2Result(p) {
+  const age = calcAge(p.birthDate);
+  const result = getVO2Result(p);
+  if (!result) return `<p class="text-[13px]" style="color:${C.paperDim}">Preencha os dados do teste selecionado para calcular o VO2máx e as zonas.</p>`;
+  const rows = result.paceZones.map((z, i) => `<div class="grid grid-cols-5 gap-px mb-px" style="background:${C.line}">
+    <div class="px-2 py-1.5 text-[12px] font-semibold" style="background:${C.ink};color:${C.paper}">${z.key} · ${z.label}</div>
+    <div class="px-2 py-1.5 text-[12px] pz-mono" style="background:${C.ink};color:${C.paperDim}">${Math.round(z.pct * 100)}%</div>
+    <div class="px-2 py-1.5 text-[12px] pz-mono" style="background:${C.ink};color:${C.paper}">${z.paceLabel}</div>
+    <div class="px-2 py-1.5 text-[12px] pz-mono" style="background:${C.ink};color:${C.paperDim}">${z.kmh}</div>
+    <div class="px-2 py-1.5 text-[12px] pz-mono" style="background:${C.ink};color:${C.paperDim}">${result.hrZones ? result.hrZones[i].bpm : '—'}</div>
+  </div>`).join('');
+  return `<div class="rounded-lg p-4" style="background:${C.ink};border:1px solid ${C.line}">
+    <div class="flex items-end justify-between mb-4 flex-wrap gap-2">
+      <div>
+        <div class="pz-mono text-[11px] uppercase tracking-wider mb-1" style="color:${C.paperDim}">VO2máx estimado</div>
+        <div class="pz-display text-[34px] font-bold" style="color:${C.hivis}">${result.vo2max.toFixed(2)} <span class="text-[14px]" style="color:${C.paperDim}">ml/kg/min</span></div>
+      </div>
+      ${result.level ? `<span class="text-[11px] uppercase tracking-wider px-2.5 py-1 rounded-full font-semibold" style="background:rgba(212,255,61,0.15);color:${C.hivis}">${result.level}</span>` : ''}
+    </div>
+    ${!age ? `<p class="text-[12px] mb-3" style="color:${C.paperDim}">Informe a data de nascimento para classificar o nível de aptidão.</p>` : ''}
+    <div class="grid grid-cols-5 gap-px mb-px" style="background:${C.line}">
+      ${['Zona', '%', 'Ritmo /km', 'km/h', 'FC bpm'].map((h) => `<div class="text-[10px] uppercase tracking-wider px-2 py-1.5" style="background:#0F1113;color:${C.paperDim}">${h}</div>`).join('')}
+    </div>
+    ${rows}
+    ${result.vam ? `<p class="text-[12px] mt-3" style="color:${C.paperDim}">VAM estimada: <span style="color:${C.paper}">${result.vam.toFixed(2)} km/h</span></p>` : ''}
+  </div>`;
+}
+function renderVo2Calculator(p) {
+  const protocol = p.vo2Protocol || 'vo2pro';
+  const protoDef = PROTOCOLS.find((x) => x.key === protocol) || PROTOCOLS[4];
+  const inputs = (p.vo2Inputs && p.vo2Inputs[protocol]) || {};
+  const age = calcAge(p.birthDate);
+  let fieldsHtml = '<div class="grid grid-cols-2 gap-3 mb-3">';
+  if (protoDef.fields.includes('time')) {
+    fieldsHtml += fieldHtml(protoDef.fields.includes('dist') ? 'Tempo da prova (min : seg)' : 'Tempo do teste (min : seg)', `<div class="flex gap-2">
+      <input class="pz-input" type="number" min="0" value="${inputs.min || ''}" oninput="updateVo2Input('min',this.value)" placeholder="min"/>
+      <input class="pz-input" type="number" min="0" max="59" value="${inputs.sec || ''}" oninput="updateVo2Input('sec',this.value)" placeholder="seg"/>
+    </div>`);
+  }
+  if (protoDef.fields.includes('dist')) {
+    const lbl = protocol === 'cooper12min' ? 'Distância em 12 min (km)' : protocol === 'dabonneville' ? 'Distância em 5 min (km)' : 'Distância da prova (km)';
+    fieldsHtml += fieldHtml(lbl, `<input class="pz-input" type="number" step="0.001" min="0" value="${inputs.distKm || ''}" oninput="updateVo2Input('distKm',this.value)" placeholder="10"/>`);
+  }
+  fieldsHtml += '</div>';
+  const inner = `
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      ${fieldHtml('Nome do aluno', `<input class="pz-input" value="${esc(p.athleteName)}" oninput="updatePlanField('athleteName',this.value)" placeholder="Pedro Henrique Oliveira Costa"/>`)}
+      ${fieldHtml('Objetivo', `<input class="pz-input" value="${esc(p.objective)}" oninput="updatePlanField('objective',this.value)" placeholder="Correr 10km abaixo de 50min"/>`)}
+    </div>
+    <div class="grid gap-3 mb-4" style="grid-template-columns:1fr 0.7fr 0.6fr">
+      ${fieldHtml('Data de nascimento', `<input type="date" class="pz-input" value="${esc(p.birthDate)}" onchange="updatePlanFieldAndRender('birthDate',this.value)"/>`)}
+      ${fieldHtml('Sexo', `<select class="pz-input" onchange="updatePlanFieldAndRender('sex',this.value)"><option value="M" ${p.sex === 'M' ? 'selected' : ''}>Masculino</option><option value="F" ${p.sex === 'F' ? 'selected' : ''}>Feminino</option></select>`)}
+      ${fieldHtml('Idade', `<div class="pz-input flex items-center" style="color:${C.paperDim}">${age ?? '—'}</div>`)}
+    </div>
+    ${fieldHtml('Protocolo de teste utilizado', `<select class="pz-input mb-3" onchange="updatePlanFieldAndRender('vo2Protocol',this.value)">${PROTOCOLS.map((pr) => `<option value="${pr.key}" ${pr.key === protocol ? 'selected' : ''}>${pr.label}</option>`).join('')}</select>`)}
+    ${fieldsHtml}
+    ${fieldHtml('Frequência cardíaca máxima (bpm)', `<div class="flex gap-2 mb-4">
+      <input class="pz-input" type="number" min="0" value="${esc(p.hrMax)}" oninput="updatePlanField('hrMax',this.value)" onchange="render()" placeholder="206"/>
+      ${iconBtnHtml('suggestHrMax()', 'Sugerir (Tanaka)', 'accent')}
+    </div>`)}
+    <div id="vo2ResultPanel">${renderVo2Result(p)}</div>
+  `;
+  return sectionCardHtml('Perfil do aluno & calculadora de VO2máx', '', inner);
+}
+
+/* ==================================================================== */
+/*  EDITOR: CALENDÁRIO DO BLOCO                                         */
+/* ==================================================================== */
+function renderCalendarGenerator(p) {
+  const inner = `
+    <div class="grid gap-3 mb-3" style="grid-template-columns:1fr auto">
+      ${fieldHtml('Início do bloco', `<input type="date" class="pz-input" value="${esc(p.blockStartDate)}" onchange="updatePlanFieldAndRender('blockStartDate',this.value)"/>`)}
+      <div class="flex items-end"><button onclick="gerarCalendario()" class="flex items-center gap-1.5 px-3 py-2 rounded-md text-[12px] pz-display uppercase whitespace-nowrap" style="background:${C.hivis};color:${C.ink}">📅 Gerar</button></div>
+    </div>
+    ${p.blockStartDate ? `<p class="text-[12px]" style="color:${C.paperDim}">Bloco de ${p.weeks.length} semana${p.weeks.length !== 1 ? 's' : ''} · término previsto em ${formatDatePt(addDays(new Date(p.blockStartDate + 'T00:00:00'), p.weeks.length * 7 - 1))}.</p>` : ''}
+    <p class="text-[11px] mt-2" style="color:${C.paperDim}">Recalcula a tag e a faixa de dias de cada semana já existente, e a data das sessões cujo dia (Seg–Dom) já esteja selecionado. Semanas novas adicionadas em "Nova semana" já vêm com a data calculada automaticamente.</p>
+  `;
+  return sectionCardHtml('Calendário do bloco', '', inner);
+}
+
+/* ==================================================================== */
+/*  EDITOR: MOTOR DE PERIODIZAÇÃO                                       */
+/* ==================================================================== */
+function renderPeriodizationGenerator(p) {
+  const action = `<button onclick="togglePeriodOpen()" class="flex items-center gap-1 text-[11px] pz-display uppercase px-2 py-1 rounded" style="background:${periodOpen ? C.hivis : C.ink};color:${periodOpen ? C.ink : C.paperDim};border:1px solid ${C.line}">📅 ${periodOpen ? 'Fechar' : 'Abrir'}</button>`;
+  let inner;
+  if (!periodOpen) {
+    inner = `<p class="text-[12.5px]" style="color:${C.paperDim}">Gera o bloco inteiro — mesociclos em periodização reversa, progressão de volume com deload/taper e a semana a semana — a partir da prova-alvo, volume atual e nível do aluno. Substitui todas as semanas deste plano.</p>`;
+  } else {
+    const niveis = [['iniciante', 'Iniciante'], ['intermediario', 'Intermediário'], ['avancado', 'Avançado']];
+    inner = `
+      ${fieldHtml('Prova alvo', `<select class="pz-input mb-3" onchange="setPeriodFieldNoRender('prova',this.value)">
+        <option value="5" ${periodForm.prova === '5' ? 'selected' : ''}>5 km</option>
+        <option value="10" ${periodForm.prova === '10' ? 'selected' : ''}>10 km</option>
+        <option value="21" ${periodForm.prova === '21' ? 'selected' : ''}>21 km (Meia Maratona)</option>
+        <option value="42" ${periodForm.prova === '42' ? 'selected' : ''}>42 km (Maratona)</option>
+      </select>`)}
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        ${fieldHtml('Volume atual (km/semana)', `<input class="pz-input" type="number" min="5" max="200" value="${periodForm.volumeAtual}" oninput="setPeriodFieldNoRender('volumeAtual',this.value)"/>`)}
+        ${fieldHtml('Treinos / semana', `<input class="pz-input" type="number" min="3" max="7" value="${periodForm.freq}" oninput="setPeriodFieldNoRender('freq',this.value)"/>`)}
+      </div>
+      ${fieldHtml('Nível do corredor', `<div class="flex gap-2 mb-3">${niveis.map(([v, l]) => `<button type="button" onclick="setPeriodField('nivel','${v}')" class="flex-1 px-2 py-2 rounded text-[12px] pz-display uppercase" style="background:${periodForm.nivel === v ? C.hivis : '#14161A'};color:${periodForm.nivel === v ? C.ink : C.paperDim};border:1px solid ${C.line}">${l}</button>`).join('')}</div>`)}
+      ${fieldHtml('Macrociclo (semanas até a prova)', `<input class="pz-input mb-1" type="number" min="6" max="32" value="${periodForm.totalSemanas}" oninput="setPeriodFieldNoRender('totalSemanas',this.value)"/>`)}
+      <p class="text-[11px] mb-3" style="color:${C.paperDim}">${p.blockStartDate ? 'Vai usar o Início do bloco definido acima pra calcular as datas de cada semana.' : 'Defina o Início do bloco (acima) antes de gerar, se quiser as datas já calculadas — senão só o dia da semana (Seg–Dom) sai preenchido.'}</p>
+      ${periodForm.error ? `<p class="text-[12px] mb-3" style="color:#E88379">${esc(periodForm.error)}</p>` : ''}
+      <button onclick="gerarMacrociclo()" class="flex items-center gap-1.5 px-3 py-2 rounded-md text-[12px] pz-display uppercase" style="background:${C.hivis};color:${C.ink}">✓ Gerar e substituir semanas do plano</button>
+    `;
+  }
+  return sectionCardHtml('Motor de periodização (gerar macrociclo)', action, inner);
+}
+
+/* ==================================================================== */
+/*  EDITOR: FAIXA DE 7 DIAS (STRIP CELL)                                */
+/* ==================================================================== */
+function stripCellHtml(week, cell, i) {
+  let assignSelect = '';
+  if (cell.type !== 'off') {
+    assignSelect = `<select class="pz-input mt-1" style="padding:3px 2px;font-size:9px" onchange="if(this.value){assignCellToSession('${week.id}',${i},this.value);this.value=''}" title="Escolher em qual sessão colocar este treino">
+      <option value="">→ sessão...</option>
+      <option value="__new__">+ nova sessão</option>
+      ${week.sessions.map((s, si) => `<option value="${si}">${si + 1}. ${esc(s.dow) || '?'}</option>`).join('')}
+    </select>`;
+  }
+  return `<div class="p-1.5 rounded" style="background:${C.ink};border:1px solid ${C.line}">
+    <div class="pz-mono text-[9px] uppercase text-center mb-1" style="color:${C.paperDim};letter-spacing:0.5px">${WEEKDAYS[i]}</div>
+    <input class="pz-input mb-1 text-center px-1" style="padding:4px 2px;font-size:11px" value="${esc(cell.date)}" oninput="setCell('${week.id}',${i},{date:this.value})" placeholder="dia"/>
+    <select class="pz-input mb-1" style="padding:4px 2px;font-size:10.5px" onchange="setCell('${week.id}',${i},{type:this.value})">${TYPE_KEYS.map((k) => `<option value="${k}" ${k === cell.type ? 'selected' : ''}>${TYPES[k].label}</option>`).join('')}</select>
+    <input class="pz-input text-center px-1" style="padding:4px 2px;font-size:10.5px" value="${esc(cell.micro)}" oninput="setCell('${week.id}',${i},{micro:this.value})" placeholder="rótulo"/>
+    ${assignSelect}
+  </div>`;
+}
+
+/* ==================================================================== */
+/*  EDITOR: CARD DE SESSÃO                                              */
+/* ==================================================================== */
+function sessionCardHtml(week, s, i, zoneOptions) {
+  const zoneSelect = zoneOptions && zoneOptions.length
+    ? fieldHtml('Zona de referência (calculadora de VO2máx do aluno)', `<select class="pz-input mb-2" onchange="if(this.value){applyZoneToSession('${week.id}',${i},this.value)}" title="Preenche pace e frequência mínima/máxima da sessão com base na zona calculada">
+        <option value="">Selecionar zona...</option>
+        ${zoneOptions.map((z) => `<option value="${z.key}">${z.label} · ${z.paceText}${z.freqText ? ' · ' + z.freqText : ''}</option>`).join('')}
+      </select>`)
+    : '';
+  return `<div class="p-3 rounded" style="background:${C.ink};border:1px solid ${C.line}">
+    <div class="grid gap-2 mb-2" style="grid-template-columns:0.7fr 0.7fr 1fr 1fr 0.55fr auto">
+      <select class="pz-input" onchange="updateSessionField('${week.id}',${i},'dow',this.value,true)">
+        <option value="">Dia</option>${WEEKDAYS.map((d) => `<option value="${d}" ${d === s.dow ? 'selected' : ''}>${d}</option>`).join('')}
+      </select>
+      <input class="pz-input" value="${esc(s.date)}" oninput="updateSessionField('${week.id}',${i},'date',this.value)" placeholder="05/08"/>
+      ${typeSelectHtml(s.type, `updateSessionField('${week.id}',${i},'type',this.value,true)`)}
+      <input class="pz-input" value="${esc(s.tagText)}" oninput="updateSessionField('${week.id}',${i},'tagText',this.value)" placeholder="Qualidade"/>
+      <input class="pz-input" type="number" step="0.1" min="0" value="${esc(s.km)}" oninput="updateSessionField('${week.id}',${i},'km',this.value)" placeholder="km" title="Volume desta sessão em km — entra no total da semana"/>
+      <div class="flex items-center gap-0.5">
+        ${iconBtnHtml(`moveSession('${week.id}',${i},-1)`, '▲', 'default', 'Mover sessão pra cima')}
+        ${iconBtnHtml(`moveSession('${week.id}',${i},1)`, '▾', 'default', 'Mover sessão pra baixo')}
+        ${iconBtnHtml(`removeSession('${week.id}',${i})`, '✕', 'danger', 'Remover sessão')}
+      </div>
+    </div>
+    ${s.dow ? `<button type="button" onclick="pullFromStrip('${week.id}',${i})" class="text-[10.5px] mb-2" style="color:${C.hivis};text-decoration:underline" title="Copia tipo, data e tag do dia correspondente na faixa de 7 dias">Puxar treino de ${esc(s.dow)} da faixa de 7 dias</button>` : ''}
+    <div class="flex gap-2 mb-2">
+      <input class="pz-input" list="bank-codes-list" value="${esc(s.code)}" oninput="handleCodeInput('${week.id}',${i},this.value)" placeholder="Código do banco (ex: INT8-1KMX2')"/>
+      ${iconBtnHtml(`applyBankCode('${week.id}',${i})`, '＋ aplicar', 'accent')}
+    </div>
+    ${notFoundFlag[s.id] ? `<div class="text-[11px] mb-2" style="color:#E88379">Código não encontrado no banco de treinos.</div>` : ''}
+    <input class="pz-input mb-2" value="${esc(s.title)}" oninput="updateSessionField('${week.id}',${i},'title',this.value)" placeholder="4x1km no limiar recalculado"/>
+    <textarea class="pz-input mb-2" rows="2" oninput="updateSessionField('${week.id}',${i},'detail',this.value)" placeholder="Aquecimento: 5 MIN TROTE. Volta à calma: 5 MIN TROTE.">${esc(s.detail)}</textarea>
+    ${fieldHtml('Pace / ritmo (aceita várias linhas — por trecho, por zona etc.)', `<textarea class="pz-input mb-2" rows="3" oninput="updateSessionField('${week.id}',${i},'pace',this.value)" placeholder="Pace 5:40 nos 2km fortes e frequência máxima 186, pace leve 6:30&#10;&#10;ou por trecho:&#10;1-2KM: 6:35&#10;3-4KM: 6:10">${esc(s.pace)}</textarea>`)}
+    ${zoneSelect}
+    <div class="grid grid-cols-3 gap-2">
+      ${fieldHtml('Velocidade (km/h, opcional)', `<input class="pz-input mb-2" value="${esc(s.velocidade)}" oninput="updateSessionField('${week.id}',${i},'velocidade',this.value)" placeholder="10,6 km/h"/>`)}
+      ${fieldHtml('Frequência (mín–máx)', `<input class="pz-input mb-2" value="${esc(s.freq)}" oninput="updateSessionField('${week.id}',${i},'freq',this.value)" placeholder="165–185 bpm"/>`)}
+      ${fieldHtml('Percepção de esforço (PSE/RPE)', `<input class="pz-input mb-2" value="${esc(s.esforco)}" oninput="updateSessionField('${week.id}',${i},'esforco',this.value)" placeholder="RPE 7/10"/>`)}
+    </div>
+  </div>`;
+}
+
+/* ==================================================================== */
+/*  EDITOR: SEMANA (WeekEditor)                                         */
+/* ==================================================================== */
+function weekEditorHtml(p, week, index) {
+  const open = weekOpen[week.id] !== false;
+  const volume = weekVolumeKm(week);
+  const zoneOptions = buildZoneOptions(getVO2Result(p));
+  let body = '';
+  if (open) {
+    const stripHtml = week.cells.map((c, i) => stripCellHtml(week, c, i)).join('');
+    const sessionsHtml = week.sessions.map((s, i) => sessionCardHtml(week, s, i, zoneOptions)).join('');
+    body = `<div class="p-4">
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        ${fieldHtml('Tag da semana', `<input class="pz-input" value="${esc(week.tag)}" oninput="updateWeekField('${week.id}','tag',this.value)" placeholder="Semana 1 · 03–09 ago"/>`)}
+        ${fieldHtml('Título da semana', `<input class="pz-input" value="${esc(week.title)}" oninput="updateWeekField('${week.id}','title',this.value)" placeholder="Absorver + recalcular"/>`)}
+      </div>
+      ${fieldHtml('Legenda da faixa de dias', `<input class="pz-input mb-2" value="${esc(week.stripCaption)}" oninput="updateWeekField('${week.id}','stripCaption',this.value)" placeholder="SEG · TER · QUA · QUI · SEX · SÁB · DOM"/>`)}
+      <div class="mb-4">
+        <span class="block text-[11px] uppercase tracking-wider mb-1.5" style="color:${C.paperDim}">Faixa de 7 dias (visual)</span>
+        <div class="grid grid-cols-7 gap-1.5">${stripHtml}</div>
+      </div>
+      <div class="mb-1">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[11px] uppercase tracking-wider" style="color:${C.paperDim}">Sessões da semana (day cards)</span>
+          <div class="flex items-center gap-2">
+            <span class="pz-mono text-[11px]" style="color:${C.paperDim}">Volume calculado: <b style="color:${C.hivis}">${fmtKm(volume)} km</b></span>
+            ${iconBtnHtml(`addSession('${week.id}')`, '＋ sessão', 'accent')}
+          </div>
+        </div>
+        <div class="space-y-3">${sessionsHtml}</div>
+      </div>
+    </div>`;
+  }
+  return `<div class="rounded-lg mb-4 overflow-hidden" style="background:${C.ink2};border:1px solid ${C.line}">
+    <div class="flex items-center justify-between px-4 py-3" style="background:#171A1E">
+      <button class="flex items-center gap-2 flex-1 text-left" onclick="toggleWeekOpen('${week.id}')">
+        <span class="pz-mono text-[11px] px-1.5 py-0.5 rounded" style="background:${C.hivis};color:${C.ink}">${index + 1}</span>
+        <span class="pz-display text-[13px] uppercase" style="color:${C.paper}">${esc(week.tag) || 'Semana ' + (index + 1)}${week.title ? ' — ' + esc(week.title) : ''}</span>
+        ${volume > 0 ? `<span class="pz-mono text-[11px] px-1.5 py-0.5 rounded shrink-0" style="background:rgba(212,255,61,0.12);color:${C.hivis}">${fmtKm(volume)} km</span>` : ''}
+      </button>
+      <div class="flex items-center gap-1">
+        ${iconBtnHtml(`moveWeek('${week.id}',-1)`, '▲', 'default', '', index === 0 ? 'opacity:0.3' : '')}
+        ${iconBtnHtml(`moveWeek('${week.id}',1)`, '▾', 'default', '', index === p.weeks.length - 1 ? 'opacity:0.3' : '')}
+        ${iconBtnHtml(`duplicateWeek('${week.id}')`, '⎘', 'accent', 'Repetir esta semana inteira na semana seguinte')}
+        ${iconBtnHtml(`removeWeek('${week.id}')`, '✕', 'danger')}
+        <button onclick="toggleWeekOpen('${week.id}')" class="p-1" style="color:${C.paperDim}">${open ? '▴' : '▾'}</button>
+      </div>
+    </div>
+    ${body}
+  </div>`;
+}
+
+/* ==================================================================== */
+/*  EDITOR: ESTRATÉGIA DE PROVA                                         */
+/* ==================================================================== */
+function renderStrategyEditor(p) {
+  const groups = p.strategyGroups.map((g, gi) => {
+    const items = g.items.map((it, ii) => `<div class="flex gap-2">
+      <input class="pz-input" style="max-width:70px" value="${esc(it.num)}" oninput="updateStrategyItem(${gi},${ii},'num',this.value)" placeholder="1-2"/>
+      <input class="pz-input" value="${esc(it.text)}" oninput="updateStrategyItem(${gi},${ii},'text',this.value)" placeholder="4:55-5:00/km — controlado."/>
+      ${iconBtnHtml(`removeStrategyItem(${gi},${ii})`, '✕', 'danger')}
+    </div>`).join('');
+    return `<div class="p-3 rounded" style="background:${C.ink};border:1px solid ${C.line}">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[11px] uppercase tracking-wider" style="color:${C.paperDim}">Bloco ${gi + 1}</span>
+        <div class="flex gap-1">${iconBtnHtml(`addStrategyItem(${gi})`, '＋ item', 'accent')}${iconBtnHtml(`removeStrategyGroup(${gi})`, '✕', 'danger')}</div>
+      </div>
+      <div class="space-y-2">${items}</div>
+    </div>`;
+  }).join('');
+  const inner = `${fieldHtml('Título da seção', `<input class="pz-input mb-3" value="${esc(p.strategyTitle)}" oninput="updatePlanField('strategyTitle',this.value)" placeholder="Pacing km a km"/>`)}
+    <div class="space-y-4">${groups}</div>`;
+  return sectionCardHtml('Estratégia de prova', iconBtnHtml('addStrategyGroup()', '＋ bloco', 'accent'), inner);
+}
+function updateStrategyItem(gi, ii, field, value) { const p = getPlan(); if (!p) return; p.strategyGroups[gi].items[ii][field] = value; persistPlan(p, true); }
+function addStrategyItem(gi) { const p = getPlan(); if (!p) return; p.strategyGroups[gi].items.push(newStrategyItem()); persistPlan(p); }
+function removeStrategyItem(gi, ii) { const p = getPlan(); if (!p) return; p.strategyGroups[gi].items.splice(ii, 1); persistPlan(p); }
+function addStrategyGroup() { const p = getPlan(); if (!p) return; p.strategyGroups.push(newStrategyGroup()); persistPlan(p); }
+function removeStrategyGroup(gi) { const p = getPlan(); if (!p) return; p.strategyGroups.splice(gi, 1); persistPlan(p); }
+
+/* ==================================================================== */
+/*  RODAPÉ                                                              */
+/* ==================================================================== */
+function renderFooterSection(p) {
+  return sectionCardHtml('Rodapé', '', fieldHtml('Texto do rodapé', `<input class="pz-input" value="${esc(p.footerNote)}" oninput="updatePlanField('footerNote',this.value)" placeholder="PH PERFORMANCE · REVISADO"/>`));
+}
+
+/* ==================================================================== */
+/*  PRÉVIA / FICHA ENTREGÁVEL                                            */
+/* ==================================================================== */
+function previewCellHtml(cell) {
+  const t = TYPES[cell.type] || TYPES.off;
+  return `<div class="aspect-square rounded flex flex-col items-center justify-center pz-mono" style="background:${t.bg};border:${t.border}">
+    <span class="text-[14px] font-bold" style="color:${C.paper}">${esc(cell.date)}</span>
+    <span class="text-[8px] uppercase mt-0.5" style="color:${C.paperDim}">${esc(cell.micro)}</span>
+  </div>`;
+}
+function dayCardHtml(s) {
+  const t = TYPES[s.type] || TYPES.easy;
+  const chips = (s.velocidade || s.freq || s.esforco) ? `<div class="flex gap-3 flex-wrap mt-1.5">
+    ${s.velocidade ? `<span class="pz-mono text-[11.5px] px-2 py-0.5 rounded" style="background:rgba(79,178,232,0.12);color:${C.blue}">${esc(s.velocidade)}</span>` : ''}
+    ${s.freq ? `<span class="pz-mono text-[11.5px] px-2 py-0.5 rounded" style="background:rgba(255,92,92,0.12);color:${C.red}">${esc(s.freq)}</span>` : ''}
+    ${s.esforco ? `<span class="pz-mono text-[11.5px] px-2 py-0.5 rounded" style="background:rgba(212,255,61,0.12);color:${C.hivis}">${esc(s.esforco)}</span>` : ''}
+  </div>` : '';
+  return `<div class="grid gap-4 py-4" style="grid-template-columns:56px 1fr;border-bottom:1px solid ${C.line}">
+    <div class="pz-display font-semibold text-[15px]" style="color:${C.paperDim}">
+      <span class="block pz-mono text-[10px] uppercase" style="color:${C.paperDim};letter-spacing:1px">${esc(s.dow)}</span>
+      ${esc(s.date)}
+    </div>
+    <div>
+      <span class="inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold mb-1.5" style="background:${t.tagBg};color:${t.tagColor}">${esc(s.tagText)}</span>
+      <div class="text-[15px] font-semibold mb-1" style="color:${C.paper}">${esc(s.title)}</div>
+      <div class="text-[13.5px] leading-relaxed" style="color:${C.paperDim}">${esc(s.detail)}</div>
+      ${s.pace ? `<div class="pz-mono text-[12.5px] leading-relaxed mt-1.5" style="color:${C.paper};white-space:pre-line">${esc(s.pace)}</div>` : ''}
+      ${chips}
+    </div>
+  </div>`;
+}
+function profileBlockHtml(p) {
+  const result = getVO2Result(p);
+  if (!p.athleteName && !p.objective && !result) return '';
+  let resultHtml = '';
+  if (result) {
+    const rows = result.paceZones.map((z, i) => `<div class="grid gap-3.5 p-3" style="grid-template-columns:70px 1fr 90px 70px;background:${C.ink2}">
+      <div class="pz-mono font-bold text-[13px]" style="color:${C.hivis}">${z.key}</div>
+      <div class="text-[13px]" style="color:${C.paperDim}">${z.label}</div>
+      <div class="pz-mono text-[13px]" style="color:${C.paper}">${z.paceLabel}/km</div>
+      <div class="pz-mono text-[13px]" style="color:${C.paperDim}">${result.hrZones ? result.hrZones[i].bpm + 'bpm' : ''}</div>
+    </div>`).join('');
+    resultHtml = `<div class="grid grid-cols-2 gap-px mt-2 mb-4" style="background:${C.line};border:1px solid ${C.line}">
+        <div class="p-3.5" style="background:${C.ink}"><div class="pz-display font-semibold text-[22px]" style="color:${C.hivis}">${result.vo2max.toFixed(1)}</div><div class="text-[10.5px] uppercase tracking-wider mt-1.5" style="color:${C.paperDim}">VO2máx ml/kg/min${result.level ? ' · ' + result.level : ''}</div></div>
+        <div class="p-3.5" style="background:${C.ink}"><div class="pz-display font-semibold text-[22px]" style="color:${C.hivis}">${esc(p.hrMax) || '—'}</div><div class="text-[10.5px] uppercase tracking-wider mt-1.5" style="color:${C.paperDim}">FC máxima (bpm)</div></div>
+      </div>
+      <div class="grid gap-px" style="background:${C.line};border:1px solid ${C.line}">${rows}</div>`;
+  }
+  return `<div class="pt-11">
+    <div class="pz-mono text-[12px] uppercase tracking-widest mb-1.5" style="color:${C.hivisDim}">Perfil & zonas de treino</div>
+    ${(p.athleteName || p.objective) ? `<div class="mb-4">${p.athleteName ? `<div class="pz-display text-[22px] font-semibold" style="color:${C.paper}">${esc(p.athleteName)}</div>` : ''}${p.objective ? `<div class="text-[14px]" style="color:${C.paperDim}">${esc(p.objective)}</div>` : ''}</div>` : ''}
+    ${resultHtml}
+  </div>`;
+}
+function previewWeekHtml(week, index) {
+  const volume = weekVolumeKm(week);
+  return `<div class="pt-11">
+    <div class="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+      <div class="pz-mono text-[12px] uppercase tracking-widest" style="color:${C.hivisDim}">${esc(week.tag) || 'Semana ' + (index + 1)}</div>
+      ${volume > 0 ? `<div class="pz-mono text-[12px] uppercase tracking-widest px-2.5 py-1 rounded-full" style="background:rgba(212,255,61,0.12);color:${C.hivis}">${fmtKm(volume)} km na semana</div>` : ''}
+    </div>
+    <div class="pz-display text-[26px] font-semibold mb-3" style="color:${C.paper};letter-spacing:-0.5px">${esc(week.title)}</div>
+    <div class="rounded p-4 mt-2" style="background:${C.ink2};border:1px solid ${C.line}">
+      <div class="text-[11px] uppercase tracking-wider mb-3" style="color:${C.paperDim}">${esc(week.stripCaption)}</div>
+      <div class="grid grid-cols-7 gap-1.5">${week.cells.map(previewCellHtml).join('')}</div>
+    </div>
+    <div class="pz-mono text-[12px] uppercase tracking-widest mt-8 mb-2 pt-4" style="color:${C.hivis};border-top:1px solid ${C.line}">Sessões da semana</div>
+    ${week.sessions.map(dayCardHtml).join('')}
+  </div>`;
+}
+function renderPreviewPage(p) {
+  const statsHtml = p.stats.some((s) => s.value || s.label) ? `<div class="grid grid-cols-3 gap-px mt-7" style="background:${C.line};border:1px solid ${C.line}">
+    ${p.stats.map((s) => `<div class="p-3.5" style="background:${C.ink}"><div class="pz-display font-semibold text-[22px]" style="color:${C.hivis}">${esc(s.value)}</div><div class="text-[10.5px] uppercase tracking-wider mt-1.5" style="color:${C.paperDim}">${esc(s.label)}</div></div>`).join('')}
+  </div>` : '';
+  const strategyHtml = p.strategyGroups.some((g) => g.items.some((it) => it.text)) ? `<div class="pt-11">
+    <div class="pz-mono text-[12px] uppercase tracking-widest mb-1.5" style="color:${C.hivisDim}">Execução no dia</div>
+    <div class="pz-display text-[26px] font-semibold mb-3" style="color:${C.paper};letter-spacing:-0.5px">${esc(p.strategyTitle)}</div>
+    <div class="space-y-5">${p.strategyGroups.map((g) => `<div class="grid gap-px" style="background:${C.line};border:1px solid ${C.line}">${g.items.map((it) => `<div class="grid gap-3.5 p-4" style="grid-template-columns:28px 1fr;background:${C.ink2}"><div class="pz-mono font-bold text-[14px]" style="color:${C.hivis}">${esc(it.num)}</div><div class="text-[14px] leading-relaxed" style="color:${C.paperDim}">${esc(it.text)}</div></div>`).join('')}</div>`).join('')}</div>
+  </div>` : '';
+  return `<div id="printArea" class="pz-print-area max-w-[760px] mx-auto px-5 pb-20" style="background:${C.ink}">
+    <div class="pt-12 pb-8" style="border-bottom:1px solid ${C.line}">
+      <div class="pz-mono text-[13px] uppercase mb-4" style="color:${C.hivisDim};letter-spacing:2px">${esc(p.bibLabel)}</div>
+      <div class="pz-display font-bold" style="color:${C.paper};font-size:clamp(56px,14vw,96px);line-height:0.9;letter-spacing:-1px">${esc(p.countdownNumber)}<span class="uppercase font-semibold ml-2.5" style="font-size:0.28em;color:${C.hivis};letter-spacing:2px">${esc(p.countdownUnit)}</span></div>
+      ${p.heroSub ? `<p class="mt-3.5 max-w-[520px] leading-relaxed text-[16px]" style="color:${C.paperDim}">${esc(p.heroSub)}</p>` : ''}
+      ${statsHtml}
+    </div>
+    ${profileBlockHtml(p)}
+    ${p.weeks.map(previewWeekHtml).join('')}
+    ${strategyHtml}
+    ${p.footerNote ? `<div class="text-center pz-mono text-[11px] mt-10 pt-6" style="color:${C.paperDim};letter-spacing:1px">${esc(p.footerNote)}</div>` : ''}
+  </div>`;
+}
+
+/* ==================================================================== */
+/*  SHELL DO PLANO (toolbar + editor/prévia)                            */
+/* ==================================================================== */
+function pdfButtonsHtml() {
+  return `<button onclick="downloadPdf()" ${pdfState === 'loading' ? 'disabled' : ''} class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] pz-display uppercase" style="background:${C.hivis};color:${C.ink};opacity:${pdfState === 'loading' ? 0.6 : 1}">
+    ${pdfState === 'loading' ? '⏳ Gerando PDF...' : '⬇ Baixar PDF'}
+  </button>
+  <button onclick="window.print()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] pz-display uppercase" style="background:${C.ink2};color:${C.paper};border:1px solid ${C.line}">🖨 Imprimir</button>`;
+}
+function renderPlanShell(p) {
+  const toolbar = `<div class="pz-no-print sticky top-0 z-10 flex items-center justify-between px-5 py-3 flex-wrap gap-2" style="background:#0F1113;border-bottom:1px solid ${C.line}">
+    <div class="flex items-center gap-3">
+      <button onclick="backToRoster()" class="flex items-center gap-1.5 text-[13px]" style="color:${C.paperDim}">‹ Planos</button>
+      <span style="color:${C.line}">/</span>
+      <span class="pz-display text-[14px] uppercase" style="color:${C.paper}">${esc(p.name || p.athleteName || 'Plano sem nome')}</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="saveIndicator" class="text-[11px]" style="color:${C.paperDim}"></span>
+      <div class="flex rounded-md overflow-hidden" style="border:1px solid ${C.line}">
+        <button onclick="setMode('edit')" class="px-3 py-1.5 text-[12px] pz-display uppercase" style="background:${mode === 'edit' ? C.hivis : 'transparent'};color:${mode === 'edit' ? C.ink : C.paperDim}">Editar</button>
+        <button onclick="setMode('preview')" class="px-3 py-1.5 text-[12px] pz-display uppercase" style="background:${mode === 'preview' ? C.hivis : 'transparent'};color:${mode === 'preview' ? C.ink : C.paperDim}">Prévia</button>
+      </div>
+      ${mode === 'preview' ? `<div id="pdfBtnWrap" class="flex gap-2">${pdfButtonsHtml()}</div>` : ''}
+    </div>
+  </div>`;
+
+  if (mode === 'preview') return toolbar + renderPreviewPage(p);
+
+  const weeksHtml = p.weeks.map((w, i) => weekEditorHtml(p, w, i)).join('');
+  return toolbar + `<div class="max-w-[760px] mx-auto py-6 px-5">
+    ${renderAlunoLink(p)}
+    ${renderHero(p)}
+    ${renderVo2Calculator(p)}
+    ${renderCalendarGenerator(p)}
+    ${renderPeriodizationGenerator(p)}
+    <div class="flex items-center justify-between mb-3 mt-6">
+      <span class="pz-mono text-[12px] uppercase tracking-widest" style="color:${C.hivis}">Semanas</span>
+      <button onclick="addWeek()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] pz-display uppercase" style="background:${C.hivis};color:${C.ink}">＋ Nova semana</button>
+    </div>
+    ${weeksHtml}
+    <div class="mt-6">${renderStrategyEditor(p)}</div>
+    ${renderFooterSection(p)}
+  </div>`;
+}
+
+/* ==================================================================== */
+/*  DISPATCH PRINCIPAL                                                  */
+/* ==================================================================== */
+function syncBankDatalist() {
+  const dl = document.getElementById('bank-codes-list'); if (!dl) return;
+  dl.innerHTML = Object.values(bank).map((b) => `<option value="${esc(b.code)}"></option>`).join('');
+}
+function render() {
+  const app = document.getElementById('app');
+  if (!currentPlanId) {
+    app.innerHTML = screen === 'roster' ? renderPlanList() : renderBankView();
+  } else {
+    const p = roster[currentPlanId];
+    if (!p) { currentPlanId = null; render(); return; }
+    app.innerHTML = renderPlanShell(p);
+  }
+  syncBankDatalist();
+  updateSaveIndicator();
+}
+
+/* ==================================================================== */
+/*  INIT                                                                 */
+/* ==================================================================== */
+async function init() {
+  try {
+    await Promise.all([loadRoster(), loadBank(), loadAlunos()]);
+  } catch (e) { console.error(e); }
+  document.getElementById('loadScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  render();
+  showToast('Carregado ✓');
+}
+init();
+
+</script>
+</body>
+</html>
