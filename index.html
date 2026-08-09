@@ -1483,7 +1483,90 @@ function mostrarToastCompartilhar(msg,link,mostrarInput=false){
 
 function gerarPDF(){
   if(!alunoAtivo)return;
-  alert('Geração de PDF: use a função de impressão do navegador (Ctrl/Cmd+P) com a ficha do aluno aberta, ou exporte o backup JSON e compartilhe o link da ficha online.');
+  const a=alunoAtivo;
+  const ficha=_FA||a.fichas?.[0]||{series:a.series||[],semanas:a.semanas||[],nome:'Ficha'};
+  const series=ficha.series||a.series||[];
+  const semanas=ficha.semanas||a.semanas||[];
+  const marca=db.consultoria||'PH PERFORMANCE';
+  const hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const semanasHtml=semanas.length?`
+    <table class="pdf-table" style="margin-bottom:22px">
+      <thead><tr><th>Semana</th><th>Repetições</th><th>Descanso</th></tr></thead>
+      <tbody>${semanas.map((s,i)=>`<tr><td>${esc(s.nome)||('Semana '+(i+1))}</td><td>${esc(s.reps)||'-'}</td><td>${esc(s.descanso)||'-'}</td></tr>`).join('')}</tbody>
+    </table>`:'';
+
+  const seriesHtml=series.map((s,si)=>{
+    const exs=(s.exercicios||[]).map((ex,ei)=>{
+      const linkMedia=(ex.medias||[]).find(m=>m.url)?.url;
+      return `<tr>
+        <td style="text-align:center;color:#888">${ei+1}</td>
+        <td><strong>${esc(ex.nome)||'(sem nome)'}</strong>${ex.tecnica&&ex.tecnica!=='Nenhuma'?`<br><span style="font-size:10px;color:#c9a84c">✦ ${esc(ex.tecnica)}</span>`:''}${linkMedia?`<br><span style="font-size:9px;color:#999">${esc(linkMedia)}</span>`:''}</td>
+        <td style="text-align:center">${esc(ex.series)||'-'}</td>
+        <td style="text-align:center">${esc(ex.reps)||'-'}</td>
+        <td style="text-align:center">${esc(ex.descanso)||'-'}</td>
+        <td style="font-size:11px;color:#555">${esc(ex.obs)||''}</td>
+      </tr>`;
+    }).join('');
+    return `
+    <div class="pdf-serie" style="margin-bottom:26px;break-inside:avoid">
+      <div class="pdf-serie-head">
+        <span class="pdf-serie-badge">${esc(s.letra)}</span>
+        <span class="pdf-serie-name">${esc(s.nome)||('Série '+s.letra)}</span>
+        ${(s.grupos&&s.grupos.length)?`<span class="pdf-serie-grupos">${s.grupos.map(g=>esc(g)).join(' · ')}</span>`:''}
+      </div>
+      <table class="pdf-table">
+        <thead><tr><th style="width:28px">#</th><th>Exercício</th><th style="width:60px">Séries</th><th style="width:70px">Reps</th><th style="width:80px">Descanso</th><th>Obs.</th></tr></thead>
+        <tbody>${exs||'<tr><td colspan="6" style="text-align:center;color:#999;padding:14px">Nenhum exercício cadastrado</td></tr>'}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  const win=window.open('','_blank');
+  if(!win){showToast('⚠️ Permita pop-ups para gerar o PDF');return}
+  win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Ficha - ${esc(a.nome)}</title>
+  <style>
+    @page{margin:16mm 14mm}
+    *{box-sizing:border-box}
+    body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;background:#fff;margin:0;padding:24px 30px}
+    .pdf-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:14px;margin-bottom:22px}
+    .pdf-brand{font-size:13px;font-weight:800;letter-spacing:1px;color:#8a7326;text-transform:uppercase}
+    .pdf-aluno{font-size:22px;font-weight:800;margin-top:4px}
+    .pdf-meta{text-align:right;font-size:11px;color:#666;line-height:1.6}
+    .pdf-serie-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .pdf-serie-badge{width:24px;height:24px;border-radius:6px;background:#1a1a1a;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .pdf-serie-name{font-size:15px;font-weight:700}
+    .pdf-serie-grupos{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px}
+    .pdf-table{width:100%;border-collapse:collapse;font-size:12px}
+    .pdf-table th{background:#f2f2f2;text-align:left;padding:7px 9px;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:#555;border-bottom:1px solid #ddd}
+    .pdf-table td{padding:7px 9px;border-bottom:1px solid #eee;vertical-align:top}
+    .pdf-footer{margin-top:30px;font-size:10px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:10px}
+    @media print{.pdf-noprint{display:none}}
+    .pdf-noprint{position:fixed;top:14px;right:14px;display:flex;gap:8px}
+    .pdf-noprint button{padding:9px 16px;border-radius:8px;border:none;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+    .pdf-btn-print{background:#1a1a1a;color:#fff}
+    .pdf-btn-close{background:#eee;color:#333}
+  </style></head><body>
+    <div class="pdf-noprint">
+      <button class="pdf-btn-print" onclick="window.print()">🖨️ Salvar PDF</button>
+      <button class="pdf-btn-close" onclick="window.close()">Fechar</button>
+    </div>
+    <div class="pdf-header">
+      <div>
+        <div class="pdf-brand">${esc(marca)}</div>
+        <div class="pdf-aluno">${esc(a.nome)}</div>
+      </div>
+      <div class="pdf-meta">
+        Ficha: ${esc(ficha.nome)||'-'}<br>
+        Emitido em ${hoje}
+      </div>
+    </div>
+    ${semanasHtml}
+    ${seriesHtml||'<p style="color:#999">Nenhuma série cadastrada.</p>'}
+    <div class="pdf-footer">${esc(marca)} · Documento gerado automaticamente</div>
+  </body></html>`);
+  win.document.close();
 }
 
 loadDB();
