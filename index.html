@@ -644,6 +644,7 @@ function _renderBanner(){
 }
 function _selFicha(fid){
   if(!alunoAtivo)return;_FA=alunoAtivo.fichas.find(f=>f.id===fid);if(!_FA)return;
+  alunoAtivo.semanas=_FA.semanas;saveDB();renderSemanas();
   _renderFichas();renderSeriesNav();const sid=(_FA.series||[])[0]?.id;
   if(sid)renderSerieEditor(sid);else renderEmpty();
   setTimeout(_renderBanner,80);
@@ -1232,14 +1233,24 @@ function renderAlunoList(){
   }).join('');
 }
 
-function selecionarAluno(id){alunoAtivo=db.alunos.find(x=>x.id===id);if(!alunoAtivo)return;_initFichas(alunoAtivo);renderAlunoList();document.getElementById('sidebarForm').style.display='block';renderSemanas();_renderFichas();renderSeriesNav();const sid=serieAtivaMap[id]||(_FA?.series||alunoAtivo.series)[0]?.id;if(sid)renderSerieEditor(sid);else renderEmpty();setTimeout(_renderBanner,80)}
+function selecionarAluno(id){alunoAtivo=db.alunos.find(x=>x.id===id);if(!alunoAtivo)return;_initFichas(alunoAtivo);if(_FA)alunoAtivo.semanas=_FA.semanas;renderAlunoList();document.getElementById('sidebarForm').style.display='block';renderSemanas();_renderFichas();renderSeriesNav();const sid=serieAtivaMap[id]||(_FA?.series||alunoAtivo.series)[0]?.id;if(sid)renderSerieEditor(sid);else renderEmpty();setTimeout(_renderBanner,80)}
 function renderEmpty(){document.getElementById('sidebarForm').style.display='none';document.getElementById('serieContent').innerHTML=`<div class="empty-screen"><div class="empty-logo">${esc(db.consultoria)}</div><p class="empty-sub">Adicione um aluno clicando em <strong>＋</strong> para começar.</p></div>`}
 
-function addSemana(){if(!alunoAtivo)return;alunoAtivo.semanas.push({nome:'',reps:'',descanso:''});saveDB();renderSemanas();syncSemanas(alunoAtivo)}
-function delSemana(i){if(!alunoAtivo)return;alunoAtivo.semanas.splice(i,1);saveDB();renderSemanas();const total=alunoAtivo.semanas.length;syncSemanas(alunoAtivo).then(()=>limparSemanasExtras(alunoAtivo.id,total))}
+/* CORREÇÃO 3: a periodização exibida/editada na sidebar (addSemana, delSemana,
+   semanaInputChange) mexia em alunoAtivo.semanas, mas o PDF e o sync de ficha
+   leem de _FA.semanas (a ficha ativa) — dois arrays diferentes que nunca eram
+   sincronizados de volta. Resultado: apagar semanas na sidebar não refletia
+   na ficha real, e o PDF continuava mostrando o conteúdo antigo de _FA.semanas.
+   Agora tudo opera sobre o array da ficha ativa (_FA.semanas), com fallback
+   para alunoAtivo.semanas apenas se não houver ficha (não deveria ocorrer,
+   já que _initFichas sempre garante uma). alunoAtivo.semanas é mantido como
+   espelho, só para não quebrar leituras antigas (ex: duplicar aluno). */
+function _semanasAtivo(){return (_FA&&_FA.semanas)||alunoAtivo.semanas}
+function addSemana(){if(!alunoAtivo)return;const sem=_semanasAtivo();sem.push({nome:'',reps:'',descanso:''});alunoAtivo.semanas=sem;saveDB();renderSemanas();syncSemanas(alunoAtivo)}
+function delSemana(i){if(!alunoAtivo)return;const sem=_semanasAtivo();sem.splice(i,1);alunoAtivo.semanas=sem;saveDB();renderSemanas();const total=sem.length;syncSemanas(alunoAtivo).then(()=>limparSemanasExtras(alunoAtivo.id,total))}
 let _semanaSaveTimer=null;
-function semanaInputChange(i,campo,val){if(!alunoAtivo)return;alunoAtivo.semanas[i][campo]=val;saveDB();clearTimeout(_semanaSaveTimer);_semanaSaveTimer=setTimeout(()=>syncSemanas(alunoAtivo),700)}
-function renderSemanas(){if(!alunoAtivo)return;document.getElementById('semList').innerHTML=alunoAtivo.semanas.map((s,i)=>`<div class="sem-card"><div class="sem-top"><div class="sem-num">${i+1}</div><input class="sem-name-inp" type="text" placeholder="Nome" value="${esc(s.nome)}" oninput="semanaInputChange(${i},'nome',this.value)"/><button class="sem-del-btn" onclick="delSemana(${i})">✕</button></div><div class="sem-fields"><div class="sem-field"><label>Reps</label><input type="text" placeholder="10–12" value="${esc(s.reps)}" oninput="semanaInputChange(${i},'reps',this.value)"/></div><div class="sem-field"><label>Descanso</label><input type="text" placeholder="60s" value="${esc(s.descanso)}" oninput="semanaInputChange(${i},'descanso',this.value)"/></div></div></div>`).join('')}
+function semanaInputChange(i,campo,val){if(!alunoAtivo)return;const sem=_semanasAtivo();sem[i][campo]=val;alunoAtivo.semanas=sem;saveDB();clearTimeout(_semanaSaveTimer);_semanaSaveTimer=setTimeout(()=>syncSemanas(alunoAtivo),700)}
+function renderSemanas(){if(!alunoAtivo)return;document.getElementById('semList').innerHTML=_semanasAtivo().map((s,i)=>`<div class="sem-card"><div class="sem-top"><div class="sem-num">${i+1}</div><input class="sem-name-inp" type="text" placeholder="Nome" value="${esc(s.nome)}" oninput="semanaInputChange(${i},'nome',this.value)"/><button class="sem-del-btn" onclick="delSemana(${i})">✕</button></div><div class="sem-fields"><div class="sem-field"><label>Reps</label><input type="text" placeholder="10–12" value="${esc(s.reps)}" oninput="semanaInputChange(${i},'reps',this.value)"/></div><div class="sem-field"><label>Descanso</label><input type="text" placeholder="60s" value="${esc(s.descanso)}" oninput="semanaInputChange(${i},'descanso',this.value)"/></div></div></div>`).join('')}
 
 function addSerie(){if(!alunoAtivo)return;const _st=_FA?.series||alunoAtivo.series;const i=_st.length;const l=LETRAS[i]||('S'+(i+1));const s={id:'s'+Date.now()+Math.random().toString(36).slice(2),letra:l,nome:'',grupos:[],exercicios:[]};_st.push(s);if(_FA)_FA.series=_st;saveDB();serieAtivaMap[alunoAtivo.id]=s.id;saveDB();renderSeriesNav();renderSerieEditor(s.id);syncSerie(alunoAtivo.id,s,i)}
 async function delSerie(sid,e){e.stopPropagation();const _st=_FA?.series||alunoAtivo.series;if(!alunoAtivo||_st.length<=1)return;const _f=_st.filter(s=>s.id!==sid);_f.forEach((s,i)=>s.letra=LETRAS[i]||('S'+(i+1)));if(_FA)_FA.series=_f;else alunoAtivo.series=_f;saveDB();const n=_f[0].id;serieAtivaMap[alunoAtivo.id]=n;saveDB();renderSeriesNav();renderSerieEditor(n);await deletarSerieSupabase(sid);for(let i=0;i<_f.length;i++)syncSerie(alunoAtivo.id,_f[i],i)}
