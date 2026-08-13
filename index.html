@@ -1001,7 +1001,12 @@ async function carregarDoSupabase(){
         id:f.id, nome:f.nome, status:f.status||'pendente', obs:f.obs||'',
         dataInicio:f.data_inicio, dataAgendada:f.data_agendada,
         series:serList,
-        semanas:semList.length?semList:[{nome:'Resistência',reps:'15–20',descanso:'30s'},{nome:'Hipertrofia',reps:'10–12',descanso:'60s'},{nome:'Força',reps:'4–6',descanso:'2min'},{nome:'Deload',reps:'12–15',descanso:'45s'}]
+        /* CORREÇÃO 1: antes usava semList.length?semList:[...padrão de 4 semanas...]
+           Isso recriava a periodização padrão mesmo quando o usuário havia apagado
+           deliberadamente todas as semanas de uma ficha JÁ EXISTENTE no banco.
+           Agora respeitamos sempre o que veio do Supabase para fichas existentes:
+           se está vazio no banco, fica vazio no app (e some do PDF). */
+        semanas:semList
       };
     });
 
@@ -1018,6 +1023,10 @@ async function carregarDoSupabase(){
           id:'f_'+aId, nome:'Ficha 1', status: fichasMontadas.some(f=>f.status==='ativa')?'inativa':'ativa',
           obs:'', dataInicio:new Date().toISOString().split('T')[0], dataAgendada:null,
           series: serListOrfa,
+          /* CORREÇÃO 1 (continuação): este bloco só roda quando é uma ficha órfã
+             recém-detectada/migrada (nunca existiu como registro 'fichas' no banco).
+             Aqui sim faz sentido semear o padrão de 4 semanas, pois é equivalente
+             a uma ficha nova sendo criada pela primeira vez. */
           semanas: semOrfas.length?semOrfas:[{nome:'Resistência',reps:'15–20',descanso:'30s'},{nome:'Hipertrofia',reps:'10–12',descanso:'60s'},{nome:'Força',reps:'4–6',descanso:'2min'},{nome:'Deload',reps:'12–15',descanso:'45s'}]
         });
       }
@@ -1033,7 +1042,9 @@ async function carregarDoSupabase(){
       proximaAvaliacao:a.proxima_avaliacao, proximaTroca:a.proxima_troca,
       updatedAt:a.updated_at,
       fichas: fichasMontadas,
-      semanas: fichaAtiva?.semanas || [{nome:'Resistência',reps:'15–20',descanso:'30s'},{nome:'Hipertrofia',reps:'10–12',descanso:'60s'},{nome:'Força',reps:'4–6',descanso:'2min'},{nome:'Deload',reps:'12–15',descanso:'45s'}],
+      /* CORREÇÃO 1 (continuação): idem — só cai no fallback padrão quando
+         não existe ficha ativa alguma (aluno sem nenhuma ficha montada). */
+      semanas: fichaAtiva?.semanas ?? [{nome:'Resistência',reps:'15–20',descanso:'30s'},{nome:'Hipertrofia',reps:'10–12',descanso:'60s'},{nome:'Força',reps:'4–6',descanso:'2min'},{nome:'Deload',reps:'12–15',descanso:'45s'}],
       series: fichaAtiva?.series || [],
       avaliacoes: avaliacoes.filter(v=>v.aluno_id===aId).map(v=>({
         id:v.id,data:v.data,idade:v.idade,altura:v.altura,peso:v.peso,
@@ -1490,10 +1501,15 @@ function gerarPDF(){
   const marca=db.consultoria||'PH PERFORMANCE';
   const hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
 
-  const semanasHtml=semanas.length?`
+  /* CORREÇÃO 2 (defensiva): além de checar o length, filtramos entradas
+     totalmente em branco (sem nome, sem reps e sem descanso), que podem
+     sobrar de edições manuais e não deveriam gerar uma linha vazia no PDF. */
+  const semanasValidas=(semanas||[]).filter(s=>(s.nome&&s.nome.trim())||(s.reps&&s.reps.trim())||(s.descanso&&s.descanso.trim()));
+
+  const semanasHtml=semanasValidas.length?`
     <table class="pdf-table" style="margin-bottom:26px">
       <thead><tr><th>Semana</th><th>Repetições</th><th>Descanso</th></tr></thead>
-      <tbody>${semanas.map((s,i)=>`<tr><td>${esc(s.nome)||('Semana '+(i+1))}</td><td>${esc(s.reps)||'-'}</td><td>${esc(s.descanso)||'-'}</td></tr>`).join('')}</tbody>
+      <tbody>${semanasValidas.map((s,i)=>`<tr><td>${esc(s.nome)||('Semana '+(i+1))}</td><td>${esc(s.reps)||'-'}</td><td>${esc(s.descanso)||'-'}</td></tr>`).join('')}</tbody>
     </table>`:'';
 
   const seriesHtml=series.map((s,si)=>{
